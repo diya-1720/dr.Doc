@@ -27,6 +27,8 @@ export async function analyzeUploadedFile(file: File): Promise<DocItem> {
         fileSizeMB: parseFloat((file.size / (1024 * 1024)).toFixed(2)),
         mimeType: file.type || 'application/octet-stream',
         previewUrl,
+        fileObj: file,
+        status: 'ready',
         category: parsed.category || 'UNKNOWN',
         documentType: parsed.documentType || 'Unidentified Document',
         confidence: parsed.confidence || 85,
@@ -96,20 +98,33 @@ async function analyzeWithGemini(file: File, apiKey: string): Promise<DocItem> {
   }
   `;
 
-  const response = await ai.models.generateContent({
-    model: 'gemini-2.5-flash',
-    contents: [
-      {
-        role: 'user',
-        parts: [
-          { inlineData: { mimeType, data: base64Data.split(',')[1] || '' } },
-          { text: prompt }
-        ]
-      }
-    ]
-  });
+  const candidateModels = ['gemini-3.6-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
+  let text = '';
+  let lastErr = null;
 
-  const text = response.text || '';
+  for (const model of candidateModels) {
+    try {
+      const response = await ai.models.generateContent({
+        model,
+        contents: [
+          {
+            role: 'user',
+            parts: [
+              { inlineData: { mimeType, data: base64Data.split(',')[1] || '' } },
+              { text: prompt }
+            ]
+          }
+        ]
+      });
+      text = response.text || '';
+      if (text) break;
+    } catch (err) {
+      lastErr = err;
+    }
+  }
+
+  if (!text) throw lastErr || new Error('No response from Gemini models');
+
   const jsonMatch = text.match(/\{[\s\S]*\}/);
   if (!jsonMatch) throw new Error('No valid JSON returned from Gemini');
 
@@ -124,6 +139,8 @@ async function analyzeWithGemini(file: File, apiKey: string): Promise<DocItem> {
     fileSizeMB: parseFloat((file.size / (1024 * 1024)).toFixed(2)),
     mimeType: file.type || 'application/octet-stream',
     previewUrl,
+    fileObj: file,
+    status: 'ready',
     category: parsed.category || 'UNKNOWN',
     documentType: parsed.documentType || 'Unidentified Document',
     confidence: parsed.confidence || 85,
@@ -275,6 +292,8 @@ async function analyzeWithLocalEngine(file: File): Promise<DocItem> {
     fileSizeMB,
     mimeType: file.type || 'application/octet-stream',
     previewUrl,
+    fileObj: file,
+    status: 'ready',
     category,
     documentType,
     confidence,

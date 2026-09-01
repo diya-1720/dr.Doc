@@ -10,7 +10,12 @@ import {
   Search, 
   Loader2,
   ShieldAlert,
-  Play
+  Play,
+  Wrench,
+  ArrowRightLeft,
+  Sliders,
+  AlertTriangle,
+  X
 } from 'lucide-react';
 
 export const DocumentInboxPage: React.FC = () => {
@@ -24,7 +29,9 @@ export const DocumentInboxPage: React.FC = () => {
     deleteDocument, 
     setActiveDocument,
     loadDemoMode,
-    isDemoMode
+    isDemoMode,
+    uploadWarning,
+    dismissWarning
   } = useForensics();
 
   const [selectedCategory, setSelectedCategory] = useState<DocumentCategory | 'ALL'>('ALL');
@@ -35,6 +42,7 @@ export const DocumentInboxPage: React.FC = () => {
     if (e.target.files && e.target.files.length > 0) {
       const filesArray = Array.from(e.target.files);
       uploadFiles(filesArray);
+      e.target.value = '';
     }
   };
 
@@ -84,7 +92,7 @@ export const DocumentInboxPage: React.FC = () => {
               DOCUMENT INBOX
             </h1>
             <p className="font-body text-sm text-[#3F2928] mt-1">
-              Upload multiple documents simultaneously. AI engine will automatically classify, check quality, and run OCR extraction.
+              Upload up to 5 documents per case. AI engine automatically classifies, audits quality, extracts OCR fields, and checks verification compliance.
             </p>
           </div>
 
@@ -98,6 +106,22 @@ export const DocumentInboxPage: React.FC = () => {
             </button>
           )}
         </div>
+
+        {/* Warning / Notification Banner if upload limits exceeded */}
+        {uploadWarning && (
+          <div className="bg-[#FFF8EA] border-2 border-[#7A302F] p-3.5 mb-6 shadow-[3px_3px_0px_#7A302F] flex items-center justify-between gap-3 font-mono text-xs text-[#7A302F]">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 shrink-0 text-[#7A302F]" />
+              <span>{uploadWarning}</span>
+            </div>
+            <button
+              onClick={dismissWarning}
+              className="text-[#3F2928] hover:text-[#7A302F] p-1"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
 
         {/* Drag & Drop Upload Zone */}
         <div
@@ -115,7 +139,7 @@ export const DocumentInboxPage: React.FC = () => {
             ref={fileInputRef}
             onChange={handleFileChange}
             multiple
-            accept=".pdf,.png,.jpg,.jpeg"
+            accept=".pdf,.png,.jpg,.jpeg,.webp"
             className="hidden"
           />
 
@@ -127,16 +151,18 @@ export const DocumentInboxPage: React.FC = () => {
             DROP YOUR DOCUMENTS HERE
           </h3>
           <p className="font-mono text-xs text-[#A58B7B] mb-4">
-            PDF • PNG • JPG • MULTIPLE FILES AT ONCE
+            PDF • PNG • JPG • UP TO 5 FILES IN BATCH (CASE CAPACITY: 5 MAX)
           </p>
 
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={isAnalyzing}
-            className="w-full sm:w-auto font-heading text-base font-bold bg-[#7A302F] hover:bg-[#5c2322] text-[#FFF8EA] px-8 py-3 border border-[#3F2928] shadow-[2px_2px_0px_#3F2928] active:translate-x-[1px] active:translate-y-[1px] transition-all"
-          >
-            CHOOSE FILES
-          </button>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isAnalyzing || documents.length >= 5}
+              className="w-full sm:w-auto font-heading text-base font-bold bg-[#7A302F] hover:bg-[#5c2322] disabled:opacity-50 text-[#FFF8EA] px-8 py-3 border border-[#3F2928] shadow-[2px_2px_0px_#3F2928] active:translate-x-[1px] active:translate-y-[1px] transition-all"
+            >
+              {documents.length >= 5 ? 'CASE CAPACITY REACHED (5/5)' : 'CHOOSE FILES (MAX 5)'}
+            </button>
+          </div>
         </div>
 
         {/* Processing State Loader */}
@@ -149,7 +175,7 @@ export const DocumentInboxPage: React.FC = () => {
                   EXAMINING DOCUMENTS...
                 </span>
                 <span className="block text-xs text-[#E8B9B8]">
-                  Reading file {processingProgress.current} / {processingProgress.total}
+                  Processing {processingProgress.current} / {processingProgress.total}
                 </span>
               </div>
             </div>
@@ -157,7 +183,7 @@ export const DocumentInboxPage: React.FC = () => {
             <div className="w-full bg-[#3F2928] h-2 border border-[#FFF8EA]/20">
               <div
                 className="bg-[#7A302F] h-full transition-all duration-300"
-                style={{ width: `${(processingProgress.current / processingProgress.total) * 100}%` }}
+                style={{ width: `${(processingProgress.current / Math.max(1, processingProgress.total)) * 100}%` }}
               />
             </div>
           </div>
@@ -170,9 +196,9 @@ export const DocumentInboxPage: React.FC = () => {
             {/* Status Summary Banner */}
             <div className="bg-[#F3E4C8] border-2 border-[#3F2928] p-3 sm:p-4 mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-4 font-mono text-xs shadow-[2px_2px_0px_#3F2928]">
               <div className="flex flex-wrap items-center gap-3 sm:gap-4">
-                <span>TOTAL UPLOADED: <strong>{documents.length}</strong></span>
+                <span>CASE DOCUMENTS: <strong>{documents.length} / 5</strong></span>
                 <span className="text-[#7A302F] font-bold">VERIFIED: {documents.filter(d => d.verificationStatus === 'VERIFIED').length}</span>
-                <span className="text-[#7A302F] font-bold">REVIEW: {documents.filter(d => d.verificationStatus !== 'VERIFIED').length}</span>
+                <span className="text-[#7A302F] font-bold">NEEDS REVIEW: {documents.filter(d => d.verificationStatus !== 'VERIFIED').length}</span>
               </div>
 
               {isDemoMode && (
@@ -296,22 +322,47 @@ export const DocumentInboxPage: React.FC = () => {
                     )}
                   </div>
 
-                  {/* Card Action Buttons */}
-                  <div className="flex items-center justify-between pt-3 border-t border-[#3F2928]/20 font-mono text-xs">
-                    <button
-                      onClick={() => handleCardClick(doc.id)}
-                      className="text-[#7A302F] hover:underline font-bold flex items-center gap-1"
-                    >
-                      VIEW OCR →
-                    </button>
+                  {/* Card Quick Workflow Actions */}
+                  <div className="pt-3 border-t border-[#3F2928]/20 font-mono text-[11px] space-y-2">
+                    <div className="flex items-center justify-between">
+                      <button
+                        onClick={() => handleCardClick(doc.id)}
+                        className="text-[#7A302F] hover:underline font-bold flex items-center gap-1"
+                      >
+                        VIEW OCR →
+                      </button>
 
-                    <button
-                      onClick={() => deleteDocument(doc.id)}
-                      className="text-[#A58B7B] hover:text-[#7A302F] transition-colors p-1.5"
-                      title="Remove file from case"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                      <button
+                        onClick={() => deleteDocument(doc.id)}
+                        className="text-[#A58B7B] hover:text-[#7A302F] transition-colors p-1"
+                        title="Remove file from case"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    <div className="flex items-center gap-2 pt-1 border-t border-[#3F2928]/10 text-[10px] text-[#A58B7B]">
+                      <button
+                        onClick={() => { setActiveDocument(doc.id); navigate('/quality'); }}
+                        className="hover:text-[#7A302F] flex items-center gap-0.5"
+                      >
+                        <Sliders className="w-3 h-3" /> Audit
+                      </button>
+                      <span>•</span>
+                      <button
+                        onClick={() => navigate('/cross-check')}
+                        className="hover:text-[#7A302F] flex items-center gap-0.5"
+                      >
+                        <ArrowRightLeft className="w-3 h-3" /> Compare
+                      </button>
+                      <span>•</span>
+                      <button
+                        onClick={() => navigate('/tools')}
+                        className="hover:text-[#7A302F] flex items-center gap-0.5"
+                      >
+                        <Wrench className="w-3 h-3" /> Tools
+                      </button>
+                    </div>
                   </div>
 
                 </div>
@@ -325,4 +376,3 @@ export const DocumentInboxPage: React.FC = () => {
     </div>
   );
 };
-

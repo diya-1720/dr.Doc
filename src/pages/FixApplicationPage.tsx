@@ -185,11 +185,26 @@ export const FixApplicationPage: React.FC = () => {
                           UPLOAD REPLACEMENT DOCUMENT
                           <input
                             type="file"
-                            accept=".pdf,.png,.jpg,.jpeg"
+                            accept=".pdf,.png,.jpg,.jpeg,.webp"
                             onChange={(e) => handleReuploadAction(e, issue.id, issue.affectedDocumentId)}
                             className="hidden"
                           />
                         </label>
+                      </div>
+                    )}
+
+                    {(issue.fixActionType === 'rename' || (!issue.fixActionType && matchedDoc)) && (
+                      <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                        <button
+                          onClick={() => {
+                            resolveIssue(issue.id);
+                            confetti({ particleCount: 30, spread: 50, origin: { y: 0.7 } });
+                          }}
+                          className="w-full sm:w-auto bg-[#7A302F] hover:bg-[#5c2322] text-[#FFF8EA] px-5 py-2.5 border border-[#3F2928] shadow-[2px_2px_0px_#3F2928] font-heading text-base font-bold flex items-center justify-center gap-2"
+                        >
+                          <CheckCircle2 className="w-4 h-4" />
+                          CONFIRM & RESOLVE THIS ISSUE
+                        </button>
                       </div>
                     )}
 

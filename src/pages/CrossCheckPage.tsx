@@ -57,6 +57,19 @@ export const CrossCheckPage: React.FC = () => {
     const doc = documents[docIndex];
     if (!doc) return;
 
+    if (doc.fileObj) {
+      if (slot === 1) {
+        setFile1(doc.fileObj);
+        setFile1Preview(doc.previewUrl);
+      } else {
+        setFile2(doc.fileObj);
+        setFile2Preview(doc.previewUrl);
+      }
+      setResult(null);
+      setErrorMessage(null);
+      return;
+    }
+
     // Convert doc preview to a pseudo-File if needed
     fetch(doc.previewUrl)
       .then(res => res.blob())
@@ -74,9 +87,9 @@ export const CrossCheckPage: React.FC = () => {
       })
       .catch(() => {
         // Fallback placeholder file
-        const blob = new Blob([doc.rawOcrText], { type: 'text/plain' });
-        const file = new File([blob], doc.filename, { type: 'text/plain' });
-        if (slot === 1) { setFile1(file); } else { setFile2(file); }
+        const blob = new Blob([doc.rawOcrText || 'Document content'], { type: doc.mimeType || 'text/plain' });
+        const file = new File([blob], doc.filename, { type: doc.mimeType || 'text/plain' });
+        if (slot === 1) { setFile1(file); setFile1Preview(doc.previewUrl); } else { setFile2(file); setFile2Preview(doc.previewUrl); }
       });
   };
 

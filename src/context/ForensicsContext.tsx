@@ -15,6 +15,7 @@ interface ForensicsContextType {
   activeDocumentId: string | null;
   caseId: string;
   isDemoMode: boolean;
+  uploadWarning: string | null;
   
   // Handlers
   setApplication: (appId: string) => void;
@@ -26,6 +27,8 @@ interface ForensicsContextType {
   setActiveDocument: (id: string | null) => void;
   resetCase: () => void;
   updateDocumentType: (id: string, type: DocumentType) => void;
+  getDocumentById: (id: string) => DocItem | undefined;
+  dismissWarning: () => void;
 }
 
 const ForensicsContext = createContext<ForensicsContextType | undefined>(undefined);
@@ -42,6 +45,7 @@ export const ForensicsProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [activeDocumentId, setActiveDocumentId] = useState<string | null>(null);
   const [caseId, setCaseId] = useState<string>('DR-2026-00142');
   const [isDemoMode, setIsDemoMode] = useState<boolean>(false);
+  const [uploadWarning, setUploadWarning] = useState<string | null>(null);
 
   // Recalculate evaluation state whenever documents or current application changes
   useEffect(() => {
@@ -76,22 +80,73 @@ export const ForensicsProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const uploadFiles = async (files: File[]) => {
     if (files.length === 0) return;
+    setUploadWarning(null);
+
+    // Strict 5 files limit enforcement
+    let filesToProcess = files;
+    if (files.length > 5) {
+      setUploadWarning(`Maximum 5 files allowed per upload batch. Ingesting first 5 files.`);
+      filesToProcess = files.slice(0, 5);
+    }
+
+    const maxAllowedRemaining = Math.max(0, 5 - documents.length);
+    if (documents.length + filesToProcess.length > 5) {
+      if (maxAllowedRemaining === 0) {
+        setUploadWarning('Case document capacity reached (maximum 5 files). Delete an existing document to upload new files.');
+        return;
+      }
+      setUploadWarning(`Case capacity is 5 files. Ingesting ${maxAllowedRemaining} document(s).`);
+      filesToProcess = filesToProcess.slice(0, maxAllowedRemaining);
+    }
+
+    if (filesToProcess.length === 0) return;
+
     setIsAnalyzing(true);
     setIsDemoMode(false);
-    setProcessingProgress({ current: 0, total: files.length, stage: 'Initiating document intake' });
+    setProcessingProgress({ current: 0, total: filesToProcess.length, stage: 'Initiating document intake' });
 
     const newDocs: DocItem[] = [];
 
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
+    for (let i = 0; i < filesToProcess.length; i++) {
+      const file = filesToProcess[i];
       setProcessingProgress({
         current: i + 1,
-        total: files.length,
-        stage: `Analyzing ${file.name} (Classification & OCR)...`
+        total: filesToProcess.length,
+        stage: `Analyzing ${file.name} (Classification, OCR & Quality Audit)...`
       });
 
-      const analyzedDoc = await analyzeUploadedFile(file);
-      newDocs.push(analyzedDoc);
+      try {
+        const analyzedDoc = await analyzeUploadedFile(file);
+        newDocs.push(analyzedDoc);
+      } catch (err: any) {
+        console.error(`Error analyzing file ${file.name}:`, err);
+        // Partial failure safety: preserve file record with error state
+        const fallbackDoc: DocItem = {
+          id: `doc-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+          filename: file.name,
+          originalFilename: file.name,
+          fileSizeMB: parseFloat((file.size / (1024 * 1024)).toFixed(2)),
+          mimeType: file.type || 'application/octet-stream',
+          previewUrl: URL.createObjectURL(file),
+          fileObj: file,
+          status: 'error',
+          errorMessage: err.message || 'Analysis encountered an error',
+          category: 'UNKNOWN',
+          documentType: 'Unidentified Document',
+          confidence: 50,
+          quality: {
+            sharpness: 70, textVisibility: 70, lighting: 70, cropping: 70, overallScore: 70,
+            status: 'NEEDS ATTENTION', feedbackLines: ['Document uploaded, manual review needed']
+          },
+          extractedFields: [],
+          rawOcrText: '',
+          verificationStatus: 'NEEDS REVIEW',
+          issues: ['Automated OCR extraction failed. Please review manually or retry.'],
+          uploadedAt: new Date().toISOString(),
+          metadata: { format: file.name.split('.').pop()?.toUpperCase() || 'FILE' }
+        };
+        newDocs.push(fallbackDoc);
+      }
     }
 
     setDocuments(prev => [...prev, ...newDocs]);
@@ -125,15 +180,21 @@ export const ForensicsProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setIsAnalyzing(true);
     setProcessingProgress({ current: 1, total: 1, stage: `Re-analyzing updated ${newFile.name}...` });
 
-    const updatedDoc = await analyzeUploadedFile(newFile);
-    updatedDoc.id = id; // keep same ID for tracking
+    try {
+      const updatedDoc = await analyzeUploadedFile(newFile);
+      updatedDoc.id = id; // preserve same ID for workflow continuity
+      updatedDoc.fileObj = newFile;
 
-    setDocuments(prev => prev.map(d => (d.id === id ? updatedDoc : d)));
+      setDocuments(prev => prev.map(d => (d.id === id ? updatedDoc : d)));
 
-    // Clear resolved issues connected to this document
-    setIssues(prev => prev.map(iss => (iss.affectedDocumentId === id ? { ...iss, resolved: true } : iss)));
-
-    setIsAnalyzing(false);
+      // Clear resolved issues connected to this document
+      setIssues(prev => prev.map(iss => (iss.affectedDocumentId === id ? { ...iss, resolved: true } : iss)));
+    } catch (err: any) {
+      console.error('Error replacing document:', err);
+    } finally {
+      setIsAnalyzing(false);
+      setProcessingProgress({ current: 0, total: 0, stage: '' });
+    }
   };
 
   const resolveIssue = (issueId: string) => {
@@ -159,6 +220,14 @@ export const ForensicsProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }));
   };
 
+  const getDocumentById = (id: string): DocItem | undefined => {
+    return documents.find(d => d.id === id);
+  };
+
+  const dismissWarning = () => {
+    setUploadWarning(null);
+  };
+
   const resetCase = () => {
     setDocuments([]);
     setIssues([]);
@@ -166,6 +235,7 @@ export const ForensicsProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setReadinessScore(0);
     setActiveDocumentId(null);
     setIsDemoMode(false);
+    setUploadWarning(null);
     setCaseId(`DR-2026-${Math.floor(10000 + Math.random() * 90000)}`);
   };
 
@@ -183,6 +253,7 @@ export const ForensicsProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         activeDocumentId,
         caseId,
         isDemoMode,
+        uploadWarning,
         setApplication,
         uploadFiles,
         loadDemoMode,
@@ -191,7 +262,9 @@ export const ForensicsProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         resolveIssue,
         setActiveDocument,
         resetCase,
-        updateDocumentType
+        updateDocumentType,
+        getDocumentById,
+        dismissWarning
       }}
     >
       {children}

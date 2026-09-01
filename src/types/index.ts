@@ -46,6 +46,9 @@ export interface DocItem {
   fileSizeMB: number;
   mimeType: string;
   previewUrl: string;
+  fileObj?: File;
+  status?: 'processing' | 'ready' | 'error';
+  errorMessage?: string;
   category: DocumentCategory;
   documentType: DocumentType;
   confidence: number; // 0-100

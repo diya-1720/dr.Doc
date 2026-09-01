@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { useForensics } from '../context/ForensicsContext';
 import { Sidebar } from '../components/Sidebar';
 import { 
   compressDocumentFile, 
@@ -21,18 +22,22 @@ import {
   CheckCircle2,
   RefreshCw,
   FileCode2,
-  Server
+  Server,
+  FolderOpen
 } from 'lucide-react';
 
 export const DocumentToolsPage: React.FC = () => {
+  const { documents, replaceDocument } = useForensics();
   const [activeTool, setActiveTool] = useState<'compress' | 'convert' | 'format' | 'txtpdf' | 'merge' | 'enhance' | 'rename'>('compress');
   
   // Compression State
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedCaseDocId, setSelectedCaseDocId] = useState<string | null>(null);
   const [targetMb, setTargetMb] = useState<number>(10);
   const [compressedResult, setCompressedResult] = useState<{ file: File; oldSize: number; newSize: number; reductionPercent?: number } | null>(null);
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [replacedInCase, setReplacedInCase] = useState<boolean>(false);
 
   // Conversion / Merge State
   const [multiFiles, setMultiFiles] = useState<File[]>([]);
@@ -51,9 +56,17 @@ export const DocumentToolsPage: React.FC = () => {
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     setErrorMsg(null);
+    setSelectedCaseDocId(null);
+    setReplacedInCase(false);
+
     if (e.target.files && e.target.files.length > 0) {
       if (activeTool === 'convert' || activeTool === 'merge') {
-        setMultiFiles(Array.from(e.target.files));
+        let filesArr = Array.from(e.target.files);
+        if (filesArr.length > 5) {
+          setErrorMsg('Batch tool limit is 5 files. Selected first 5 files.');
+          filesArr = filesArr.slice(0, 5);
+        }
+        setMultiFiles(filesArr);
       } else {
         setSelectedFile(e.target.files[0]);
         if (activeTool === 'rename') {
@@ -65,10 +78,41 @@ export const DocumentToolsPage: React.FC = () => {
     }
   };
 
+  const handlePickCaseDoc = (docId: string) => {
+    const doc = documents.find(d => d.id === docId);
+    if (!doc) return;
+
+    setSelectedCaseDocId(doc.id);
+    setReplacedInCase(false);
+    setErrorMsg(null);
+    setCompressedResult(null);
+    setExtractedTextResult(null);
+
+    if (doc.fileObj) {
+      setSelectedFile(doc.fileObj);
+      if (activeTool === 'rename') setRenameInput(doc.filename.toUpperCase());
+      return;
+    }
+
+    fetch(doc.previewUrl)
+      .then(res => res.blob())
+      .then(blob => {
+        const file = new File([blob], doc.filename, { type: doc.mimeType });
+        setSelectedFile(file);
+        if (activeTool === 'rename') setRenameInput(doc.filename.toUpperCase());
+      })
+      .catch(() => {
+        const blob = new Blob([doc.rawOcrText || 'Document text'], { type: doc.mimeType || 'text/plain' });
+        const file = new File([blob], doc.filename, { type: doc.mimeType || 'text/plain' });
+        setSelectedFile(file);
+      });
+  };
+
   const handleCompress = async () => {
     if (!selectedFile) return;
     setIsProcessing(true);
     setErrorMsg(null);
+    setReplacedInCase(false);
     try {
       const res = await compressDocumentFile(selectedFile, targetMb);
       setCompressedResult({ 
@@ -81,6 +125,16 @@ export const DocumentToolsPage: React.FC = () => {
       setErrorMsg(err.message || 'Compression failed');
     } finally {
       setIsProcessing(false);
+    }
+  };
+
+  const handleUpdateInCase = async () => {
+    if (!selectedCaseDocId || !compressedResult) return;
+    try {
+      await replaceDocument(selectedCaseDocId, compressedResult.file);
+      setReplacedInCase(true);
+    } catch (err: any) {
+      setErrorMsg('Failed to update document in case');
     }
   };
 
@@ -182,7 +236,7 @@ export const DocumentToolsPage: React.FC = () => {
         {/* Header */}
         <div className="mb-6 pb-4 border-b-2 border-[#3F2928]">
           <div className="font-mono text-xs font-bold text-[#7A302F] uppercase tracking-widest mb-1 flex items-center gap-2">
-            <span>DOCUMENT PREPARATION // BACKEND SERVICES CONNECTED</span>
+            <span>DOCUMENT PREPARATION // INTEGRATED CASE TOOLS</span>
             <span className="inline-flex items-center gap-1 text-[10px] text-[#7A302F] bg-[#FFF8EA] px-2 py-0.5 border border-[#7A302F]">
               <Server className="w-3 h-3" /> NODE ENGINE
             </span>
@@ -214,10 +268,12 @@ export const DocumentToolsPage: React.FC = () => {
                 onClick={() => { 
                   setActiveTool(t.id as any); 
                   setSelectedFile(null); 
+                  setSelectedCaseDocId(null);
                   setMultiFiles([]); 
                   setCompressedResult(null); 
                   setExtractedTextResult(null);
                   setErrorMsg(null);
+                  setReplacedInCase(false);
                 }}
                 className={`px-3 sm:px-4 py-2 border font-bold flex items-center gap-2 transition-all text-[11px] sm:text-xs ${
                   isActive
@@ -237,14 +293,39 @@ export const DocumentToolsPage: React.FC = () => {
           
           {errorMsg && (
             <div className="p-3 mb-4 bg-[#E8B9B8] border-2 border-[#7A302F] text-[#7A302F] font-mono text-xs font-bold">
-              ERROR: {errorMsg}
+              {errorMsg}
+            </div>
+          )}
+
+          {/* Quick Select from Case Inbox if documents exist */}
+          {documents.length > 0 && activeTool !== 'convert' && activeTool !== 'merge' && (
+            <div className="mb-5 p-3 bg-[#F3E4C8] border border-[#3F2928]">
+              <div className="font-mono text-[11px] font-bold text-[#7A302F] uppercase mb-2 flex items-center gap-1.5">
+                <FolderOpen className="w-3.5 h-3.5" />
+                OR PICK FROM CURRENT CASE INBOX ({documents.length} DOCS):
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {documents.map((d) => (
+                  <button
+                    key={d.id}
+                    onClick={() => handlePickCaseDoc(d.id)}
+                    className={`px-2.5 py-1 font-mono text-xs border transition-all ${
+                      selectedCaseDocId === d.id
+                        ? 'bg-[#3F2928] text-[#FFF8EA] border-[#3F2928] font-bold shadow-[2px_2px_0px_#D47794]'
+                        : 'bg-[#FFF8EA] text-[#3F2928] border-[#3F2928] hover:bg-[#FFF8EA]/80'
+                    }`}
+                  >
+                    {d.documentType} ({d.fileSizeMB} MB)
+                  </button>
+                ))}
+              </div>
             </div>
           )}
 
           {/* File Upload Zone for Active Tool */}
           <div className="mb-6">
             <label className="font-mono text-xs font-bold text-[#3F2928] block mb-2 uppercase">
-              SELECT FILE(S) TO PROCESS:
+              SELECT FILE(S) TO PROCESS (MAX 5 FILES):
             </label>
 
             <input
@@ -271,7 +352,7 @@ export const DocumentToolsPage: React.FC = () => {
                 {selectedFile 
                   ? `SELECTED: ${selectedFile.name} (${(selectedFile.size / (1024*1024)).toFixed(2)} MB)`
                   : multiFiles.length > 0
-                  ? `SELECTED ${multiFiles.length} FILES`
+                  ? `SELECTED ${multiFiles.length} FILES (MAX 5)`
                   : 'CLICK TO SELECT FILE FROM YOUR COMPUTER'}
               </span>
             </button>
@@ -320,13 +401,26 @@ export const DocumentToolsPage: React.FC = () => {
                     <div className="text-[11px] text-[#7A302F]">✓ READY FOR SUBMISSION</div>
                   </div>
 
-                  <button
-                    onClick={() => downloadFile(compressedResult.file)}
-                    className="w-full sm:w-auto bg-[#7A302F] text-[#FFF8EA] px-5 py-2.5 border border-[#3F2928] shadow-[2px_2px_0px_#3F2928] font-bold flex items-center justify-center gap-2"
-                  >
-                    <Download className="w-4 h-4" />
-                    DOWNLOAD COMPRESSED FILE ({compressedResult.newSize} MB)
-                  </button>
+                  <div className="flex flex-wrap gap-3">
+                    <button
+                      onClick={() => downloadFile(compressedResult.file)}
+                      className="w-full sm:w-auto bg-[#7A302F] text-[#FFF8EA] px-5 py-2.5 border border-[#3F2928] shadow-[2px_2px_0px_#3F2928] font-bold flex items-center justify-center gap-2"
+                    >
+                      <Download className="w-4 h-4" />
+                      DOWNLOAD COMPRESSED FILE ({compressedResult.newSize} MB)
+                    </button>
+
+                    {selectedCaseDocId && (
+                      <button
+                        onClick={handleUpdateInCase}
+                        disabled={replacedInCase}
+                        className="w-full sm:w-auto bg-[#3F2928] text-[#FFF8EA] px-5 py-2.5 border border-[#3F2928] shadow-[2px_2px_0px_#3F2928] font-bold flex items-center justify-center gap-2 disabled:opacity-75"
+                      >
+                        <CheckCircle2 className="w-4 h-4 text-green-400" />
+                        {replacedInCase ? 'UPDATED IN CASE FILE ✓' : 'REPLACE IN CURRENT CASE FILE'}
+                      </button>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
@@ -336,7 +430,7 @@ export const DocumentToolsPage: React.FC = () => {
           {activeTool === 'convert' && (
             <div className="space-y-6 font-mono text-xs">
               <p className="text-[#A58B7B]">
-                Select one or more PNG/JPG/WEBP photos. The backend sharp + pdf-lib engine bundles them into a multi-page A4 PDF document.
+                Select up to 5 PNG/JPG/WEBP photos. The backend sharp + pdf-lib engine bundles them into a multi-page A4 PDF document.
               </p>
               <button
                 onClick={handleConvert}
@@ -385,7 +479,7 @@ export const DocumentToolsPage: React.FC = () => {
             <div className="space-y-6 font-mono text-xs">
               <div className="flex gap-3">
                 <button
-                  onClick={() => { setTxtPdfMode('txt-to-pdf'); setSelectedFile(null); }}
+                  onClick={() => { setTxtPdfMode('txt-to-pdf'); setSelectedFile(null); setSelectedCaseDocId(null); }}
                   className={`px-4 py-2 border font-bold ${
                     txtPdfMode === 'txt-to-pdf'
                       ? 'bg-[#3F2928] text-[#FFF8EA] border-[#3F2928]'
@@ -395,7 +489,7 @@ export const DocumentToolsPage: React.FC = () => {
                   TXT → PDF (PDFKIT LAYOUT)
                 </button>
                 <button
-                  onClick={() => { setTxtPdfMode('pdf-to-txt'); setSelectedFile(null); }}
+                  onClick={() => { setTxtPdfMode('pdf-to-txt'); setSelectedFile(null); setSelectedCaseDocId(null); }}
                   className={`px-4 py-2 border font-bold ${
                     txtPdfMode === 'pdf-to-txt'
                       ? 'bg-[#3F2928] text-[#FFF8EA] border-[#3F2928]'
@@ -429,7 +523,7 @@ export const DocumentToolsPage: React.FC = () => {
           {activeTool === 'merge' && (
             <div className="space-y-6 font-mono text-xs">
               <p className="text-[#A58B7B]">
-                Select multiple PDF files to concatenate into a single master submission PDF.
+                Select up to 5 PDF files to concatenate into a single master submission PDF.
               </p>
               <button
                 onClick={handleMerge}

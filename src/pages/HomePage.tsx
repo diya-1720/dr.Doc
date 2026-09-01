@@ -13,8 +13,12 @@ import {
 
 export const HomePage: React.FC = () => {
   const navigate = useNavigate();
-  const { loadDemoMode } = useForensics();
+  const { loadDemoMode, documents, readinessScore, issues, currentApplication, caseId } = useForensics();
   const { t } = useLanguage();
+
+  const unresolvedIssues = issues.filter(i => !i.resolved);
+  const verifiedDocsCount = documents.filter(d => d.verificationStatus === 'VERIFIED').length;
+  const isEvaluated = documents.length > 0;
 
   const handleStartCheckup = () => {
     navigate('/verify');
@@ -38,7 +42,7 @@ export const HomePage: React.FC = () => {
             {/* Top Tag */}
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#3F2928] text-[#FFF8EA] font-mono text-[11px] sm:text-xs font-bold uppercase tracking-widest mb-4 md:mb-6 border border-[#3F2928] shadow-[2px_2px_0px_#7A302F]">
               <span className="w-2 h-2 rounded-full bg-[#D47794] animate-pulse" />
-              {t.home.heroTag}
+              {isEvaluated ? `CASE ${caseId} ACTIVE (${documents.length}/5 DOCS)` : t.home.heroTag}
             </div>
 
             {/* Main Headline */}
@@ -58,7 +62,7 @@ export const HomePage: React.FC = () => {
                 onClick={handleStartCheckup}
                 className="w-full sm:w-auto font-heading text-lg sm:text-xl font-bold bg-[#7A302F] hover:bg-[#5c2322] text-[#FFF8EA] px-6 sm:px-8 py-3.5 border-2 border-[#3F2928] shadow-[4px_4px_0px_#3F2928] hover:shadow-[6px_6px_0px_#3F2928] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all flex items-center justify-center gap-3"
               >
-                {t.home.startCheckupBtn}
+                {isEvaluated ? 'RESUME CASE VERIFICATION' : t.home.startCheckupBtn}
                 <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 text-[#FFF8EA]" />
               </button>
 
@@ -74,16 +78,28 @@ export const HomePage: React.FC = () => {
             {/* Micro Stats */}
             <div className="mt-8 md:mt-10 pt-4 sm:pt-6 border-t border-[#3F2928]/20 grid grid-cols-1 sm:grid-cols-3 gap-4 font-mono text-xs text-[#3F2928]">
               <div>
-                <span className="block font-bold text-sm sm:text-base text-[#3F2928]">{t.home.stat1Title}</span>
-                <span className="text-[#A58B7B] text-[11px]">{t.home.stat1Desc}</span>
+                <span className="block font-bold text-sm sm:text-base text-[#3F2928]">
+                  {isEvaluated ? `${documents.length} OF 5 DOCS` : t.home.stat1Title}
+                </span>
+                <span className="text-[#A58B7B] text-[11px]">
+                  {isEvaluated ? `${verifiedDocsCount} Verified Compliant` : t.home.stat1Desc}
+                </span>
               </div>
               <div>
-                <span className="block font-bold text-sm sm:text-base text-[#7A302F]">{t.home.stat2Title}</span>
-                <span className="text-[#A58B7B] text-[11px]">{t.home.stat2Desc}</span>
+                <span className="block font-bold text-sm sm:text-base text-[#7A302F]">
+                  {isEvaluated ? `${readinessScore} / 100` : t.home.stat2Title}
+                </span>
+                <span className="text-[#A58B7B] text-[11px]">
+                  {isEvaluated ? currentApplication.name : t.home.stat2Desc}
+                </span>
               </div>
               <div>
-                <span className="block font-bold text-sm sm:text-base text-[#7A302F]">{t.home.stat3Title}</span>
-                <span className="text-[#A58B7B] text-[11px]">{t.home.stat3Desc}</span>
+                <span className="block font-bold text-sm sm:text-base text-[#7A302F]">
+                  {isEvaluated ? `${unresolvedIssues.length} ISSUES` : t.home.stat3Title}
+                </span>
+                <span className="text-[#A58B7B] text-[11px]">
+                  {isEvaluated ? (unresolvedIssues.length === 0 ? 'All Checks Passed' : 'Action Required') : t.home.stat3Desc}
+                </span>
               </div>
             </div>
           </div>
@@ -96,56 +112,76 @@ export const HomePage: React.FC = () => {
               
               {/* Top Desk Header */}
               <div className="flex justify-between items-center font-mono text-xs font-bold border-b-2 border-[#3F2928] pb-2 text-[#3F2928]">
-                <span>EVIDENCE DESK</span>
-                <span className="text-[#7A302F]">LIVE ANALYSIS BOARD</span>
+                <span>EVIDENCE DESK // {caseId}</span>
+                <span className="text-[#7A302F]">{isEvaluated ? 'CASE IN PROGRESS' : 'LIVE ANALYSIS BOARD'}</span>
               </div>
 
               {/* Physical Document Sheets Stacked */}
               <div className="relative my-3 sm:my-4 h-[250px] sm:h-[280px]">
                 
-                {/* Document 1: Aadhaar Card (Rotated Left) */}
+                {/* Document 1: (Rotated Left) */}
                 <div className="absolute top-1 sm:top-2 left-1 sm:left-3 w-44 sm:w-52 p-3 bg-[#FFF8EA] border-2 border-[#3F2928] shadow-[4px_4px_0px_rgba(63,41,40,0.15)] transform -rotate-3 transition-transform hover:rotate-0 duration-300 z-10">
                   <div className="flex justify-between items-center font-mono text-[9px] sm:text-[10px] text-[#A58B7B] border-b border-[#3F2928] pb-1 mb-1 sm:mb-1.5">
-                    <span>GOVT IDENTITY</span>
-                    <span className="text-[#7A302F] font-bold">VERIFIED ✓</span>
+                    <span>{documents[0]?.category || 'GOVT IDENTITY'}</span>
+                    <span className="text-[#7A302F] font-bold">{documents[0]?.verificationStatus === 'VERIFIED' ? 'VERIFIED ✓' : 'EXAMINED'}</span>
                   </div>
-                  <div className="font-heading text-xs sm:text-sm font-bold text-[#3F2928]">AADHAAR CARD</div>
-                  <div className="font-mono text-[10px] sm:text-xs text-[#3F2928] mt-0.5">Name: <span className="font-bold underline decoration-[#7A302F]">Rahul Kumar</span></div>
-                  <div className="font-mono text-[9px] text-[#A58B7B] mt-0.5">UID: •••• •••• 4912</div>
+                  <div className="font-heading text-xs sm:text-sm font-bold text-[#3F2928] truncate">
+                    {documents[0]?.documentType || 'AADHAAR CARD'}
+                  </div>
+                  <div className="font-mono text-[10px] sm:text-xs text-[#3F2928] mt-0.5 truncate">
+                    Name: <span className="font-bold underline decoration-[#7A302F]">{documents[0]?.extractedFields?.find(f => f.key.includes('name'))?.value || 'Rahul Kumar'}</span>
+                  </div>
+                  <div className="font-mono text-[9px] text-[#A58B7B] mt-0.5 truncate">
+                    {documents[0]?.extractedFields?.find(f => f.key.includes('number') || f.key.includes('id'))?.value || 'UID: •••• •••• 4912'}
+                  </div>
                   <div className="mt-2 flex justify-between items-center">
-                    <span className="evidence-tag text-[9px]">CONFIDENCE 97%</span>
+                    <span className="evidence-tag text-[9px]">CONFIDENCE {documents[0]?.confidence || 97}%</span>
                     <span className="stamp stamp-verified text-[8px]">EXAMINED</span>
                   </div>
                 </div>
 
-                {/* Document 2: PAN Card (Rotated Right) */}
+                {/* Document 2: (Rotated Right) */}
                 <div className="absolute top-6 sm:top-8 right-1 sm:right-3 w-48 sm:w-56 p-3 bg-[#FFF8EA] border-2 border-[#3F2928] shadow-[6px_6px_0px_rgba(63,41,40,0.2)] transform rotate-2 z-20 transition-transform hover:rotate-0 duration-300">
                   <div className="flex justify-between items-center font-mono text-[9px] sm:text-[10px] text-[#A58B7B] border-b border-[#3F2928] pb-1 mb-1 sm:mb-1.5">
-                    <span>TAX RECORD</span>
-                    <span className="text-[#7A302F] font-bold">VERIFIED ✓</span>
+                    <span>{documents[1]?.category || 'TAX RECORD'}</span>
+                    <span className="text-[#7A302F] font-bold">{documents[1]?.verificationStatus === 'VERIFIED' ? 'VERIFIED ✓' : 'EXAMINED'}</span>
                   </div>
-                  <div className="font-heading text-xs sm:text-sm font-bold text-[#3F2928]">PAN CARD</div>
-                  <div className="font-mono text-[10px] sm:text-xs text-[#3F2928] mt-0.5">Name: <span className="font-bold underline decoration-[#7A302F]">Rahul Kumar</span></div>
-                  <div className="font-mono text-[9px] text-[#A58B7B] mt-0.5">PAN: ABCDE1234F</div>
+                  <div className="font-heading text-xs sm:text-sm font-bold text-[#3F2928] truncate">
+                    {documents[1]?.documentType || 'PAN CARD'}
+                  </div>
+                  <div className="font-mono text-[10px] sm:text-xs text-[#3F2928] mt-0.5 truncate">
+                    Name: <span className="font-bold underline decoration-[#7A302F]">{documents[1]?.extractedFields?.find(f => f.key.includes('name'))?.value || 'Rahul Kumar'}</span>
+                  </div>
+                  <div className="font-mono text-[9px] text-[#A58B7B] mt-0.5 truncate">
+                    {documents[1]?.extractedFields?.find(f => f.key.includes('number') || f.key.includes('id'))?.value || 'PAN: ABCDE1234F'}
+                  </div>
                   <div className="mt-2 flex justify-between items-center">
-                    <span className="evidence-tag text-[9px]">CONFIDENCE 99%</span>
+                    <span className="evidence-tag text-[9px]">CONFIDENCE {documents[1]?.confidence || 99}%</span>
                     <span className="stamp stamp-verified text-[8px]">MATCHED</span>
                   </div>
                 </div>
 
-                {/* Document 3: Bank Statement (Flagged) */}
+                {/* Document 3 / Flagged Item */}
                 <div className="absolute top-20 sm:top-24 left-4 sm:left-10 w-52 sm:w-60 p-3 bg-[#FFF8EA] border-2 border-[#7A302F] shadow-[8px_8px_0px_rgba(122,48,47,0.25)] transform -rotate-1 z-30 transition-transform hover:rotate-0 duration-300">
                   <div className="flex justify-between items-center font-mono text-[9px] sm:text-[10px] text-[#7A302F] font-bold border-b border-[#7A302F] pb-1 mb-1 sm:mb-1.5">
-                    <span>ADDRESS PROOF</span>
-                    <span className="stamp stamp-critical text-[8px] py-0">FLAGGED ✕</span>
+                    <span>{documents[2]?.category || 'ADDRESS PROOF'}</span>
+                    <span className="stamp stamp-critical text-[8px] py-0">
+                      {unresolvedIssues.length > 0 ? 'FLAGGED ✕' : 'COMPLIANT ✓'}
+                    </span>
                   </div>
-                  <div className="font-heading text-xs sm:text-sm font-bold text-[#3F2928]">BANK STATEMENT</div>
-                  <div className="font-mono text-[10px] sm:text-xs text-[#3F2928] mt-0.5">Name: <span className="font-bold text-[#7A302F] bg-[#E8B9B8] px-1">R. Kumar</span></div>
+                  <div className="font-heading text-xs sm:text-sm font-bold text-[#3F2928] truncate">
+                    {documents[2]?.documentType || 'BANK STATEMENT'}
+                  </div>
+                  <div className="font-mono text-[10px] sm:text-xs text-[#3F2928] mt-0.5 truncate">
+                    Name: <span className="font-bold text-[#7A302F] bg-[#E8B9B8] px-1">{documents[2]?.extractedFields?.find(f => f.key.includes('name'))?.value || 'R. Kumar'}</span>
+                  </div>
                   <div className="font-mono text-[9px] text-[#7A302F] mt-0.5 font-semibold flex items-center gap-1">
                     <ShieldAlert className="w-3 h-3" />
-                    NAME MISMATCH vs AADHAAR
+                    {unresolvedIssues.length > 0 ? unresolvedIssues[0].title : 'ALL CHECKS PASSED'}
                   </div>
-                  <div className="mt-1 text-[9px] font-mono text-[#A58B7B]">Size: 14.8 MB (Over 10MB Limit)</div>
+                  <div className="mt-1 text-[9px] font-mono text-[#A58B7B]">
+                    Size: {documents[2]?.fileSizeMB || '14.8'} MB
+                  </div>
                 </div>
 
                 {/* Red String Overlay SVG */}
@@ -158,14 +194,14 @@ export const HomePage: React.FC = () => {
 
                 {/* Floating Mismatch Tag Annotation */}
                 <div className="absolute bottom-0 right-0 sm:right-1 bg-[#3F2928] text-[#E8B9B8] px-2 py-0.5 font-mono text-[9px] sm:text-[10px] font-bold border border-[#E8B9B8] shadow-md z-50">
-                  CROSS-DOCUMENT MATCH FAIL
+                  {isEvaluated ? `${readinessScore}% READINESS` : 'CROSS-DOCUMENT MATCH FAIL'}
                 </div>
               </div>
 
               {/* Desk Footer bar */}
               <div className="flex justify-between items-center font-mono text-[10px] sm:text-[11px] text-[#3F2928] pt-2 border-t border-[#3F2928]">
-                <span>READINESS SCORE: <strong className="text-[#7A302F]">78 / 100</strong></span>
-                <span className="font-bold text-[#7A302F]">ACTION REQUIRED</span>
+                <span>READINESS SCORE: <strong className="text-[#7A302F]">{isEvaluated ? readinessScore : 78} / 100</strong></span>
+                <span className="font-bold text-[#7A302F]">{isEvaluated && readinessScore >= 85 ? 'READY FOR SUBMISSION ✓' : 'ACTION REQUIRED'}</span>
               </div>
             </div>
 

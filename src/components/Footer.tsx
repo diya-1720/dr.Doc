@@ -49,40 +49,40 @@ export const Footer: React.FC = () => {
         {/* Quick Links */}
         <div>
           <div className="font-heading text-xs text-[#E8B9B8] mb-2 tracking-wider">
-            {t.footer.workspaces}
+            WORKSPACES
           </div>
           <ul className="space-y-1.5 font-mono text-xs text-[#F3E4C8]">
-            <li><Link to="/verify" className="hover:text-[#D47794] transition-colors">{t.nav.verifySetup}</Link></li>
-            <li><Link to="/documents" className="hover:text-[#D47794] transition-colors">{t.nav.documentInbox}</Link></li>
-            <li><Link to="/ocr" className="hover:text-[#D47794] transition-colors">{t.nav.ocrExtraction}</Link></li>
-            <li><Link to="/quality" className="hover:text-[#D47794] transition-colors">{t.nav.qualityInspection}</Link></li>
-            <li><Link to="/tools" className="hover:text-[#D47794] transition-colors">{t.nav.documentPreparation}</Link></li>
-            <li><Link to="/cross-check" className="hover:text-[#D47794] transition-colors">{t.nav.evidenceCrossCheck}</Link></li>
+            <li><Link to="/verify" className="hover:text-[#D47794] transition-colors">{t.nav.verify}</Link></li>
+            <li><Link to="/documents" className="hover:text-[#D47794] transition-colors">{t.nav.documents}</Link></li>
+            <li><Link to="/ocr" className="hover:text-[#D47794] transition-colors">{t.nav.ocr}</Link></li>
+            <li><Link to="/quality" className="hover:text-[#D47794] transition-colors">{t.nav.quality}</Link></li>
+            <li><Link to="/tools" className="hover:text-[#D47794] transition-colors">{t.nav.tools}</Link></li>
+            <li><Link to="/cross-check" className="hover:text-[#D47794] transition-colors">{t.nav.crossCheck}</Link></li>
           </ul>
         </div>
 
         {/* Legal & Compliance */}
         <div>
           <div className="font-heading text-xs text-[#E8B9B8] mb-2 tracking-wider">
-            {t.footer.compliance}
+            SECURITY & COMPLIANCE
           </div>
           <ul className="space-y-1.5 font-mono text-xs text-[#F3E4C8]">
-            <li><span className="text-[#A58B7B]">{t.footer.auditTrail}</span></li>
-            <li><span className="text-[#A58B7B]">{t.footer.ephemeralProcessing}</span></li>
-            <li><span className="text-[#A58B7B]">{t.footer.forensicIntegrity}</span></li>
-            <li><span className="text-[#A58B7B]">{t.footer.isoStandard}</span></li>
+            <li><span className="text-[#A58B7B]">{t.footer.privacy}</span></li>
+            <li><span className="text-[#A58B7B]">{t.footer.terms}</span></li>
+            <li><span className="text-[#A58B7B]">{t.footer.security}</span></li>
+            <li><span className="text-[#A58B7B]">{t.footer.philosophyTitle}</span></li>
           </ul>
         </div>
 
         {/* Case File Info */}
         <div>
           <div className="font-heading text-xs text-[#E8B9B8] mb-2 tracking-wider">
-            {t.footer.stationInfo}
+            STATION INFO
           </div>
           <div className="font-mono text-xs text-[#F3E4C8] space-y-1">
-            <div>{t.footer.terminal} <span className="text-[#E8B9B8]">DOC-SEC-01</span></div>
-            <div>{t.footer.build} <span className="text-[#E8B9B8]">2026.08.31-PROD</span></div>
-            <div>{t.footer.session} <span className="text-[#E8B9B8]">ACTIVE</span></div>
+            <div>TERMINAL: <span className="text-[#E8B9B8]">DOC-SEC-01</span></div>
+            <div>BUILD: <span className="text-[#E8B9B8]">2026.09.01-PROD</span></div>
+            <div>SESSION: <span className="text-[#E8B9B8]">ACTIVE</span></div>
           </div>
         </div>
 
@@ -93,9 +93,9 @@ export const Footer: React.FC = () => {
           {t.footer.copyright}
         </div>
         <div className="flex gap-4">
-          <span>{t.footer.isoCompliant}</span>
+          <span>{t.footer.privacy}</span>
           <span>•</span>
-          <span>{t.footer.zeroRetention}</span>
+          <span>{t.footer.terms}</span>
         </div>
       </div>
     </footer>
