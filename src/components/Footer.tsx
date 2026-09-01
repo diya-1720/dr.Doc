@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import logoImg from '../assets/logo.jpg';
+import logoImg from '../assets/logo.png';
 
 export const Footer: React.FC = () => {
   return (
@@ -13,7 +13,7 @@ export const Footer: React.FC = () => {
             <img
               src={logoImg}
               alt="DR. DOC Logo"
-              className="w-8 h-8 rounded-full object-cover border border-[#FFF8EA] shrink-0"
+              className="h-9 w-auto object-contain shrink-0"
             />
             <div>
               <div className="font-heading text-xl font-bold tracking-wider text-white leading-none">

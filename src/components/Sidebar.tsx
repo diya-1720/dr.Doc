@@ -16,7 +16,7 @@ import {
   ChevronUp
 } from 'lucide-react';
 
-import logoImg from '../assets/logo.jpg';
+import logoImg from '../assets/logo.png';
 
 export const Sidebar: React.FC = () => {
   const { documents, issues, readinessScore, currentApplication } = useForensics();
@@ -55,7 +55,7 @@ export const Sidebar: React.FC = () => {
             <img
               src={logoImg}
               alt="DR. DOC Logo"
-              className="w-8 h-8 rounded-full object-cover border border-[#3F2928] shadow-[1px_1px_0px_#7A302F] shrink-0"
+              className="h-8 w-auto object-contain shrink-0"
             />
             <div>
               <div className="font-mono text-[10px] uppercase font-bold text-[#A58B7B]">

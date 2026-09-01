@@ -2,7 +2,7 @@ import React from 'react';
 import { useForensics } from '../context/ForensicsContext';
 import { Sidebar } from '../components/Sidebar';
 import { Printer, Download } from 'lucide-react';
-import logoImg from '../assets/logo.jpg';
+import logoImg from '../assets/logo.png';
 
 export const VerificationReportPage: React.FC = () => {
   const { readinessScore, caseId, currentApplication, documents, issues, crossChecks } = useForensics();
@@ -33,7 +33,7 @@ export const VerificationReportPage: React.FC = () => {
                 <img
                   src={logoImg}
                   alt="DR. DOC Logo"
-                  className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover border border-[#3F2928] shadow-[2px_2px_0px_#7A302F] shrink-0"
+                  className="h-12 sm:h-14 w-auto object-contain shrink-0"
                 />
                 <div>
                   <h1 className="font-heading text-2xl sm:text-3xl font-bold tracking-wider text-[#3F2928]">

@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useForensics } from '../context/ForensicsContext';
 import { Play, Menu, X } from 'lucide-react';
 
-import logoImg from '../assets/logo.jpg';
+import logoImg from '../assets/logo.png';
 
 export const Header: React.FC = () => {
   const location = useLocation();
@@ -37,7 +37,7 @@ export const Header: React.FC = () => {
           <img
             src={logoImg}
             alt="DR. DOC Logo"
-            className="w-10 h-10 sm:w-11 sm:h-11 rounded-full object-cover border border-[#3F2928] shadow-[2px_2px_0px_#7A302F] group-hover:translate-x-[1px] group-hover:translate-y-[1px] group-hover:shadow-[1px_1px_0px_#7A302F] transition-all shrink-0"
+            className="w-10 h-10 sm:w-11 sm:h-11 object-contain transition-transform group-hover:scale-105 shrink-0"
           />
           <div>
             <div className="font-heading text-xl font-bold tracking-wider leading-none text-[#3F2928]">
