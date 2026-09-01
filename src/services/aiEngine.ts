@@ -499,19 +499,20 @@ export function calculateApplicationScore(docs: DocItem[], requiredTypes: Docume
   });
 
   if (namesExtracted.length > 1) {
-    const firstNorm = namesExtracted[0].name.trim().toLowerCase();
-    const hasMismatch = namesExtracted.some(n => {
-      const norm = n.name.trim().toLowerCase();
-      return norm !== firstNorm && !norm.includes(firstNorm) && !firstNorm.includes(norm);
+    const baseName = namesExtracted[0].name;
+    const mismatchesFound = namesExtracted.filter((n, idx) => {
+      if (idx === 0) return false;
+      const res = smartCompareNames(baseName, n.name);
+      return res.match === false;
     });
 
-    if (hasMismatch) {
+    if (mismatchesFound.length > 0) {
       score -= 20;
       crossChecks.push({
         id: 'cross-name-check',
         fieldName: 'Applicant Full Name',
         status: 'MISMATCH',
-        analysisNote: `Discrepancy found: Names vary across documents (${namesExtracted.map(n => `"${n.name}" on ${n.docType}`).join(' vs ')}).`,
+        analysisNote: `Discrepancy found: Names contradict across documents (${namesExtracted.map(n => `"${n.name}" on ${n.docType}`).join(' vs ')}).`,
         sources: namesExtracted.map(n => ({
           documentId: n.docId,
           documentType: n.docType,
@@ -520,26 +521,24 @@ export function calculateApplicationScore(docs: DocItem[], requiredTypes: Docume
         }))
       });
 
-      const mismatchDoc = namesExtracted.find(n => n.name !== namesExtracted[0].name);
-      if (mismatchDoc) {
-        issues.push({
-          id: `mismatch-name-${mismatchDoc.docId}`,
-          title: `NAME MISMATCH IN ${mismatchDoc.docType.toUpperCase()}`,
-          severity: 'CRITICAL',
-          affectedDocumentId: mismatchDoc.docId,
-          affectedDocumentName: mismatchDoc.docName,
-          whyFlagged: `Name on ${mismatchDoc.docType} is "${mismatchDoc.name}", whereas identity documents state "${namesExtracted[0].name}".`,
-          recommendedAction: 'Upload a matching address proof or submit a notarized Name Affidavit.',
-          fixActionType: 'reupload',
-          resolved: false
-        });
-      }
+      const mismatchDoc = mismatchesFound[0];
+      issues.push({
+        id: `mismatch-name-${mismatchDoc.docId}`,
+        title: `NAME CONTRADICTION IN ${mismatchDoc.docType.toUpperCase()}`,
+        severity: 'CRITICAL',
+        affectedDocumentId: mismatchDoc.docId,
+        affectedDocumentName: mismatchDoc.docName,
+        whyFlagged: `Name on ${mismatchDoc.docType} is "${mismatchDoc.name}", whereas identity documents state "${baseName}".`,
+        recommendedAction: 'Ensure name matches across all identity records, or submit a Gazette Name Change / Notarized Affidavit.',
+        fixActionType: 'reupload',
+        resolved: false
+      });
     } else {
       crossChecks.push({
         id: 'cross-name-check',
         fieldName: 'Applicant Full Name',
         status: 'MATCHED',
-        analysisNote: `Verified: Applicant name matches across ${namesExtracted.length} documents.`,
+        analysisNote: `Verified: Applicant name aligned across ${namesExtracted.length} documents (including middle name / initial variants).`,
         sources: namesExtracted.map(n => ({
           documentId: n.docId,
           documentType: n.docType,
@@ -558,7 +557,7 @@ export function calculateApplicationScore(docs: DocItem[], requiredTypes: Docume
       f.key === 'billing_address' || 
       f.key === 'residence'
     );
-    if (addressField && addressField.value && addressField.value !== 'Not detected') {
+    if (addressField && addressField.value && addressField.value !== 'Not detected' && addressField.value !== 'Not specified') {
       addressesExtracted.push({
         docId: d.id,
         docType: d.documentType,
@@ -569,23 +568,20 @@ export function calculateApplicationScore(docs: DocItem[], requiredTypes: Docume
   });
 
   if (addressesExtracted.length > 1) {
-    const firstAddr = addressesExtracted[0].address.trim().toLowerCase();
-    const hasAddrMismatch = addressesExtracted.some(a => {
-      const norm = a.address.trim().toLowerCase();
-      // Check for similarity
-      const wordsFirst = firstAddr.split(/[\s,.-]+/).filter(w => w.length > 3);
-      const wordsOther = norm.split(/[\s,.-]+/).filter(w => w.length > 3);
-      const overlap = wordsFirst.filter(w => wordsOther.includes(w));
-      return overlap.length === 0;
+    const baseAddr = addressesExtracted[0].address;
+    const addrMismatches = addressesExtracted.filter((a, idx) => {
+      if (idx === 0) return false;
+      const res = smartCompareAddresses(baseAddr, a.address);
+      return res.match === false;
     });
 
-    if (hasAddrMismatch) {
+    if (addrMismatches.length > 0) {
       score -= 15;
       crossChecks.push({
         id: 'cross-address-check',
         fieldName: 'Residential Address',
         status: 'MISMATCH',
-        analysisNote: `Address Discrepancy: Addresses differ significantly between ${addressesExtracted.map(a => a.docType).join(' and ')}.`,
+        analysisNote: `Address Discrepancy: Residential localities differ between ${addressesExtracted.map(a => a.docType).join(' and ')}.`,
         sources: addressesExtracted.map(a => ({
           documentId: a.docId,
           documentType: a.docType,
@@ -595,12 +591,12 @@ export function calculateApplicationScore(docs: DocItem[], requiredTypes: Docume
       });
 
       issues.push({
-        id: `mismatch-address-${addressesExtracted[1].docId}`,
-        title: `ADDRESS MISMATCH DETECTED`,
+        id: `mismatch-address-${addrMismatches[0].docId}`,
+        title: `RESIDENTIAL ADDRESS MISMATCH`,
         severity: 'NEEDS REVIEW',
-        affectedDocumentId: addressesExtracted[1].docId,
-        affectedDocumentName: addressesExtracted[1].docName,
-        whyFlagged: `Address on ${addressesExtracted[1].docType} does not match ${addressesExtracted[0].docType}.`,
+        affectedDocumentId: addrMismatches[0].docId,
+        affectedDocumentName: addrMismatches[0].docName,
+        whyFlagged: `Address on ${addrMismatches[0].docType} does not match locality on ${addressesExtracted[0].docType}.`,
         recommendedAction: 'Ensure all proof of residence documents display your current matching residential address.',
         fixActionType: 'reupload',
         resolved: false
@@ -610,7 +606,7 @@ export function calculateApplicationScore(docs: DocItem[], requiredTypes: Docume
         id: 'cross-address-check',
         fieldName: 'Residential Address',
         status: 'MATCHED',
-        analysisNote: `Verified: Residential address is consistent across proofs.`,
+        analysisNote: `Verified: Residential address & locality consistent across proofs (handling short/expanded premise formats).`,
         sources: addressesExtracted.map(a => ({
           documentId: a.docId,
           documentType: a.docType,
@@ -631,6 +627,80 @@ export function calculateApplicationScore(docs: DocItem[], requiredTypes: Docume
     issues,
     crossChecks
   };
+}
+
+/**
+ * Smart Name Comparison Helper
+ */
+export function smartCompareNames(name1?: string, name2?: string): { match: boolean | 'Unable to verify'; notes: string } {
+  if (!name1 || !name2 || name1 === 'Not detected' || name2 === 'Not detected') {
+    return { match: 'Unable to verify', notes: 'Name not readable on both documents' };
+  }
+  const clean1 = name1.toLowerCase().trim().replace(/[^a-z\s]/g, '');
+  const clean2 = name2.toLowerCase().trim().replace(/[^a-z\s]/g, '');
+  if (clean1 === clean2) {
+    return { match: true, notes: 'Full name matches exactly' };
+  }
+  const words1 = clean1.split(/\s+/).filter(Boolean);
+  const words2 = clean2.split(/\s+/).filter(Boolean);
+  
+  // Check if one name is a subset of the other (e.g. Rahul Kumar vs Rahul Suresh Kumar or Rahul vs Rahul Kumar)
+  const isSubset1 = words1.every(w => words2.includes(w) || words2.some(w2 => w2.startsWith(w.charAt(0)) && w.length === 1));
+  const isSubset2 = words2.every(w => words1.includes(w) || words1.some(w1 => w1.startsWith(w.charAt(0)) && w.length === 1));
+  
+  if (isSubset1 || isSubset2) {
+    return { match: true, notes: 'Compatible name variant: middle name, initial, or name expansion detected' };
+  }
+  
+  // Check initials (e.g. R. Kumar vs Rahul Kumar)
+  const lastWord1 = words1[words1.length - 1];
+  const lastWord2 = words2[words2.length - 1];
+  if (lastWord1 === lastWord2 && words1[0].charAt(0) === words2[0].charAt(0)) {
+    return { match: true, notes: 'Compatible name variant: initials match with same surname' };
+  }
+
+  // Permuted order (e.g. Kumar Rahul vs Rahul Kumar)
+  const sorted1 = [...words1].sort().join(' ');
+  const sorted2 = [...words2].sort().join(' ');
+  if (sorted1 === sorted2) {
+    return { match: true, notes: 'Compatible name variant: surname-first order' };
+  }
+
+  return { match: false, notes: `Name discrepancy detected: "${name1}" vs "${name2}"` };
+}
+
+/**
+ * Smart Address Comparison Helper
+ */
+export function smartCompareAddresses(addr1?: string, addr2?: string): { match: boolean | 'Unable to verify'; notes: string } {
+  if (!addr1 || !addr2 || addr1 === 'Not specified' || addr2 === 'Not specified') {
+    return { match: 'Unable to verify', notes: 'Address not available on both documents' };
+  }
+  const clean1 = addr1.toLowerCase();
+  const clean2 = addr2.toLowerCase();
+  
+  // Extract PIN codes (6 digits)
+  const pin1 = clean1.match(/\b\d{6}\b/);
+  const pin2 = clean2.match(/\b\d{6}\b/);
+  
+  if (pin1 && pin2) {
+    if (pin1[0] === pin2[0]) {
+      return { match: true, notes: `Compatible address: matching postal PIN code (${pin1[0]})` };
+    } else {
+      return { match: false, notes: `Address mismatch: PIN code discrepancy (${pin1[0]} vs ${pin2[0]})` };
+    }
+  }
+
+  // Token overlap (locality / city)
+  const words1 = clean1.split(/[\s,.-]+/).filter(w => w.length > 3);
+  const words2 = clean2.split(/[\s,.-]+/).filter(w => w.length > 3);
+  const overlap = words1.filter(w => words2.includes(w));
+  
+  if (overlap.length >= 2 || (words1.length > 0 && words2.length > 0 && overlap.length >= Math.min(words1.length, words2.length) * 0.5)) {
+    return { match: true, notes: `Compatible address: locality and city align (${overlap.slice(0, 3).join(', ')})` };
+  }
+
+  return { match: false, notes: `Address discrepancy: different residential localities` };
 }
 
 /**
