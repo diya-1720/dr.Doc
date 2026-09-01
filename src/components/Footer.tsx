@@ -3,34 +3,34 @@ import { Link } from 'react-router-dom';
 
 export const Footer: React.FC = () => {
   return (
-    <footer className="bg-[#3F2928] text-[#FFF8EA] border-t-4 border-[#7A302F] py-12 px-4 md:px-8 mt-auto">
-      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
+    <footer className="bg-[#3F2928] text-[#FFF8EA] border-t-4 border-[#7A302F] py-6 md:py-8 px-4 md:px-8 mt-auto">
+      <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 md:gap-8 mb-6">
         
         {/* Brand Column */}
-        <div className="md:col-span-1">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-8 h-8 bg-[#7A302F] text-[#FFF8EA] flex items-center justify-center font-heading text-lg font-bold border border-[#FFF8EA]">
+        <div>
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-7 h-7 bg-[#7A302F] text-[#FFF8EA] flex items-center justify-center font-heading text-base font-bold border border-[#FFF8EA]">
               DR
             </div>
-            <div className="font-heading text-2xl font-bold tracking-wider text-white">
+            <div className="font-heading text-xl font-bold tracking-wider text-white">
               DR. DOC
             </div>
           </div>
-          <p className="font-mono text-xs text-[#A58B7B] leading-relaxed mb-4">
-            AI-POWERED DOCUMENT FORENSICS AND VERIFICATION PLATFORM.
-            EXAMINE, CLASSIFY, VERIFY & PREPARE CASE FILES BEFORE SUBMISSION.
+          <p className="font-mono text-[11px] text-[#A58B7B] leading-relaxed mb-3">
+            AI-POWERED DOCUMENT FORENSICS & VERIFICATION PLATFORM.
+            EXAMINE, CLASSIFY & VERIFY CASE FILES BEFORE SUBMISSION.
           </p>
-          <div className="inline-block px-2 py-1 bg-[#3F2928]/80 border border-[#D47794] font-mono text-[10px] text-[#D47794] uppercase font-bold">
+          <div className="inline-block px-2 py-0.5 bg-[#3F2928]/80 border border-[#D47794] font-mono text-[10px] text-[#D47794] uppercase font-bold">
             SYSTEM STATUS: OPERATIONAL
           </div>
         </div>
 
         {/* Quick Links */}
         <div>
-          <div className="font-heading text-sm text-[#E8B9B8] mb-4 tracking-wider">
+          <div className="font-heading text-xs text-[#E8B9B8] mb-2 tracking-wider">
             FORENSIC WORKSPACE
           </div>
-          <ul className="space-y-2 font-mono text-xs text-[#F3E4C8]">
+          <ul className="space-y-1.5 font-mono text-xs text-[#F3E4C8]">
             <li><Link to="/verify" className="hover:text-[#D47794] transition-colors">Verify Setup</Link></li>
             <li><Link to="/documents" className="hover:text-[#D47794] transition-colors">Document Inbox</Link></li>
             <li><Link to="/ocr" className="hover:text-[#D47794] transition-colors">OCR & Extraction</Link></li>
@@ -41,11 +41,11 @@ export const Footer: React.FC = () => {
 
         {/* Tools & Services */}
         <div>
-          <div className="font-heading text-sm text-[#E8B9B8] mb-4 tracking-wider">
+          <div className="font-heading text-xs text-[#E8B9B8] mb-2 tracking-wider">
             DOCUMENT TOOLS
           </div>
-          <ul className="space-y-2 font-mono text-xs text-[#F3E4C8]">
-            <li><Link to="/tools" className="hover:text-[#D47794] transition-colors">Compress PDF (Limit Threshold)</Link></li>
+          <ul className="space-y-1.5 font-mono text-xs text-[#F3E4C8]">
+            <li><Link to="/tools" className="hover:text-[#D47794] transition-colors">Compress PDF</Link></li>
             <li><Link to="/tools" className="hover:text-[#D47794] transition-colors">Image to PDF Converter</Link></li>
             <li><Link to="/tools" className="hover:text-[#D47794] transition-colors">Merge Application Bundle</Link></li>
             <li><Link to="/tools" className="hover:text-[#D47794] transition-colors">Readability Enhancer</Link></li>
@@ -55,24 +55,24 @@ export const Footer: React.FC = () => {
 
         {/* Forensic Philosophy */}
         <div>
-          <div className="font-heading text-sm text-[#E8B9B8] mb-4 tracking-wider">
+          <div className="font-heading text-xs text-[#E8B9B8] mb-2 tracking-wider">
             CORE PHILOSOPHY
           </div>
           <div className="font-mono text-xs text-[#A58B7B] space-y-1">
-            <div className="text-[#FFF8EA] font-bold">DETECT → UNDERSTAND → VERIFY</div>
-            <div className="text-[#FFF8EA] font-bold">EXPLAIN → FIX → RECHECK → READY</div>
-            <p className="mt-3 text-[11px] leading-normal">
-              Built for high-stakes paperwork verification, government portals, business onboarding, and legal compliance.
+            <div className="text-[#FFF8EA] font-bold text-[11px]">DETECT → UNDERSTAND → VERIFY</div>
+            <div className="text-[#FFF8EA] font-bold text-[11px]">EXPLAIN → FIX → RECHECK → READY</div>
+            <p className="mt-2 text-[10px] leading-tight text-[#A58B7B]">
+              Built for high-stakes paperwork verification, government portals, and legal compliance.
             </p>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto pt-6 border-t border-[#7A302F]/40 flex flex-col md:flex-row justify-between items-center font-mono text-xs text-[#A58B7B]">
+      <div className="max-w-7xl mx-auto pt-4 border-t border-[#7A302F]/40 flex flex-col sm:flex-row justify-between items-center font-mono text-[11px] text-[#A58B7B] gap-2">
         <div>
           © 2026 DR. DOC FORENSICS LAB. ALL RIGHTS RESERVED.
         </div>
-        <div className="flex gap-4 mt-2 md:mt-0 text-[11px]">
+        <div className="flex flex-wrap justify-center gap-3 text-[10px]">
           <span>EVIDENCE SECURED</span>
           <span>•</span>
           <span>PRIVACY COMPLIANT</span>
@@ -83,3 +83,4 @@ export const Footer: React.FC = () => {
     </footer>
   );
 };
+

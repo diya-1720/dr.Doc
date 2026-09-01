@@ -39,14 +39,14 @@ export const NearbyHelpPage: React.FC = () => {
     <div className="min-h-screen bg-[#F3E4C8] flex flex-col md:flex-row">
       <Sidebar />
 
-      <main className="flex-1 p-6 md:p-8 max-w-6xl">
+      <main className="flex-1 p-4 sm:p-6 md:p-8 max-w-6xl w-full">
         
         {/* Header */}
         <div className="mb-6 pb-4 border-b-2 border-[#3F2928]">
           <div className="font-mono text-xs font-bold text-[#7A302F] uppercase tracking-widest mb-1">
             PHYSICAL ASSISTANCE LOCATOR
           </div>
-          <h1 className="font-heading text-3xl md:text-5xl font-bold text-[#3F2928]">
+          <h1 className="font-heading text-3xl sm:text-4xl md:text-5xl font-bold text-[#3F2928]">
             NEARBY ASSISTANCE CENTRES
           </h1>
           <p className="font-body text-sm text-[#3F2928] mt-1">
@@ -64,26 +64,26 @@ export const NearbyHelpPage: React.FC = () => {
               placeholder="Search service type (e.g. Aadhaar, PAN)..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-[#F3E4C8] border border-[#3F2928] pl-9 pr-3 py-1.5 focus:outline-none text-[#3F2928]"
+              className="w-full bg-[#F3E4C8] border border-[#3F2928] pl-9 pr-3 py-2 text-xs focus:outline-none text-[#3F2928]"
             />
           </div>
 
           <button
             onClick={handleGetLocation}
             disabled={isLocating}
-            className="bg-[#3F2928] text-[#FFF8EA] px-4 py-2 border border-[#3F2928] shadow-[2px_2px_0px_#7A302F] font-bold flex items-center gap-2 hover:bg-[#7A302F] transition-colors"
+            className="w-full sm:w-auto bg-[#3F2928] text-[#FFF8EA] px-4 py-2.5 border border-[#3F2928] shadow-[2px_2px_0px_#7A302F] font-bold flex items-center justify-center gap-2 hover:bg-[#7A302F] transition-colors"
           >
-            <Navigation className="w-4 h-4 text-[#D47794]" />
-            {isLocating ? 'LOCATING...' : userLocation ? `GPS: ${userLocation}` : 'USE CURRENT GPS LOCATION'}
+            <Navigation className="w-4 h-4 text-[#D47794] shrink-0" />
+            <span>{isLocating ? 'LOCATING...' : userLocation ? `GPS: ${userLocation}` : 'USE CURRENT GPS LOCATION'}</span>
           </button>
         </div>
 
         {/* Service Centers Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
           {filteredCenters.map((center) => (
             <div
               key={center.id}
-              className="case-card p-6 border-2 border-[#3F2928] flex flex-col justify-between"
+              className="case-card p-4 sm:p-6 border-2 border-[#3F2928] flex flex-col justify-between"
             >
               <div>
                 
@@ -94,7 +94,7 @@ export const NearbyHelpPage: React.FC = () => {
                 </div>
 
                 {/* Name */}
-                <h3 className="font-heading text-xl font-bold text-[#3F2928] mb-1">
+                <h3 className="font-heading text-lg sm:text-xl font-bold text-[#3F2928] mb-1">
                   {center.name}
                 </h3>
                 
@@ -157,3 +157,4 @@ export const NearbyHelpPage: React.FC = () => {
     </div>
   );
 };
+

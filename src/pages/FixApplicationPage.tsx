@@ -62,14 +62,14 @@ export const FixApplicationPage: React.FC = () => {
     <div className="min-h-screen bg-[#F3E4C8] flex flex-col md:flex-row">
       <Sidebar />
 
-      <main className="flex-1 p-6 md:p-8 max-w-5xl">
+      <main className="flex-1 p-4 sm:p-6 md:p-8 max-w-5xl w-full">
         
         {/* Header */}
         <div className="mb-6 pb-4 border-b-2 border-[#3F2928]">
           <div className="font-mono text-xs font-bold text-[#7A302F] uppercase tracking-widest mb-1">
             PHASE 08 // GUIDED RESOLUTION WORKFLOW
           </div>
-          <h1 className="font-heading text-3xl md:text-5xl font-bold text-[#3F2928]">
+          <h1 className="font-heading text-3xl sm:text-4xl md:text-5xl font-bold text-[#3F2928]">
             YOUR FIX PLAN
           </h1>
           <p className="font-body text-sm text-[#3F2928] mt-1">
@@ -78,9 +78,9 @@ export const FixApplicationPage: React.FC = () => {
         </div>
 
         {/* Progress Tracker */}
-        <div className="bg-[#3F2928] text-[#FFF8EA] p-6 border-2 border-[#3F2928] shadow-[4px_4px_0px_#7A302F] mb-8 font-mono">
-          <div className="flex justify-between items-center mb-2">
-            <span className="font-heading text-xl font-bold text-white tracking-wider">
+        <div className="bg-[#3F2928] text-[#FFF8EA] p-4 sm:p-6 border-2 border-[#3F2928] shadow-[4px_4px_0px_#7A302F] mb-8 font-mono">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-3">
+            <span className="font-heading text-lg sm:text-xl font-bold text-white tracking-wider">
               RESOLVED ISSUES: {resolvedCount} / {issues.length}
             </span>
             <span className="font-bold text-[#E8B9B8]">READINESS: {readinessScore}/100</span>
@@ -96,9 +96,9 @@ export const FixApplicationPage: React.FC = () => {
 
         {/* Fix Plan Steps */}
         {unresolvedIssues.length === 0 ? (
-          <div className="bg-[#FFF8EA] p-8 border-2 border-[#7A302F] text-center shadow-[4px_4px_0px_#7A302F]">
+          <div className="bg-[#FFF8EA] p-6 sm:p-8 border-2 border-[#7A302F] text-center shadow-[4px_4px_0px_#7A302F]">
             <CheckCircle2 className="w-12 h-12 text-[#7A302F] mx-auto mb-3" />
-            <h2 className="font-heading text-3xl font-bold text-[#3F2928] mb-2">
+            <h2 className="font-heading text-2xl sm:text-3xl font-bold text-[#3F2928] mb-2">
               ALL ISSUES RESOLVED!
             </h2>
             <p className="font-mono text-xs text-[#A58B7B] mb-6">
@@ -107,7 +107,7 @@ export const FixApplicationPage: React.FC = () => {
 
             <button
               onClick={() => navigate('/report')}
-              className="font-heading text-xl font-bold bg-[#7A302F] hover:bg-[#5c2322] text-[#FFF8EA] px-8 py-3.5 border-2 border-[#3F2928] shadow-[4px_4px_0px_#3F2928] transition-all inline-flex items-center gap-2"
+              className="w-full sm:w-auto font-heading text-lg font-bold bg-[#7A302F] hover:bg-[#5c2322] text-[#FFF8EA] px-8 py-3.5 border-2 border-[#3F2928] shadow-[4px_4px_0px_#3F2928] transition-all inline-flex items-center justify-center gap-2"
             >
               GENERATE FINAL VERIFICATION REPORT
               <ArrowRight className="w-5 h-5 text-[#FFF8EA]" />
@@ -121,16 +121,16 @@ export const FixApplicationPage: React.FC = () => {
               return (
                 <div
                   key={issue.id}
-                  className="bg-[#FFF8EA] p-6 border-2 border-[#3F2928] shadow-[4px_4px_0px_#3F2928]"
+                  className="bg-[#FFF8EA] p-4 sm:p-6 border-2 border-[#3F2928] shadow-[4px_4px_0px_#3F2928]"
                 >
                   
                   {/* Step Header */}
-                  <div className="flex justify-between items-center font-mono border-b border-[#3F2928] pb-3 mb-4">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 font-mono border-b border-[#3F2928] pb-3 mb-4">
                     <div className="flex items-center gap-3">
-                      <span className="font-heading text-2xl font-bold text-[#7A302F]">
+                      <span className="font-heading text-xl sm:text-2xl font-bold text-[#7A302F]">
                         STEP 0{idx + 1}
                       </span>
-                      <span className="font-bold text-sm text-[#3F2928]">{issue.title}</span>
+                      <span className="font-bold text-xs sm:text-sm text-[#3F2928]">{issue.title}</span>
                     </div>
 
                     <span className="evidence-tag">{issue.affectedDocumentName || 'APPLICATION'}</span>
@@ -148,20 +148,20 @@ export const FixApplicationPage: React.FC = () => {
 
                     {/* Conditional Action Controls */}
                     {issue.fixActionType === 'compress' && matchedDoc && (
-                      <div className="flex flex-wrap items-center gap-4 pt-2">
-                        <div>
-                          <span className="text-[#A58B7B]">CURRENT FILE SIZE:</span>
+                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 pt-2">
+                        <div className="flex justify-between sm:block text-[11px] sm:text-xs">
+                          <span className="text-[#A58B7B]">CURRENT SIZE:</span>
                           <strong className="text-[#7A302F] ml-1">{matchedDoc.fileSizeMB} MB</strong>
                         </div>
-                        <div>
-                          <span className="text-[#A58B7B]">PORTAL LIMIT:</span>
+                        <div className="flex justify-between sm:block text-[11px] sm:text-xs">
+                          <span className="text-[#A58B7B]">LIMIT:</span>
                           <strong className="text-[#7A302F] ml-1">{targetSize} MB</strong>
                         </div>
 
                         <button
                           onClick={() => handleCompressAction(matchedDoc.id, issue.id)}
                           disabled={compressingId === matchedDoc.id}
-                          className="bg-[#7A302F] hover:bg-[#5c2322] text-[#FFF8EA] px-5 py-2 border border-[#3F2928] shadow-[2px_2px_0px_#3F2928] font-heading text-base font-bold flex items-center gap-2 active:translate-x-[1px] transition-all"
+                          className="w-full sm:w-auto bg-[#7A302F] hover:bg-[#5c2322] text-[#FFF8EA] px-5 py-2.5 border border-[#3F2928] shadow-[2px_2px_0px_#3F2928] font-heading text-base font-bold flex items-center justify-center gap-2 active:translate-x-[1px] transition-all"
                         >
                           {compressingId === matchedDoc.id ? (
                             <>
@@ -180,9 +180,9 @@ export const FixApplicationPage: React.FC = () => {
 
                     {issue.fixActionType === 'reupload' && (
                       <div className="pt-2">
-                        <label className="bg-[#3F2928] hover:bg-[#7A302F] text-[#FFF8EA] px-5 py-2.5 border border-[#3F2928] shadow-[2px_2px_0px_#7A302F] font-heading text-base font-bold inline-flex items-center gap-2 cursor-pointer transition-colors">
+                        <label className="w-full sm:w-auto bg-[#3F2928] hover:bg-[#7A302F] text-[#FFF8EA] px-5 py-2.5 border border-[#3F2928] shadow-[2px_2px_0px_#7A302F] font-heading text-base font-bold inline-flex items-center justify-center gap-2 cursor-pointer transition-colors text-center">
                           <Upload className="w-4 h-4" />
-                          UPLOAD REPLACEMENT / CORRECTED DOCUMENT
+                          UPLOAD REPLACEMENT DOCUMENT
                           <input
                             type="file"
                             accept=".pdf,.png,.jpg,.jpeg"
@@ -205,3 +205,4 @@ export const FixApplicationPage: React.FC = () => {
     </div>
   );
 };
+

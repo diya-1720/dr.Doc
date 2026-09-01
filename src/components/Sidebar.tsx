@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useForensics } from '../context/ForensicsContext';
 import { 
@@ -11,11 +11,14 @@ import {
   MapPin, 
   FileText,
   Activity,
-  Layers
+  Layers,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 
 export const Sidebar: React.FC = () => {
   const { documents, issues, readinessScore, currentApplication, caseId } = useForensics();
+  const [isOpenMobile, setIsOpenMobile] = useState(false);
 
   const criticalCount = issues.filter(i => i.severity === 'CRITICAL' && !i.resolved).length;
   const reviewCount = issues.filter(i => i.severity === 'NEEDS REVIEW' && !i.resolved).length;
@@ -42,27 +45,40 @@ export const Sidebar: React.FC = () => {
   return (
     <aside className="w-full md:w-64 bg-[#FFF8EA] border-b-2 md:border-b-0 md:border-r-2 border-[#3F2928] p-4 flex flex-col justify-between shrink-0">
       <div>
-        {/* Active Application Context Header */}
-        <div className="mb-6 pb-4 border-b border-[#3F2928]/20">
-          <div className="font-mono text-[10px] uppercase font-bold text-[#A58B7B]">
-            ACTIVE WORKSPACE
+        
+        {/* Active Workspace Header with Mobile Collapsible Toggle */}
+        <div className="pb-3 md:pb-4 border-b border-[#3F2928]/20 flex items-center justify-between md:block">
+          <div>
+            <div className="font-mono text-[10px] uppercase font-bold text-[#A58B7B]">
+              ACTIVE WORKSPACE
+            </div>
+            <div className="font-heading text-base md:text-lg font-bold text-[#3F2928] line-clamp-1">
+              {currentApplication.name}
+            </div>
+            <div className="font-mono text-[11px] text-[#7A302F] mt-0.5">
+              CASE: {caseId}
+            </div>
           </div>
-          <div className="font-heading text-lg font-bold text-[#3F2928] line-clamp-1">
-            {currentApplication.name}
-          </div>
-          <div className="font-mono text-[11px] text-[#7A302F] mt-0.5">
-            CASE: {caseId}
-          </div>
+
+          {/* Mobile Drawer Accordion Toggle Button */}
+          <button
+            onClick={() => setIsOpenMobile(!isOpenMobile)}
+            className="md:hidden flex items-center gap-1 font-mono text-xs font-bold text-[#3F2928] bg-[#F3E4C8] border border-[#3F2928] px-2.5 py-1.5 shadow-[2px_2px_0px_#3F2928]"
+          >
+            <span>MENU</span>
+            {isOpenMobile ? <ChevronUp className="w-4 h-4 text-[#7A302F]" /> : <ChevronDown className="w-4 h-4" />}
+          </button>
         </div>
 
-        {/* Navigation Items */}
-        <div className="space-y-1">
+        {/* Navigation Items (Visible always on Desktop, Toggleable on Mobile) */}
+        <div className={`space-y-1 mt-3 md:mt-4 ${isOpenMobile ? 'block' : 'hidden md:block'}`}>
           {navItems.map((item) => {
             const Icon = item.icon;
             return (
               <NavLink
                 key={item.path}
                 to={item.path}
+                onClick={() => setIsOpenMobile(false)}
                 className={({ isActive }) =>
                   `flex items-center justify-between px-3 py-2 text-xs font-mono font-semibold uppercase tracking-wider transition-all border ${
                     isActive
@@ -90,8 +106,8 @@ export const Sidebar: React.FC = () => {
         </div>
       </div>
 
-      {/* Footer Status Panel */}
-      <div className="mt-8 pt-4 border-t border-[#3F2928]/20 font-mono text-[11px]">
+      {/* Footer Status Panel (Visible on Desktop or when mobile drawer open) */}
+      <div className={`mt-6 pt-4 border-t border-[#3F2928]/20 font-mono text-[11px] ${isOpenMobile ? 'block' : 'hidden md:block'}`}>
         <div className="flex justify-between items-center text-[#A58B7B] mb-1">
           <span>READINESS:</span>
           <span className="font-bold text-[#7A302F]">{readinessScore}/100</span>
@@ -109,3 +125,4 @@ export const Sidebar: React.FC = () => {
     </aside>
   );
 };
+

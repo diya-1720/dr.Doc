@@ -72,7 +72,7 @@ export const DocumentInboxPage: React.FC = () => {
     <div className="min-h-screen bg-[#F3E4C8] flex flex-col md:flex-row">
       <Sidebar />
 
-      <main className="flex-1 p-6 md:p-8 max-w-6xl">
+      <main className="flex-1 p-4 sm:p-6 md:p-8 max-w-6xl w-full">
         
         {/* Page Header */}
         <div className="mb-6 pb-4 border-b-2 border-[#3F2928] flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -80,7 +80,7 @@ export const DocumentInboxPage: React.FC = () => {
             <div className="font-mono text-xs font-bold text-[#7A302F] uppercase tracking-widest mb-1">
               PHASE 02 // MULTI-DOCUMENT INGESTION & CLASSIFICATION
             </div>
-            <h1 className="font-heading text-3xl md:text-5xl font-bold text-[#3F2928]">
+            <h1 className="font-heading text-3xl sm:text-4xl md:text-5xl font-bold text-[#3F2928]">
               DOCUMENT INBOX
             </h1>
             <p className="font-body text-sm text-[#3F2928] mt-1">
@@ -91,7 +91,7 @@ export const DocumentInboxPage: React.FC = () => {
           {documents.length === 0 && (
             <button
               onClick={loadDemoMode}
-              className="font-mono text-xs font-bold bg-[#E8B9B8] hover:bg-[#D47794] text-[#7A302F] hover:text-[#FFF8EA] px-4 py-2 border border-[#3F2928] shadow-[2px_2px_0px_#3F2928] flex items-center gap-2 self-start transition-colors"
+              className="font-mono text-xs font-bold bg-[#E8B9B8] hover:bg-[#D47794] text-[#7A302F] hover:text-[#FFF8EA] px-4 py-2.5 border border-[#3F2928] shadow-[2px_2px_0px_#3F2928] flex items-center justify-center gap-2 self-stretch sm:self-start transition-colors"
             >
               <Play className="w-4 h-4" fill="currentColor" />
               LOAD DEMO CASE (5 DOCS)
@@ -104,7 +104,7 @@ export const DocumentInboxPage: React.FC = () => {
           onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
           onDragLeave={() => setIsDragOver(false)}
           onDrop={handleDrop}
-          className={`p-8 border-2 border-dashed text-center transition-all mb-8 relative ${
+          className={`p-5 sm:p-8 border-2 border-dashed text-center transition-all mb-8 relative ${
             isDragOver 
               ? 'bg-[#F3E4C8] border-[#7A302F] shadow-[4px_4px_0px_#7A302F]' 
               : 'bg-[#FFF8EA] border-[#3F2928] shadow-[4px_4px_0px_#3F2928]'
@@ -119,12 +119,12 @@ export const DocumentInboxPage: React.FC = () => {
             className="hidden"
           />
 
-          <div className="w-14 h-14 bg-[#3F2928] text-[#FFF8EA] border border-[#3F2928] flex items-center justify-center mx-auto mb-3 shadow-[2px_2px_0px_#7A302F]">
-            <Upload className="w-7 h-7" />
+          <div className="w-12 h-12 sm:w-14 sm:h-14 bg-[#3F2928] text-[#FFF8EA] border border-[#3F2928] flex items-center justify-center mx-auto mb-3 shadow-[2px_2px_0px_#7A302F]">
+            <Upload className="w-6 h-6 sm:w-7 sm:h-7" />
           </div>
 
-          <h3 className="font-heading text-2xl font-bold text-[#3F2928] mb-1">
-            DROP EVERYTHING HERE
+          <h3 className="font-heading text-xl sm:text-2xl font-bold text-[#3F2928] mb-1">
+            DROP YOUR DOCUMENTS HERE
           </h3>
           <p className="font-mono text-xs text-[#A58B7B] mb-4">
             PDF • PNG • JPG • MULTIPLE FILES AT ONCE
@@ -133,7 +133,7 @@ export const DocumentInboxPage: React.FC = () => {
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={isAnalyzing}
-            className="font-heading text-base font-bold bg-[#7A302F] hover:bg-[#5c2322] text-[#FFF8EA] px-6 py-2 border border-[#3F2928] shadow-[2px_2px_0px_#3F2928] active:translate-x-[1px] active:translate-y-[1px] transition-all"
+            className="w-full sm:w-auto font-heading text-base font-bold bg-[#7A302F] hover:bg-[#5c2322] text-[#FFF8EA] px-8 py-3 border border-[#3F2928] shadow-[2px_2px_0px_#3F2928] active:translate-x-[1px] active:translate-y-[1px] transition-all"
           >
             CHOOSE FILES
           </button>
@@ -141,11 +141,11 @@ export const DocumentInboxPage: React.FC = () => {
 
         {/* Processing State Loader */}
         {isAnalyzing && (
-          <div className="bg-[#3F2928] text-[#FFF8EA] p-6 border-2 border-[#3F2928] shadow-[4px_4px_0px_#7A302F] mb-8 font-mono">
+          <div className="bg-[#3F2928] text-[#FFF8EA] p-4 sm:p-6 border-2 border-[#3F2928] shadow-[4px_4px_0px_#7A302F] mb-8 font-mono">
             <div className="flex items-center gap-3 mb-3">
-              <Loader2 className="w-6 h-6 text-[#D47794] animate-spin" />
+              <Loader2 className="w-6 h-6 text-[#D47794] animate-spin shrink-0" />
               <div>
-                <span className="font-heading text-xl font-bold text-white tracking-wider">
+                <span className="font-heading text-lg sm:text-xl font-bold text-white tracking-wider">
                   EXAMINING DOCUMENTS...
                 </span>
                 <span className="block text-xs text-[#E8B9B8]">
@@ -168,15 +168,15 @@ export const DocumentInboxPage: React.FC = () => {
           <div>
             
             {/* Status Summary Banner */}
-            <div className="bg-[#F3E4C8] border-2 border-[#3F2928] p-4 mb-6 flex flex-wrap justify-between items-center font-mono text-xs shadow-[2px_2px_0px_#3F2928]">
-              <div className="flex items-center gap-4">
+            <div className="bg-[#F3E4C8] border-2 border-[#3F2928] p-3 sm:p-4 mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-4 font-mono text-xs shadow-[2px_2px_0px_#3F2928]">
+              <div className="flex flex-wrap items-center gap-3 sm:gap-4">
                 <span>TOTAL UPLOADED: <strong>{documents.length}</strong></span>
                 <span className="text-[#7A302F] font-bold">VERIFIED: {documents.filter(d => d.verificationStatus === 'VERIFIED').length}</span>
                 <span className="text-[#7A302F] font-bold">REVIEW: {documents.filter(d => d.verificationStatus !== 'VERIFIED').length}</span>
               </div>
 
               {isDemoMode && (
-                <span className="evidence-tag bg-[#E8B9B8] text-[#7A302F]">
+                <span className="evidence-tag bg-[#E8B9B8] text-[#7A302F] self-start sm:self-auto">
                   DEMO CASE LOADED
                 </span>
               )}
@@ -186,12 +186,12 @@ export const DocumentInboxPage: React.FC = () => {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
               
               {/* Category Filter Tabs */}
-              <div className="flex flex-wrap gap-1 font-mono text-xs">
+              <div className="flex flex-wrap gap-1 font-mono text-xs w-full md:w-auto">
                 {(['ALL', 'IDENTITY', 'ADDRESS', 'BUSINESS', 'PERSONAL', 'UNKNOWN'] as const).map((cat) => (
                   <button
                     key={cat}
                     onClick={() => setSelectedCategory(cat)}
-                    className={`px-3 py-1.5 border font-semibold transition-all ${
+                    className={`px-3 py-1.5 border font-semibold transition-all text-[11px] sm:text-xs ${
                       selectedCategory === cat
                         ? 'bg-[#3F2928] text-[#FFF8EA] border-[#3F2928] shadow-[2px_2px_0px_#D47794]'
                         : 'bg-[#FFF8EA] text-[#3F2928] border-[#3F2928] hover:bg-[#F3E4C8]'
@@ -217,7 +217,7 @@ export const DocumentInboxPage: React.FC = () => {
             </div>
 
             {/* Documents Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {filteredDocs.map((doc) => (
                 <div
                   key={doc.id}
@@ -262,7 +262,7 @@ export const DocumentInboxPage: React.FC = () => {
                     </div>
 
                     {/* Document Title & Metadata */}
-                    <h4 className="font-heading text-lg font-bold text-[#3F2928] line-clamp-1">
+                    <h4 className="font-heading text-base sm:text-lg font-bold text-[#3F2928] line-clamp-1">
                       {doc.documentType}
                     </h4>
                     <div className="font-mono text-xs text-[#A58B7B] truncate mb-2">
@@ -290,8 +290,8 @@ export const DocumentInboxPage: React.FC = () => {
                     {/* Issues line if any */}
                     {doc.issues.length > 0 && (
                       <div className="text-[10px] font-mono text-[#7A302F] font-bold bg-[#E8B9B8] p-1.5 border border-[#7A302F] mb-3 leading-tight flex items-start gap-1">
-                        <ShieldAlert className="w-3 h-3 shrink-0 mt-0.5" />
-                        <span>{doc.issues[0]}</span>
+                        <ShieldAlert className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                        <span className="line-clamp-2">{doc.issues[0]}</span>
                       </div>
                     )}
                   </div>
@@ -307,7 +307,7 @@ export const DocumentInboxPage: React.FC = () => {
 
                     <button
                       onClick={() => deleteDocument(doc.id)}
-                      className="text-[#A58B7B] hover:text-[#7A302F] transition-colors p-1"
+                      className="text-[#A58B7B] hover:text-[#7A302F] transition-colors p-1.5"
                       title="Remove file from case"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -325,3 +325,4 @@ export const DocumentInboxPage: React.FC = () => {
     </div>
   );
 };
+

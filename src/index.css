@@ -26,7 +26,23 @@ body {
   background-size: 24px 24px, 48px 48px, 48px 48px;
   background-position: 0 0, 0 0, 0 0;
   min-height: 100vh;
+  overflow-x: hidden;
 }
+
+html {
+  overflow-x: hidden;
+}
+
+@media print {
+  header, footer, aside, .no-print {
+    display: none !important;
+  }
+  body {
+    background: #FFF !important;
+    color: #000 !important;
+  }
+}
+
 
 .font-heading {
   font-family: 'Oswald', sans-serif;

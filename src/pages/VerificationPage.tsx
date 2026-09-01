@@ -18,23 +18,23 @@ export const VerificationPage: React.FC = () => {
     <div className="min-h-screen bg-[#F3E4C8] flex flex-col md:flex-row">
       <Sidebar />
 
-      <main className="flex-1 p-6 md:p-8 max-w-6xl">
+      <main className="flex-1 p-4 sm:p-6 md:p-8 max-w-6xl w-full">
         
         {/* Header */}
-        <div className="mb-8 pb-4 border-b-2 border-[#3F2928]">
+        <div className="mb-6 sm:mb-8 pb-4 border-b-2 border-[#3F2928]">
           <div className="font-mono text-xs font-bold text-[#7A302F] uppercase tracking-widest mb-1">
             PHASE 05 // APPLICATION AUDIT & READINESS EVALUATION
           </div>
-          <h1 className="font-heading text-3xl md:text-5xl font-bold text-[#3F2928]">
+          <h1 className="font-heading text-3xl sm:text-4xl md:text-5xl font-bold text-[#3F2928]">
             APPLICATION CHECKUP SUMMARY
           </h1>
-          <p className="font-body text-base text-[#3F2928] mt-1">
+          <p className="font-body text-sm text-[#3F2928] mt-1">
             Target Application Profile: <strong>{currentApplication.name}</strong> | CASE ID: <strong>{caseId}</strong>
           </p>
         </div>
 
         {/* Big Readiness Score Hero Banner */}
-        <div className="bg-[#FFF8EA] border-2 border-[#3F2928] p-8 shadow-[6px_6px_0px_#3F2928] mb-8 relative overflow-hidden">
+        <div className="bg-[#FFF8EA] border-2 border-[#3F2928] p-5 sm:p-8 shadow-[6px_6px_0px_#3F2928] mb-8 relative overflow-hidden">
           
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             
@@ -43,14 +43,14 @@ export const VerificationPage: React.FC = () => {
                 OVERALL APPLICATION READINESS SCORE
               </div>
               <div className="flex items-baseline gap-3">
-                <span className="font-heading text-6xl md:text-7xl font-bold text-[#7A302F]">
+                <span className="font-heading text-5xl sm:text-6xl md:text-7xl font-bold text-[#7A302F]">
                   {readinessScore}
                 </span>
-                <span className="font-heading text-3xl font-bold text-[#A58B7B]">/ 100</span>
+                <span className="font-heading text-2xl sm:text-3xl font-bold text-[#A58B7B]">/ 100</span>
               </div>
               <div className="mt-2">
                 <span
-                  className={`stamp ${
+                  className={`stamp text-xs sm:text-sm ${
                     isReady ? 'stamp-verified' : 'stamp-critical'
                   }`}
                 >
@@ -60,10 +60,10 @@ export const VerificationPage: React.FC = () => {
             </div>
 
             {/* CTA to Fix or Report */}
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-3 w-full md:w-auto">
               <Link
                 to="/fix"
-                className="font-heading text-lg font-bold bg-[#7A302F] hover:bg-[#5c2322] text-[#FFF8EA] px-6 py-3 border-2 border-[#3F2928] shadow-[3px_3px_0px_#3F2928] active:translate-x-[1px] active:translate-y-[1px] transition-all flex items-center justify-center gap-2"
+                className="font-heading text-base sm:text-lg font-bold bg-[#7A302F] hover:bg-[#5c2322] text-[#FFF8EA] px-6 py-3 border-2 border-[#3F2928] shadow-[3px_3px_0px_#3F2928] active:translate-x-[1px] active:translate-y-[1px] transition-all flex items-center justify-center gap-2 text-center"
               >
                 GO TO FIX APPLICATION WORKFLOW
                 <ArrowRight className="w-5 h-5 text-[#FFF8EA]" />
@@ -88,12 +88,12 @@ export const VerificationPage: React.FC = () => {
         </div>
 
         {/* Document Requirement Status Checklist Grid */}
-        <div className="bg-[#FFF8EA] border-2 border-[#3F2928] p-6 shadow-[4px_4px_0px_#3F2928] mb-8">
+        <div className="bg-[#FFF8EA] border-2 border-[#3F2928] p-4 sm:p-6 shadow-[4px_4px_0px_#3F2928] mb-8">
           <div className="font-mono text-xs font-bold text-[#3F2928] uppercase tracking-widest mb-4">
             REQUIRED DOCUMENT BUNDLE STATUS
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 font-mono text-xs">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 font-mono text-xs">
             {currentApplication.requiredDocuments.map((reqType) => {
               const matchedDoc = documents.find(d => d.documentType === reqType);
               const isVerified = matchedDoc?.verificationStatus === 'VERIFIED';
@@ -103,27 +103,27 @@ export const VerificationPage: React.FC = () => {
               return (
                 <div
                   key={reqType}
-                  className={`p-4 border flex items-center justify-between ${
+                  className={`p-3 sm:p-4 border flex items-center justify-between ${
                     isVerified
                       ? 'bg-[#FFF8EA] border-[#7A302F]'
                       : 'bg-[#E8B9B8] border-[#7A302F]'
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    {isVerified && <CheckCircle2 className="w-5 h-5 text-[#7A302F]" />}
-                    {isReview && <AlertTriangle className="w-5 h-5 text-[#7A302F]" />}
-                    {isMissing && <XCircle className="w-5 h-5 text-[#7A302F]" />}
+                    {isVerified && <CheckCircle2 className="w-5 h-5 text-[#7A302F] shrink-0" />}
+                    {isReview && <AlertTriangle className="w-5 h-5 text-[#7A302F] shrink-0" />}
+                    {isMissing && <XCircle className="w-5 h-5 text-[#7A302F] shrink-0" />}
                     
                     <div>
-                      <div className="font-bold text-sm text-[#3F2928]">{reqType}</div>
-                      <div className="text-[10px] text-[#A58B7B]">
+                      <div className="font-bold text-xs sm:text-sm text-[#3F2928]">{reqType}</div>
+                      <div className="text-[10px] text-[#A58B7B] truncate max-w-[150px] sm:max-w-[200px]">
                         {matchedDoc ? matchedDoc.filename : 'MISSING FILE'}
                       </div>
                     </div>
                   </div>
 
                   <span
-                    className={`font-bold text-[10px] uppercase px-2 py-0.5 border ${
+                    className={`font-bold text-[10px] uppercase px-2 py-0.5 border shrink-0 ${
                       isVerified
                         ? 'bg-[#FFF8EA] text-[#7A302F] border-[#7A302F]'
                         : 'bg-[#E8B9B8] text-[#7A302F] border-[#7A302F]'
@@ -137,8 +137,8 @@ export const VerificationPage: React.FC = () => {
           </div>
         </div>
 
-        {/* 6 Verification Categories Breakdown */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 font-mono text-xs">
+        {/* 3 Verification Categories Breakdown */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 font-mono text-xs">
           
           <div className="p-4 bg-[#FFF8EA] border-2 border-[#3F2928] shadow-[3px_3px_0px_#3F2928]">
             <div className="text-[#A58B7B] font-bold mb-1">01 COMPLETENESS</div>
@@ -156,7 +156,7 @@ export const VerificationPage: React.FC = () => {
               File Size & Limits Checked
             </div>
             <div className="text-[11px] text-[#A58B7B]">
-              Verifies compliance with maximum portal attachment size limits (e.g. 10MB).
+              Verifies compliance with maximum portal attachment size limits ({currentApplication.portalMaxFileSizeMB}MB).
             </div>
           </div>
 
@@ -176,3 +176,4 @@ export const VerificationPage: React.FC = () => {
     </div>
   );
 };
+
