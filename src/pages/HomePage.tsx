@@ -87,75 +87,75 @@ export const HomePage: React.FC = () => {
           </div>
 
           {/* Hero Visual Desk Scene */}
-          <div className="lg:col-span-6 relative">
+          <div className="lg:col-span-6 relative w-full flex justify-center items-center lg:-mt-6">
             
             {/* Investigation Desk Board Background */}
-            <div className="relative bg-[#FFF8EA] border-2 border-[#3F2928] p-4 sm:p-6 shadow-[6px_6px_0px_#3F2928] md:shadow-[8px_8px_0px_#3F2928] min-h-[380px] sm:min-h-[420px] flex flex-col justify-between overflow-hidden">
+            <div className="relative w-full max-w-lg bg-[#FFF8EA] border-2 border-[#3F2928] p-4 sm:p-5 shadow-[6px_6px_0px_#3F2928] md:shadow-[8px_8px_0px_#3F2928] flex flex-col justify-between overflow-hidden">
               
               {/* Top Desk Header */}
               <div className="flex justify-between items-center font-mono text-xs font-bold border-b-2 border-[#3F2928] pb-2 text-[#3F2928]">
-                <span>EVIDENCE DESK #0142</span>
+                <span>EVIDENCE DESK</span>
                 <span className="text-[#7A302F]">LIVE ANALYSIS BOARD</span>
               </div>
 
               {/* Physical Document Sheets Stacked */}
-              <div className="relative my-4 sm:my-6 h-[260px] sm:h-[300px]">
+              <div className="relative my-3 sm:my-4 h-[250px] sm:h-[280px]">
                 
-                {/* Document 1: Aadhaar (Rotated) */}
-                <div className="absolute top-1 sm:top-2 left-1 sm:left-4 w-48 sm:w-56 p-3 sm:p-4 bg-[#FFF8EA] border-2 border-[#3F2928] shadow-[4px_4px_0px_rgba(63,41,40,0.15)] transform -rotate-3 transition-transform hover:rotate-0 duration-300">
-                  <div className="flex justify-between items-center font-mono text-[9px] sm:text-[10px] text-[#A58B7B] border-b border-[#3F2928] pb-1 mb-1.5 sm:mb-2">
+                {/* Document 1: Aadhaar Card (Rotated Left) */}
+                <div className="absolute top-1 sm:top-2 left-1 sm:left-3 w-44 sm:w-52 p-3 bg-[#FFF8EA] border-2 border-[#3F2928] shadow-[4px_4px_0px_rgba(63,41,40,0.15)] transform -rotate-3 transition-transform hover:rotate-0 duration-300 z-10">
+                  <div className="flex justify-between items-center font-mono text-[9px] sm:text-[10px] text-[#A58B7B] border-b border-[#3F2928] pb-1 mb-1 sm:mb-1.5">
                     <span>GOVT IDENTITY</span>
                     <span className="text-[#7A302F] font-bold">VERIFIED ✓</span>
                   </div>
                   <div className="font-heading text-xs sm:text-sm font-bold text-[#3F2928]">AADHAAR CARD</div>
-                  <div className="font-mono text-[11px] sm:text-xs text-[#3F2928] mt-0.5 sm:mt-1">Name: <span className="font-bold underline decoration-[#7A302F]">Rahul Kumar</span></div>
-                  <div className="font-mono text-[9px] sm:text-[10px] text-[#A58B7B] mt-0.5">UID: •••• •••• 4912</div>
-                  <div className="mt-2 sm:mt-3 flex justify-between items-center">
-                    <span className="evidence-tag text-[9px] sm:text-[10px]">CONFIDENCE 97%</span>
-                    <span className="stamp stamp-verified text-[8px] sm:text-[9px]">EXAMINED</span>
+                  <div className="font-mono text-[10px] sm:text-xs text-[#3F2928] mt-0.5">Name: <span className="font-bold underline decoration-[#7A302F]">Rahul Kumar</span></div>
+                  <div className="font-mono text-[9px] text-[#A58B7B] mt-0.5">UID: •••• •••• 4912</div>
+                  <div className="mt-2 flex justify-between items-center">
+                    <span className="evidence-tag text-[9px]">CONFIDENCE 97%</span>
+                    <span className="stamp stamp-verified text-[8px]">EXAMINED</span>
                   </div>
                 </div>
 
-                {/* Document 2: PAN Card (Rotated right) */}
-                <div className="absolute top-8 sm:top-12 left-20 sm:left-36 w-52 sm:w-60 p-3 sm:p-4 bg-[#FFF8EA] border-2 border-[#3F2928] shadow-[6px_6px_0px_rgba(63,41,40,0.2)] transform rotate-2 z-10 transition-transform hover:rotate-0 duration-300">
-                  <div className="flex justify-between items-center font-mono text-[9px] sm:text-[10px] text-[#A58B7B] border-b border-[#3F2928] pb-1 mb-1.5 sm:mb-2">
+                {/* Document 2: PAN Card (Rotated Right) */}
+                <div className="absolute top-6 sm:top-8 right-1 sm:right-3 w-48 sm:w-56 p-3 bg-[#FFF8EA] border-2 border-[#3F2928] shadow-[6px_6px_0px_rgba(63,41,40,0.2)] transform rotate-2 z-20 transition-transform hover:rotate-0 duration-300">
+                  <div className="flex justify-between items-center font-mono text-[9px] sm:text-[10px] text-[#A58B7B] border-b border-[#3F2928] pb-1 mb-1 sm:mb-1.5">
                     <span>TAX RECORD</span>
                     <span className="text-[#7A302F] font-bold">VERIFIED ✓</span>
                   </div>
                   <div className="font-heading text-xs sm:text-sm font-bold text-[#3F2928]">PAN CARD</div>
-                  <div className="font-mono text-[11px] sm:text-xs text-[#3F2928] mt-0.5 sm:mt-1">Name: <span className="font-bold underline decoration-[#7A302F]">Rahul Kumar</span></div>
-                  <div className="font-mono text-[9px] sm:text-[10px] text-[#A58B7B] mt-0.5">PAN: ABCDE1234F</div>
-                  <div className="mt-2 sm:mt-3 flex justify-between items-center">
-                    <span className="evidence-tag text-[9px] sm:text-[10px]">CONFIDENCE 99%</span>
-                    <span className="stamp stamp-verified text-[8px] sm:text-[9px]">MATCHED</span>
+                  <div className="font-mono text-[10px] sm:text-xs text-[#3F2928] mt-0.5">Name: <span className="font-bold underline decoration-[#7A302F]">Rahul Kumar</span></div>
+                  <div className="font-mono text-[9px] text-[#A58B7B] mt-0.5">PAN: ABCDE1234F</div>
+                  <div className="mt-2 flex justify-between items-center">
+                    <span className="evidence-tag text-[9px]">CONFIDENCE 99%</span>
+                    <span className="stamp stamp-verified text-[8px]">MATCHED</span>
                   </div>
                 </div>
 
                 {/* Document 3: Bank Statement (Flagged) */}
-                <div className="absolute top-20 sm:top-28 left-8 sm:left-20 w-56 sm:w-64 p-3 sm:p-4 bg-[#FFF8EA] border-2 border-[#7A302F] shadow-[8px_8px_0px_rgba(122,48,47,0.25)] transform -rotate-1 z-20 transition-transform hover:rotate-0 duration-300">
-                  <div className="flex justify-between items-center font-mono text-[9px] sm:text-[10px] text-[#7A302F] font-bold border-b border-[#7A302F] pb-1 mb-1.5 sm:mb-2">
+                <div className="absolute top-20 sm:top-24 left-4 sm:left-10 w-52 sm:w-60 p-3 bg-[#FFF8EA] border-2 border-[#7A302F] shadow-[8px_8px_0px_rgba(122,48,47,0.25)] transform -rotate-1 z-30 transition-transform hover:rotate-0 duration-300">
+                  <div className="flex justify-between items-center font-mono text-[9px] sm:text-[10px] text-[#7A302F] font-bold border-b border-[#7A302F] pb-1 mb-1 sm:mb-1.5">
                     <span>ADDRESS PROOF</span>
                     <span className="stamp stamp-critical text-[8px] py-0">FLAGGED ✕</span>
                   </div>
                   <div className="font-heading text-xs sm:text-sm font-bold text-[#3F2928]">BANK STATEMENT</div>
-                  <div className="font-mono text-[11px] sm:text-xs text-[#3F2928] mt-0.5 sm:mt-1">Name: <span className="font-bold text-[#7A302F] bg-[#E8B9B8] px-1">R. Kumar</span></div>
-                  <div className="font-mono text-[9px] sm:text-[10px] text-[#7A302F] mt-0.5 sm:mt-1 font-semibold flex items-center gap-1">
+                  <div className="font-mono text-[10px] sm:text-xs text-[#3F2928] mt-0.5">Name: <span className="font-bold text-[#7A302F] bg-[#E8B9B8] px-1">R. Kumar</span></div>
+                  <div className="font-mono text-[9px] text-[#7A302F] mt-0.5 font-semibold flex items-center gap-1">
                     <ShieldAlert className="w-3 h-3" />
                     NAME MISMATCH vs AADHAAR
                   </div>
-                  <div className="mt-1 sm:mt-2 text-[9px] sm:text-[10px] font-mono text-[#A58B7B]">Size: 14.8 MB (Over 10MB Limit)</div>
+                  <div className="mt-1 text-[9px] font-mono text-[#A58B7B]">Size: 14.8 MB (Over 10MB Limit)</div>
                 </div>
 
                 {/* Red String Overlay SVG */}
-                <svg className="absolute inset-0 w-full h-full pointer-events-none z-30">
-                  <line x1="70" y1="50" x2="180" y2="90" stroke="#7A302F" strokeWidth="2" strokeDasharray="4,4" />
-                  <line x1="180" y1="90" x2="130" y2="150" stroke="#7A302F" strokeWidth="2" strokeDasharray="3,3" />
-                  <circle cx="180" cy="90" r="4" fill="#7A302F" />
+                <svg className="absolute inset-0 w-full h-full pointer-events-none z-40">
+                  <line x1="70" y1="45" x2="200" y2="65" stroke="#7A302F" strokeWidth="2" strokeDasharray="4,4" />
+                  <line x1="200" y1="65" x2="130" y2="150" stroke="#7A302F" strokeWidth="2" strokeDasharray="3,3" />
+                  <circle cx="200" cy="65" r="4" fill="#7A302F" />
                   <circle cx="130" cy="150" r="4" fill="#7A302F" />
                 </svg>
 
-                {/* Floating Forensic Tag Annotation */}
-                <div className="absolute bottom-1 sm:bottom-2 right-1 sm:right-2 bg-[#3F2928] text-[#E8B9B8] px-2.5 py-1 font-mono text-[10px] sm:text-[11px] font-bold border border-[#E8B9B8] shadow-md z-40">
+                {/* Floating Mismatch Tag Annotation */}
+                <div className="absolute bottom-0 right-0 sm:right-1 bg-[#3F2928] text-[#E8B9B8] px-2 py-0.5 font-mono text-[9px] sm:text-[10px] font-bold border border-[#E8B9B8] shadow-md z-50">
                   CROSS-DOCUMENT MATCH FAIL
                 </div>
               </div>
@@ -166,6 +166,7 @@ export const HomePage: React.FC = () => {
                 <span className="font-bold text-[#7A302F]">ACTION REQUIRED</span>
               </div>
             </div>
+
           </div>
 
         </div>
@@ -451,34 +452,41 @@ export const HomePage: React.FC = () => {
         </div>
       </section>
 
-      {/* SECTION 6: FINAL CTA */}
-      <section className="py-12 md:py-16 px-4 md:px-8 bg-[#3F2928] text-[#FFF8EA]">
-        <div className="max-w-4xl mx-auto text-center">
+      {/* SECTION 6: FINAL CTA CHECKPOINT */}
+      <section className="py-10 md:py-14 px-4 md:px-8 bg-[#FFF8EA] border-t-2 border-b-2 border-[#3F2928] relative overflow-hidden">
+        
+        {/* Subtle grid line accent */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#3F292808_1px,transparent_1px),linear-gradient(to_bottom,#3F292808_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
+
+        <div className="max-w-4xl mx-auto text-center relative z-10">
           
-          <div className="font-mono text-xs font-bold text-[#D47794] uppercase tracking-widest mb-3">
+          <div className="inline-block px-3 py-1 bg-[#F3E4C8] border border-[#3F2928] font-mono text-xs font-bold text-[#7A302F] uppercase tracking-widest mb-3">
             CONFIDENT APPLICATION SUBMISSION
           </div>
 
-          <h2 className="font-heading text-3xl sm:text-5xl md:text-6xl font-bold text-white mb-4 sm:mb-6">
+          <h2 className="font-heading text-3xl sm:text-5xl md:text-6xl font-bold text-[#3F2928] mb-3 sm:mb-4">
             READY BEFORE YOU SUBMIT.
           </h2>
 
-          <p className="font-body text-base sm:text-lg text-[#F3E4C8] mb-6 sm:mb-8 max-w-xl mx-auto leading-relaxed">
+          <p className="font-body text-base sm:text-lg text-[#3F2928] mb-6 sm:mb-8 max-w-xl mx-auto leading-relaxed">
             Avoid costly delays, rejected business registrations, and manual document re-submissions. Perform a document checkup right now.
           </p>
 
-          <div className="flex flex-col sm:flex-row justify-center items-stretch sm:items-center gap-3 sm:gap-4">
+          <div className="flex flex-col sm:flex-row justify-center items-stretch sm:items-center gap-3 sm:gap-4 font-mono">
             <button
               onClick={handleStartCheckup}
-              className="w-full sm:w-auto font-heading text-lg sm:text-xl font-bold bg-[#7A302F] hover:bg-[#5c2322] text-[#FFF8EA] px-8 py-3.5 sm:py-4 border-2 border-[#FFF8EA] shadow-[4px_4px_0px_#D47794] hover:shadow-[6px_6px_0px_#D47794] active:translate-x-[2px] active:translate-y-[2px] transition-all"
+              className="w-full sm:w-auto font-heading text-lg sm:text-xl font-bold bg-[#7A302F] hover:bg-[#5c2322] text-[#FFF8EA] px-8 py-3.5 sm:py-4 border-2 border-[#3F2928] shadow-[4px_4px_0px_#3F2928] hover:shadow-[6px_6px_0px_#3F2928] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all flex items-center justify-center gap-2"
             >
               START VERIFICATION
+              <ArrowRight className="w-5 h-5 text-[#FFF8EA]" />
             </button>
+
             <button
               onClick={handleTryDemo}
-              className="w-full sm:w-auto font-mono text-xs sm:text-sm uppercase font-bold bg-[#FFF8EA] hover:bg-[#E8B9B8] text-[#3F2928] px-6 py-3.5 sm:py-4 border-2 border-[#FFF8EA] shadow-[4px_4px_0px_#FFF8EA] transition-all"
+              className="w-full sm:w-auto font-mono text-xs sm:text-sm uppercase font-bold bg-[#FFF8EA] hover:bg-[#E8B9B8] text-[#3F2928] px-6 py-3.5 sm:py-4 border-2 border-[#3F2928] shadow-[4px_4px_0px_#3F2928] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all flex items-center justify-center gap-2"
             >
-              LAUNCH DEMO CASE
+              <Play className="w-4 h-4 text-[#7A302F]" fill="#7A302F" />
+              LAUNCH DEMO
             </button>
           </div>
 

@@ -19,17 +19,18 @@ import {
 import logoImg from '../assets/logo.jpg';
 
 export const Sidebar: React.FC = () => {
-  const { documents, issues, readinessScore, currentApplication, caseId } = useForensics();
+  const { documents, issues, readinessScore, currentApplication } = useForensics();
   const [isOpenMobile, setIsOpenMobile] = useState(false);
 
   const criticalCount = issues.filter(i => i.severity === 'CRITICAL' && !i.resolved).length;
   const reviewCount = issues.filter(i => i.severity === 'NEEDS REVIEW' && !i.resolved).length;
 
   const navItems = [
-    { label: 'OVERVIEW', path: '/verification', icon: Activity, badge: `${readinessScore}%` },
+    { label: 'OVERVIEW', path: '/', icon: Activity },
     { label: 'DOCUMENT INBOX', path: '/documents', icon: Inbox, badge: documents.length },
     { label: 'OCR & EXTRACTION', path: '/ocr', icon: Scan },
     { label: 'QUALITY CHECK', path: '/quality', icon: Layers },
+    { label: 'VERIFICATION', path: '/verification', icon: FileCheck2, badge: documents.length > 0 ? `${readinessScore}%` : undefined },
     { label: 'CROSS-CHECK', path: '/cross-check', icon: GitCompare },
     { 
       label: 'ISSUES', 
@@ -58,13 +59,10 @@ export const Sidebar: React.FC = () => {
             />
             <div>
               <div className="font-mono text-[10px] uppercase font-bold text-[#A58B7B]">
-                ACTIVE WORKSPACE
+                ACTIVE APPLICATION
               </div>
-              <div className="font-heading text-base md:text-lg font-bold text-[#3F2928] line-clamp-1">
+              <div className="font-heading text-sm md:text-base font-bold text-[#3F2928] leading-tight break-words">
                 {currentApplication.name}
-              </div>
-              <div className="font-mono text-[11px] text-[#7A302F] mt-0.5">
-                CASE: {caseId}
               </div>
             </div>
           </div>

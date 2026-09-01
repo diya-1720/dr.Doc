@@ -1,5 +1,5 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { ForensicsProvider } from './context/ForensicsContext';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
@@ -18,10 +18,21 @@ import { DocumentToolsPage } from './pages/DocumentToolsPage';
 import { NearbyHelpPage } from './pages/NearbyHelpPage';
 import { VerificationReportPage } from './pages/VerificationReportPage';
 
+const ScrollToTop: React.FC = () => {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
+  return null;
+};
+
 export const App: React.FC = () => {
   return (
     <ForensicsProvider>
       <Router>
+        <ScrollToTop />
         <div className="min-h-screen flex flex-col bg-[#F3E4C8] text-[#3F2928] antialiased">
           <Header />
 
