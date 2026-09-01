@@ -113,12 +113,12 @@ export const Header: React.FC = () => {
             {isLangOpen && (
               <div className="absolute right-0 mt-1 w-36 bg-[#FFF8EA] border-2 border-[#3F2928] shadow-[4px_4px_0px_#3F2928] z-50 py-1 font-mono text-xs">
                 <div className="px-3 py-1 text-[10px] font-bold text-[#A58B7B] uppercase border-b border-[#3F2928]/20">
-                  {t.nav.selectLanguage}
+                  LANGUAGE
                 </div>
                 {[
                   { code: 'en', label: 'English' },
-                  { code: 'hi', label: 'हिंदी (Hindi)' },
-                  { code: 'mr', label: 'मराठी (Marathi)' },
+                  { code: 'hi', label: 'हिंदी' },
+                  { code: 'mr', label: 'मराठी' },
                 ].map((lang) => (
                   <button
                     key={lang.code}

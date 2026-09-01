@@ -1,12 +1,14 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForensics } from '../context/ForensicsContext';
+import { useLanguage } from '../i18n/LanguageContext';
 import { Sidebar } from '../components/Sidebar';
 import { CheckSquare, ArrowRight } from 'lucide-react';
 
 export const VerifySetupPage: React.FC = () => {
   const navigate = useNavigate();
   const { applications, currentApplication, setApplication } = useForensics();
+  const { t } = useLanguage();
 
   const handleSelectApp = (id: string) => {
     setApplication(id);
@@ -25,13 +27,13 @@ export const VerifySetupPage: React.FC = () => {
         {/* Page Header */}
         <div className="mb-6 sm:mb-8 pb-4 border-b-2 border-[#3F2928]">
           <div className="font-mono text-xs font-bold text-[#7A302F] uppercase tracking-widest mb-1">
-            PHASE 01 // APPLICATION CHECKUP
+            PHASE 01 // {t.setup.tag}
           </div>
           <h1 className="font-heading text-3xl sm:text-4xl md:text-5xl font-bold text-[#3F2928]">
-            SELECT YOUR APPLICATION TYPE
+            {t.setup.title}
           </h1>
           <p className="font-body text-sm sm:text-base text-[#3F2928] mt-2">
-            Specify the destination portal or government service. Dr. Doc will configure exact document requirements, mandatory fields, and file-size thresholds.
+            {t.setup.subtitle}
           </p>
         </div>
 
@@ -67,7 +69,7 @@ export const VerifySetupPage: React.FC = () => {
 
                 {/* Requirement pills */}
                 <div className="pt-3 border-t border-[#3F2928]/20 font-mono text-[11px] text-[#A58B7B]">
-                  <div className="font-bold text-[#3F2928] mb-1">REQUIRED DOCUMENTS:</div>
+                  <div className="font-bold text-[#3F2928] mb-1">{t.setup.requiredDocsLabel}</div>
                   <div className="flex flex-wrap gap-1">
                     {app.requiredDocuments.map((docType) => (
                       <span key={docType} className="px-1.5 py-0.5 bg-[#FFF8EA] border border-[#3F2928] text-[#3F2928] text-[10px]">
@@ -110,7 +112,7 @@ export const VerifySetupPage: React.FC = () => {
               onClick={handleProceedToInbox}
               className="w-full sm:w-auto font-heading text-base sm:text-lg font-bold bg-[#7A302F] hover:bg-[#5c2322] text-[#FFF8EA] px-8 py-3 border-2 border-[#3F2928] shadow-[4px_4px_0px_#3F2928] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all flex items-center justify-center gap-2"
             >
-              CONTINUE TO DOCUMENT INBOX
+              {t.nav.documents} (INBOX)
               <ArrowRight className="w-5 h-5" />
             </button>
           </div>
@@ -120,4 +122,3 @@ export const VerifySetupPage: React.FC = () => {
     </div>
   );
 };
-

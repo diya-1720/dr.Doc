@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForensics } from '../context/ForensicsContext';
+import { useLanguage } from '../i18n/LanguageContext';
 import { Sidebar } from '../components/Sidebar';
 import type { DocumentCategory, DocItem } from '../types';
 import { mergeSelectedDocsIntoPdf, downloadDocInFormat } from '../services/docTools';
@@ -29,6 +30,7 @@ import {
 export const DocumentInboxPage: React.FC = () => {
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { t } = useLanguage();
   const { 
     documents, 
     uploadFiles, 
@@ -159,16 +161,16 @@ export const DocumentInboxPage: React.FC = () => {
         <div className="mb-6 pb-4 border-b-2 border-[#3F2928] flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="font-mono text-xs font-bold text-[#7A302F] uppercase tracking-widest mb-1 flex items-center gap-1.5">
-              <span>PHASE 02 // MULTI-DOCUMENT INGESTION & AI CLASSIFICATION</span>
+              <span>PHASE 02 // {t.inbox.tag}</span>
               <span className="bg-[#FFF8EA] text-[#7A302F] px-1.5 py-0.2 border border-[#7A302F] text-[10px]">
                 5 MAX
               </span>
             </div>
             <h1 className="font-heading text-3xl sm:text-4xl md:text-5xl font-bold text-[#3F2928]">
-              DOCUMENT INBOX
+              {t.inbox.title}
             </h1>
             <p className="font-body text-sm text-[#3F2928] mt-1">
-              Upload up to 5 documents. AI automatically classifies document types, performs deep field OCR, verifies Name & Address cross-consistency, and audits photo aging.
+              {t.inbox.subtitle}
             </p>
           </div>
         </div>
@@ -239,10 +241,10 @@ export const DocumentInboxPage: React.FC = () => {
           </div>
 
           <h3 className="font-heading text-xl sm:text-2xl font-bold text-[#3F2928] mb-1">
-            DROP YOUR DOCUMENTS HERE
+            {t.inbox.uploadBoxTitle}
           </h3>
           <p className="font-mono text-xs text-[#A58B7B] mb-4">
-            PDF • PNG • JPG • UP TO 5 FILES IN BATCH (CASE CAPACITY: 5 MAX)
+            {t.inbox.uploadBoxSubtitle}
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
@@ -251,7 +253,7 @@ export const DocumentInboxPage: React.FC = () => {
               disabled={isAnalyzing || documents.length >= 5}
               className="w-full sm:w-auto font-heading text-base font-bold bg-[#7A302F] hover:bg-[#5c2322] disabled:opacity-50 text-[#FFF8EA] px-8 py-3 border border-[#3F2928] shadow-[2px_2px_0px_#3F2928] active:translate-x-[1px] active:translate-y-[1px] transition-all"
             >
-              {documents.length >= 5 ? 'CASE CAPACITY REACHED (5/5)' : 'CHOOSE FILES (MAX 5)'}
+              {documents.length >= 5 ? 'CASE CAPACITY REACHED (5/5)' : `${t.common.upload} (MAX 5)`}
             </button>
           </div>
         </div>

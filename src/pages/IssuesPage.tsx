@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForensics } from '../context/ForensicsContext';
+import { useLanguage } from '../i18n/LanguageContext';
 import { Sidebar } from '../components/Sidebar';
-import { AlertOctagon, Wrench, MapPin, CheckCircle2 } from 'lucide-react';
+import { Wrench, MapPin, CheckCircle2 } from 'lucide-react';
 
 export const IssuesPage: React.FC = () => {
   const navigate = useNavigate();
   const { issues, resolveIssue } = useForensics();
+  const { t } = useLanguage();
   const [filterSeverity, setFilterSeverity] = useState<'ALL' | 'CRITICAL' | 'NEEDS REVIEW' | 'RESOLVED'>('ALL');
 
   const handleFixClick = () => {
@@ -33,11 +35,14 @@ export const IssuesPage: React.FC = () => {
         <div className="mb-6 pb-4 border-b-2 border-[#3F2928] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="font-mono text-xs font-bold text-[#7A302F] uppercase tracking-widest mb-1">
-              PHASE 07 // CASE FINDINGS
+              PHASE 07 // {t.issues.tag}
             </div>
             <h1 className="font-heading text-3xl sm:text-4xl md:text-5xl font-bold text-[#3F2928]">
-              CASE FINDINGS
+              {t.issues.title}
             </h1>
+            <p className="font-body text-xs sm:text-sm text-[#3F2928] mt-0.5">
+              {t.issues.subtitle}
+            </p>
           </div>
 
           {/* Filter Pills */}
@@ -52,7 +57,7 @@ export const IssuesPage: React.FC = () => {
                     : 'bg-[#FFF8EA] text-[#3F2928] border-[#3F2928] hover:bg-[#F3E4C8]'
                 }`}
               >
-                {sev}
+                {sev === 'ALL' ? t.common.all : sev === 'CRITICAL' ? t.issues.criticalTab : sev === 'NEEDS REVIEW' ? t.issues.reviewTab : t.issues.resolvedTab}
               </button>
             ))}
           </div>
@@ -63,9 +68,9 @@ export const IssuesPage: React.FC = () => {
           <div className="bg-[#FFF8EA] p-6 sm:p-8 border-2 border-[#3F2928] text-center font-mono text-xs shadow-[3px_3px_0px_#3F2928]">
             <CheckCircle2 className="w-10 h-10 text-[#7A302F] mx-auto mb-2" />
             <h3 className="font-heading text-xl font-bold text-[#3F2928] mb-1">
-              NO ACTIVE ISSUES MATCHING FILTER
+              {t.issues.noIssuesTitle}
             </h3>
-            <p className="text-[#A58B7B]">All document parameters comply with application requirements.</p>
+            <p className="text-[#A58B7B]">{t.verification.noIssuesDesc}</p>
           </div>
         ) : (
           <div className="space-y-4 sm:space-y-6">
@@ -94,74 +99,61 @@ export const IssuesPage: React.FC = () => {
                             : 'stamp-critical'
                         }`}
                       >
-                        {issue.resolved ? 'RESOLVED ✓' : issue.severity}
+                        {issue.resolved ? `${t.issues.resolvedStatus} ✓` : issue.severity}
                       </span>
                       {issue.affectedDocumentName && (
                         <span className="evidence-tag">{issue.affectedDocumentName}</span>
                       )}
                     </div>
 
-                    <span className="font-mono text-xs text-[#A58B7B]">
-                      ISSUE CODE: #{issue.id}
-                    </span>
+                    {!issue.resolved && (
+                      <button
+                        onClick={() => resolveIssue(issue.id)}
+                        className="font-mono text-xs font-bold text-[#7A302F] hover:underline self-start sm:self-auto"
+                      >
+                        {t.issues.resolveBtn}
+                      </button>
+                    )}
                   </div>
 
-                  {/* Issue Title */}
-                  <h3 className="font-heading text-xl sm:text-2xl font-bold text-[#3F2928] mb-3 sm:mb-4">
+                  {/* Title & Why Flagged */}
+                  <h3 className="font-heading text-xl sm:text-2xl font-bold text-[#3F2928] mb-2">
                     {issue.title}
                   </h3>
 
-                  {/* Explanation Sections */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 font-mono text-xs mb-6">
-                    
-                    {/* WHY THIS WAS FLAGGED */}
-                    <div className="p-3 sm:p-4 bg-[#E8B9B8] border border-[#7A302F]">
-                      <div className="font-bold text-[#7A302F] mb-1 uppercase flex items-center gap-1.5 text-[11px] sm:text-xs">
-                        <AlertOctagon className="w-4 h-4 shrink-0" />
-                        WHY THIS WAS FLAGGED
-                      </div>
-                      <p className="font-body text-xs text-[#3F2928] leading-relaxed">
-                        {issue.whyFlagged}
-                      </p>
+                  <div className="space-y-2 font-mono text-xs mb-6">
+                    <div className="p-3 bg-[#F3E4C8] border border-[#3F2928]">
+                      <span className="text-[#A58B7B] block text-[10px] uppercase font-bold mb-0.5">
+                        {t.issues.whyFlagged}
+                      </span>
+                      <p className="text-[#3F2928] font-bold">{issue.whyFlagged}</p>
                     </div>
 
-                    {/* RECOMMENDED ACTION */}
-                    <div className="p-3 sm:p-4 bg-[#F3E4C8] border border-[#3F2928]">
-                      <div className="font-bold text-[#7A302F] mb-1 uppercase flex items-center gap-1.5 text-[11px] sm:text-xs">
-                        <CheckCircle2 className="w-4 h-4 shrink-0" />
-                        RECOMMENDED ACTION
-                      </div>
-                      <p className="font-body text-xs text-[#3F2928] leading-relaxed">
-                        {issue.recommendedAction}
-                      </p>
+                    <div className="p-3 bg-[#FFF8EA] border border-[#3F2928]">
+                      <span className="text-[#A58B7B] block text-[10px] uppercase font-bold mb-0.5">
+                        {t.issues.suggestedFix}
+                      </span>
+                      <p className="text-[#7A302F] font-bold">{issue.recommendedAction}</p>
                     </div>
-
                   </div>
 
-                  {/* Action Buttons */}
+                  {/* Resolution Action Footer */}
                   {!issue.resolved && (
-                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-3 border-t border-[#3F2928]/20 font-mono text-xs">
+                    <div className="flex flex-wrap items-center gap-3 pt-3 border-t border-[#3F2928]">
                       <button
                         onClick={handleFixClick}
-                        className="w-full sm:w-auto bg-[#7A302F] hover:bg-[#5c2322] text-[#FFF8EA] px-5 py-2.5 border border-[#3F2928] shadow-[2px_2px_0px_#3F2928] font-heading text-base font-bold flex items-center justify-center gap-2 active:translate-x-[1px] active:translate-y-[1px] transition-all"
+                        className="bg-[#7A302F] hover:bg-[#5c2322] text-[#FFF8EA] font-heading text-xs font-bold px-4 py-2 border border-[#3F2928] flex items-center gap-1.5 shadow-[2px_2px_0px_#3F2928]"
                       >
-                        <Wrench className="w-4 h-4" />
-                        FIX THIS ISSUE IN WORKFLOW
+                        <Wrench className="w-3.5 h-3.5" />
+                        {t.nav.fix}
                       </button>
 
                       <button
                         onClick={handleNearbyClick}
-                        className="w-full sm:w-auto bg-[#FFF8EA] hover:bg-[#E8B9B8] text-[#3F2928] px-4 py-2.5 border border-[#3F2928] shadow-[2px_2px_0px_#3F2928] font-mono text-xs font-bold flex items-center justify-center gap-2"
+                        className="bg-[#FFF8EA] hover:bg-[#F3E4C8] text-[#3F2928] font-mono text-xs font-bold px-4 py-2 border border-[#3F2928] flex items-center gap-1.5"
                       >
-                        <MapPin className="w-4 h-4 text-[#7A302F]" />
-                        FIND HELP NEARBY
-                      </button>
-
-                      <button
-                        onClick={() => resolveIssue(issue.id)}
-                        className="sm:ml-auto text-[#A58B7B] hover:text-[#7A302F] underline font-bold py-1 text-center sm:text-right"
-                      >
-                        MARK AS RESOLVED
+                        <MapPin className="w-3.5 h-3.5 text-[#7A302F]" />
+                        {t.nav.help}
                       </button>
                     </div>
                   )}
@@ -176,4 +168,3 @@ export const IssuesPage: React.FC = () => {
     </div>
   );
 };
-

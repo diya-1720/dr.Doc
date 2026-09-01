@@ -1,12 +1,14 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForensics } from '../context/ForensicsContext';
+import { useLanguage } from '../i18n/LanguageContext';
 import { Sidebar } from '../components/Sidebar';
 import { Wrench } from 'lucide-react';
 
 export const DocumentQualityPage: React.FC = () => {
   const navigate = useNavigate();
   const { documents } = useForensics();
+  const { t } = useLanguage();
 
   const handleFixTool = () => {
     navigate('/tools');
@@ -21,19 +23,19 @@ export const DocumentQualityPage: React.FC = () => {
         {/* Header */}
         <div className="mb-6 pb-4 border-b-2 border-[#3F2928]">
           <div className="font-mono text-xs font-bold text-[#7A302F] uppercase tracking-widest mb-1">
-            PHASE 04 // LEGIBILITY & RESOLUTION INSPECTION
+            PHASE 04 // {t.quality.tag}
           </div>
           <h1 className="font-heading text-3xl sm:text-4xl md:text-5xl font-bold text-[#3F2928]">
-            DOCUMENT QUALITY AUDIT
+            {t.quality.title}
           </h1>
           <p className="font-body text-sm text-[#3F2928] mt-1">
-            Automated image legibility, DPI resolution, boundary cropping, and lighting contrast evaluation.
+            {t.quality.subtitle}
           </p>
         </div>
 
         {documents.length === 0 ? (
           <div className="bg-[#FFF8EA] p-6 sm:p-8 border-2 border-[#3F2928] text-center font-mono text-xs text-[#3F2928] shadow-[3px_3px_0px_#3F2928]">
-            No documents uploaded to inspect. Please upload files in the Document Inbox.
+            {t.inbox.noDocsMessage}
           </div>
         ) : (
           <div className="space-y-4 sm:space-y-6">
@@ -100,42 +102,32 @@ export const DocumentQualityPage: React.FC = () => {
                     </div>
 
                     <div className="p-3 bg-[#F3E4C8] border border-[#3F2928]">
-                      <div className="text-[#A58B7B] mb-1 text-[10px] sm:text-xs">CROPPING</div>
+                      <div className="text-[#A58B7B] mb-1 text-[10px] sm:text-xs">CROPPING & ALIGNMENT</div>
                       <div className="font-bold text-sm sm:text-base text-[#3F2928]">{q.cropping}%</div>
                       <div className="w-full h-1.5 bg-[#FFF8EA] mt-2 border border-[#3F2928]/30">
-                        <div className="bg-[#3F2928] h-full" style={{ width: `${q.cropping}%` }} />
+                        <div className="bg-[#7A302F] h-full" style={{ width: `${q.cropping}%` }} />
                       </div>
                     </div>
 
                   </div>
 
-                  {/* Feedback Observations */}
-                  <div className="bg-[#F3E4C8] p-3 sm:p-4 border border-[#3F2928] font-mono text-xs mb-4">
-                    <div className="font-bold text-[#3F2928] mb-2 uppercase text-[11px] sm:text-xs">
-                      QUALITY OBSERVATIONS:
+                  {/* Recommendations and Tools CTA */}
+                  <div className="bg-[#F3E4C8] p-3.5 sm:p-4 border border-[#3F2928] flex flex-col sm:flex-row sm:items-center justify-between gap-3 font-mono text-xs">
+                    <div>
+                      <div className="font-bold text-[#3F2928] mb-0.5">FORENSIC RECOMMENDATION:</div>
+                      <p className="text-[#7A302F]">{q.feedbackLines && q.feedbackLines.length > 0 ? q.feedbackLines.join('; ') : 'All forensic quality metrics pass verification thresholds.'}</p>
                     </div>
-                    <ul className="space-y-1 text-[#3F2928]">
-                      {q.feedbackLines.map((line, idx) => (
-                        <li key={idx} className="flex items-center gap-2 text-[11px] sm:text-xs">
-                          <span className="text-[#7A302F]">•</span>
-                          {line}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
 
-                  {/* Action Buttons if low quality */}
-                  {!isGood && (
-                    <div className="flex flex-wrap gap-3 pt-2 font-mono text-xs">
+                    {!isGood && (
                       <button
                         onClick={handleFixTool}
-                        className="w-full sm:w-auto bg-[#3F2928] text-[#FFF8EA] px-4 py-2.5 border border-[#3F2928] shadow-[2px_2px_0px_#7A302F] font-bold flex items-center justify-center gap-2 hover:bg-[#7A302F] transition-colors"
+                        className="bg-[#7A302F] hover:bg-[#5c2322] text-[#FFF8EA] font-heading text-xs font-bold px-4 py-2 border border-[#3F2928] flex items-center justify-center gap-1.5 shrink-0 self-start sm:self-auto"
                       >
-                        <Wrench className="w-4 h-4" />
-                        IMPROVE READABILITY IN TOOLS
+                        <Wrench className="w-3.5 h-3.5" />
+                        {t.quality.fixQualityBtn}
                       </button>
-                    </div>
-                  )}
+                    )}
+                  </div>
 
                 </div>
               );
@@ -147,4 +139,3 @@ export const DocumentQualityPage: React.FC = () => {
     </div>
   );
 };
-

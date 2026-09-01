@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useForensics } from '../context/ForensicsContext';
+import { useLanguage } from '../i18n/LanguageContext';
 import { Sidebar } from '../components/Sidebar';
 import { mergeSelectedDocsIntoPdf, downloadDocInFormat } from '../services/docTools';
 import type { DocItem } from '../types';
@@ -18,6 +19,7 @@ import logoImg from '../assets/logo.png';
 
 export const VerificationReportPage: React.FC = () => {
   const { readinessScore, caseId, currentApplication, documents, issues, crossChecks } = useForensics();
+  const { t } = useLanguage();
 
   const isReady = readinessScore >= 85 && issues.filter(i => i.severity === 'CRITICAL' && !i.resolved).length === 0;
 
@@ -89,10 +91,10 @@ export const VerificationReportPage: React.FC = () => {
                 />
                 <div>
                   <h1 className="font-heading text-2xl sm:text-3xl font-bold tracking-wider text-[#3F2928]">
-                    DR. DOC
+                    {t.header.tagline}
                   </h1>
                   <div className="font-mono text-[9px] sm:text-[10px] font-bold text-[#7A302F] tracking-widest uppercase">
-                    FORENSIC DOCUMENT VERIFICATION REPORT
+                    {t.report.title}
                   </div>
                 </div>
               </div>
@@ -101,28 +103,28 @@ export const VerificationReportPage: React.FC = () => {
             <div className="font-mono text-xs sm:text-right space-y-0.5 sm:space-y-1 text-[#3F2928]">
               <div>CASE ID: <strong>{caseId}</strong></div>
               <div>DATE: <strong>{new Date().toLocaleDateString('en-GB')}</strong></div>
-              <div>STATUS: <strong className="text-[#7A302F]">{isReady ? 'CERTIFIED READY' : 'ACTION REQUIRED'}</strong></div>
+              <div>STATUS: <strong className="text-[#7A302F]">{isReady ? t.common.readyForSubmission : t.common.actionRequired}</strong></div>
             </div>
           </div>
 
           {/* Report Summary Details Grid */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 font-mono text-xs mb-6 sm:mb-8 p-3 sm:p-4 bg-[#F3E4C8] border-2 border-[#3F2928]">
             <div>
-              <span className="text-[#A58B7B] block text-[10px]">APPLICATION</span>
+              <span className="text-[#A58B7B] block text-[10px] uppercase">APPLICATION</span>
               <strong className="text-[#3F2928] truncate block">{currentApplication.name}</strong>
             </div>
             <div>
-              <span className="text-[#A58B7B] block text-[10px]">READINESS</span>
+              <span className="text-[#A58B7B] block text-[10px] uppercase">{t.home.readinessScore}</span>
               <strong className="text-sm sm:text-base text-[#7A302F]">
                 {readinessScore} / 100
               </strong>
             </div>
             <div>
-              <span className="text-[#A58B7B] block text-[10px]">CASE DOCUMENTS</span>
+              <span className="text-[#A58B7B] block text-[10px] uppercase">{t.nav.documents}</span>
               <strong className="text-[#3F2928]">{documents.length} / 5 Files</strong>
             </div>
             <div>
-              <span className="text-[#A58B7B] block text-[10px]">UNRESOLVED ISSUES</span>
+              <span className="text-[#A58B7B] block text-[10px] uppercase">{t.issues.title}</span>
               <strong className="text-[#7A302F]">{issues.filter(i => !i.resolved).length} Issues</strong>
             </div>
           </div>
@@ -131,10 +133,10 @@ export const VerificationReportPage: React.FC = () => {
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 sm:p-6 border-2 border-[#3F2928] bg-[#F3E4C8] mb-6 sm:mb-8 gap-4">
             <div>
               <div className="font-mono text-xs text-[#A58B7B] font-bold uppercase mb-1">
-                FINAL VERIFICATION STATUS
+                {t.report.decisionStatus}
               </div>
               <div className="font-heading text-xl sm:text-3xl font-bold text-[#3F2928]">
-                {isReady ? 'READY FOR PORTAL SUBMISSION' : 'ACTION REQUIRED BEFORE SUBMISSION'}
+                {isReady ? t.common.readyForSubmission : t.common.actionRequired}
               </div>
             </div>
 
@@ -143,14 +145,14 @@ export const VerificationReportPage: React.FC = () => {
                 isReady ? 'stamp-verified' : 'stamp-critical'
               }`}
             >
-              {isReady ? 'VERIFIED ✓' : 'ACTION REQUIRED ✕'}
+              {isReady ? `${t.common.verified} ✓` : `${t.common.actionRequired} ✕`}
             </span>
           </div>
 
           {/* Document-by-Document Audit Table */}
           <div className="mb-6 sm:mb-8">
             <h3 className="font-heading text-lg sm:text-xl font-bold text-[#3F2928] mb-3 border-b-2 border-[#3F2928] pb-1">
-              DOCUMENT CLASSIFICATION & FORENSIC AUDIT
+              {t.report.auditSummary}
             </h3>
 
             <div className="overflow-x-auto">
@@ -198,7 +200,7 @@ export const VerificationReportPage: React.FC = () => {
                         <td className="p-2 border border-[#3F2928] font-bold">{doc.quality.overallScore}%</td>
                         <td className="p-2 border border-[#3F2928] font-bold">
                           <span className={doc.verificationStatus === 'VERIFIED' ? 'text-green-800' : 'text-[#7A302F]'}>
-                            {doc.verificationStatus}
+                            {doc.verificationStatus === 'VERIFIED' ? t.common.verified : t.common.needsReview}
                           </span>
                         </td>
                       </tr>
@@ -213,14 +215,14 @@ export const VerificationReportPage: React.FC = () => {
           {crossChecks.length > 0 && (
             <div className="mb-6 sm:mb-8 font-mono text-xs">
               <h3 className="font-heading text-lg sm:text-xl font-bold text-[#3F2928] mb-3 border-b-2 border-[#3F2928] pb-1">
-                CROSS-DOCUMENT CONSISTENCY AUDIT
+                {t.crossCheck.matrixTitle}
               </h3>
               <div className="space-y-2">
                 {crossChecks.map((check) => (
                   <div key={check.id} className="p-2.5 border border-[#3F2928] bg-[#F3E4C8] flex flex-col sm:flex-row justify-between text-[#3F2928] gap-1 sm:gap-2">
                     <span>{check.fieldName}: <strong>{check.analysisNote}</strong></span>
                     <span className={`font-bold self-start sm:self-auto ${check.status === 'MATCHED' ? 'text-green-800' : 'text-[#7A302F]'}`}>
-                      {check.status}
+                      {check.status === 'MATCHED' ? t.crossCheck.allMatch : t.crossCheck.mismatchDetected}
                     </span>
                   </div>
                 ))}
@@ -231,8 +233,8 @@ export const VerificationReportPage: React.FC = () => {
           {/* Footer Signature */}
           <div className="pt-6 border-t-2 border-[#3F2928] flex flex-col sm:flex-row justify-between items-start sm:items-end font-mono text-[10px] sm:text-[11px] text-[#A58B7B] gap-4">
             <div>
-              <div>DR. DOC • VERIFICATION REPORT</div>
-              <div>CONFIDENTIAL OFFICIAL FORENSIC AUDIT</div>
+              <div>DR. DOC • {t.report.title}</div>
+              <div>{t.footer.philosophyText}</div>
             </div>
             <div className="sm:text-right w-full sm:w-auto">
               <div className="border-b border-[#3F2928] w-48 mb-1" />
@@ -320,7 +322,7 @@ export const VerificationReportPage: React.FC = () => {
               className="w-full sm:w-auto bg-[#3F2928] text-[#FFF8EA] px-6 py-3 border border-[#3F2928] shadow-[3px_3px_0px_#7A302F] font-bold flex items-center justify-center gap-2 hover:bg-[#7A302F] transition-colors"
             >
               <Printer className="w-4 h-4" />
-              PRINT VERIFICATION CERTIFICATE
+              {t.report.printReportBtn}
             </button>
           </div>
 
@@ -386,7 +388,7 @@ export const VerificationReportPage: React.FC = () => {
                   onClick={() => setDownloadModalDoc(null)}
                   className="px-4 py-2.5 bg-[#FFF8EA] hover:bg-[#F3E4C8] text-[#3F2928] border border-[#3F2928] font-bold text-xs"
                 >
-                  CANCEL
+                  {t.common.cancel}
                 </button>
               </div>
 

@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useForensics } from '../context/ForensicsContext';
+import { useLanguage } from '../i18n/LanguageContext';
 import { Sidebar } from '../components/Sidebar';
 import { 
   compressDocumentFile, 
@@ -28,6 +29,7 @@ import {
 
 export const DocumentToolsPage: React.FC = () => {
   const { documents, replaceDocument } = useForensics();
+  const { t } = useLanguage();
   const [activeTool, setActiveTool] = useState<'compress' | 'convert' | 'format' | 'txtpdf' | 'merge' | 'enhance' | 'rename'>('compress');
   
   // Compression State
@@ -236,16 +238,16 @@ export const DocumentToolsPage: React.FC = () => {
         {/* Header */}
         <div className="mb-6 pb-4 border-b-2 border-[#3F2928]">
           <div className="font-mono text-xs font-bold text-[#7A302F] uppercase tracking-widest mb-1 flex items-center gap-2">
-            <span>DOCUMENT PREPARATION // INTEGRATED CASE TOOLS</span>
+            <span>PHASE 09 // {t.tools.tag}</span>
             <span className="inline-flex items-center gap-1 text-[10px] text-[#7A302F] bg-[#FFF8EA] px-2 py-0.5 border border-[#7A302F]">
               <Server className="w-3 h-3" /> NODE ENGINE
             </span>
           </div>
           <h1 className="font-heading text-3xl sm:text-4xl md:text-5xl font-bold text-[#3F2928]">
-            DOCUMENT PREPARATION
+            {t.tools.title}
           </h1>
           <p className="font-body text-sm text-[#3F2928] mt-1">
-            Server-accelerated document manipulation suite. Compress PDFs & images to portal limits, convert formats, extract text, merge bundles, and enhance contrast.
+            {t.tools.subtitle}
           </p>
         </div>
 

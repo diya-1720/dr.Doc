@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { Sidebar } from '../components/Sidebar';
+import { useLanguage } from '../i18n/LanguageContext';
 import { DEMO_NEARBY_CENTERS } from '../services/demoData';
-import { MapPin, Navigation, ExternalLink, Search } from 'lucide-react';
+import { Navigation, ExternalLink, Search } from 'lucide-react';
 
 export const NearbyHelpPage: React.FC = () => {
+  const { t } = useLanguage();
   const [centers] = useState(DEMO_NEARBY_CENTERS);
   const [searchQuery, setSearchQuery] = useState('');
   const [userLocation, setUserLocation] = useState<string | null>(null);
@@ -44,13 +46,13 @@ export const NearbyHelpPage: React.FC = () => {
         {/* Header */}
         <div className="mb-6 pb-4 border-b-2 border-[#3F2928]">
           <div className="font-mono text-xs font-bold text-[#7A302F] uppercase tracking-widest mb-1">
-            ASSISTANCE DESK
+            PHASE 10 // {t.help.tag}
           </div>
           <h1 className="font-heading text-3xl sm:text-4xl md:text-5xl font-bold text-[#3F2928]">
-            ASSISTANCE DESK
+            {t.help.title}
           </h1>
           <p className="font-body text-sm text-[#3F2928] mt-1">
-            Find verified offline document centers, Aadhaar Seva Kendras, CSC Digital desks, and notarization service providers near you.
+            {t.help.subtitle}
           </p>
         </div>
 
@@ -61,7 +63,7 @@ export const NearbyHelpPage: React.FC = () => {
             <Search className="w-4 h-4 absolute left-3 top-2.5 text-[#A58B7B]" />
             <input
               type="text"
-              placeholder="Search service type (e.g. Aadhaar, PAN)..."
+              placeholder={t.common.search}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full bg-[#F3E4C8] border border-[#3F2928] pl-9 pr-3 py-2 text-xs focus:outline-none text-[#3F2928]"
@@ -99,39 +101,16 @@ export const NearbyHelpPage: React.FC = () => {
                 </h3>
                 
                 {/* Address */}
-                <div className="font-mono text-xs text-[#3F2928] flex items-start gap-1.5 mb-3">
-                  <MapPin className="w-4 h-4 text-[#7A302F] shrink-0 mt-0.5" />
-                  <span>{center.address}</span>
-                </div>
+                <p className="font-mono text-xs text-[#A58B7B] mb-3 leading-relaxed">
+                  {center.address}
+                </p>
 
-                {/* Distance & Hours */}
-                <div className="grid grid-cols-2 gap-2 font-mono text-[11px] bg-[#F3E4C8] p-3 border border-[#3F2928] mb-4">
-                  <div>
-                    <span className="text-[#A58B7B]">DISTANCE:</span>
-                    <strong className="text-[#7A302F] ml-1">{center.distanceKm} KM</strong>
-                  </div>
-                  <div>
-                    <span className="text-[#A58B7B]">HOURS:</span>
-                    <span className="ml-1 font-semibold text-[#3F2928]">{center.hours}</span>
-                  </div>
-                  <div>
-                    <span className="text-[#A58B7B]">PHONE:</span>
-                    <span className="ml-1 font-bold text-[#3F2928]">{center.phone}</span>
-                  </div>
-                  <div>
-                    <span className="text-[#A58B7B]">RATING:</span>
-                    <span className="ml-1 font-bold text-[#7A302F]">★ {center.rating}</span>
-                  </div>
-                </div>
-
-                {/* Provided Services List */}
-                <div className="font-mono text-xs mb-4">
-                  <div className="font-bold text-[#3F2928] mb-1 text-[10px] uppercase">
-                    SERVICES PROVIDED:
-                  </div>
+                {/* Services List */}
+                <div className="space-y-1 font-mono text-[11px] mb-4">
+                  <span className="text-[#3F2928] font-bold block text-[10px]">SERVICES OFFERED:</span>
                   <div className="flex flex-wrap gap-1">
                     {center.services.map((s, idx) => (
-                      <span key={idx} className="px-2 py-0.5 bg-[#F3E4C8] border border-[#3F2928] text-[10px] text-[#3F2928]">
+                      <span key={idx} className="px-1.5 py-0.5 bg-[#F3E4C8] border border-[#3F2928] text-[#3F2928] text-[10px]">
                         {s}
                       </span>
                     ))}
@@ -140,14 +119,18 @@ export const NearbyHelpPage: React.FC = () => {
 
               </div>
 
-              {/* Get Directions Button */}
-              <button
-                onClick={() => handleGetDirections(center.address)}
-                className="w-full bg-[#7A302F] hover:bg-[#5c2322] text-[#FFF8EA] py-2.5 border border-[#3F2928] shadow-[2px_2px_0px_#3F2928] font-heading text-base font-bold flex items-center justify-center gap-2 active:translate-x-[1px] active:translate-y-[1px] transition-all"
-              >
-                <ExternalLink className="w-4 h-4 text-[#FFF8EA]" />
-                GET DIRECTIONS ON MAPS
-              </button>
+              {/* Action Footer */}
+              <div className="pt-3 border-t border-[#3F2928]/20 flex items-center justify-between font-mono text-xs">
+                <span className="text-[#7A302F] font-bold">{center.distanceKm} km</span>
+
+                <button
+                  onClick={() => handleGetDirections(center.address)}
+                  className="text-[#7A302F] hover:underline font-bold flex items-center gap-1"
+                >
+                  <span>{t.help.directions}</span>
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </button>
+              </div>
 
             </div>
           ))}
@@ -157,4 +140,3 @@ export const NearbyHelpPage: React.FC = () => {
     </div>
   );
 };
-
