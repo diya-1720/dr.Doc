@@ -3,6 +3,9 @@ import { Sidebar } from '../components/Sidebar';
 import { 
   compressDocumentFile, 
   convertImagesToPdf, 
+  convertImageFormat,
+  convertTxtToPdf,
+  extractPdfText,
   enhanceImageReadability, 
   renameFile, 
   mergePdfFiles 
@@ -15,20 +18,31 @@ import {
   Layers, 
   Edit3, 
   Sparkles,
-  CheckCircle2
+  CheckCircle2,
+  RefreshCw,
+  FileCode2,
+  Server
 } from 'lucide-react';
 
 export const DocumentToolsPage: React.FC = () => {
-  const [activeTool, setActiveTool] = useState<'compress' | 'convert' | 'rename' | 'merge' | 'enhance'>('compress');
+  const [activeTool, setActiveTool] = useState<'compress' | 'convert' | 'format' | 'txtpdf' | 'merge' | 'enhance' | 'rename'>('compress');
   
   // Compression State
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [targetMb, setTargetMb] = useState<number>(10);
-  const [compressedResult, setCompressedResult] = useState<{ file: File; oldSize: number; newSize: number } | null>(null);
+  const [compressedResult, setCompressedResult] = useState<{ file: File; oldSize: number; newSize: number; reductionPercent?: number } | null>(null);
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   // Conversion / Merge State
   const [multiFiles, setMultiFiles] = useState<File[]>([]);
+
+  // Format Conversion State
+  const [targetFormat, setTargetFormat] = useState<'png' | 'jpg' | 'webp'>('webp');
+
+  // TXT / PDF Mode
+  const [txtPdfMode, setTxtPdfMode] = useState<'txt-to-pdf' | 'pdf-to-txt'>('txt-to-pdf');
+  const [extractedTextResult, setExtractedTextResult] = useState<string | null>(null);
 
   // Rename State
   const [renameInput, setRenameInput] = useState<string>('AADHAAR_CARD_RAHUL_KUMAR.pdf');
@@ -36,46 +50,113 @@ export const DocumentToolsPage: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setErrorMsg(null);
     if (e.target.files && e.target.files.length > 0) {
       if (activeTool === 'convert' || activeTool === 'merge') {
         setMultiFiles(Array.from(e.target.files));
       } else {
         setSelectedFile(e.target.files[0]);
+        if (activeTool === 'rename') {
+          setRenameInput(e.target.files[0].name.toUpperCase());
+        }
       }
       setCompressedResult(null);
+      setExtractedTextResult(null);
     }
   };
 
   const handleCompress = async () => {
     if (!selectedFile) return;
     setIsProcessing(true);
-    const res = await compressDocumentFile(selectedFile, targetMb);
-    setCompressedResult({ file: res.compressedFile, oldSize: res.oldSizeMB, newSize: res.newSizeMB });
-    setIsProcessing(false);
+    setErrorMsg(null);
+    try {
+      const res = await compressDocumentFile(selectedFile, targetMb);
+      setCompressedResult({ 
+        file: res.compressedFile, 
+        oldSize: res.oldSizeMB, 
+        newSize: res.newSizeMB,
+        reductionPercent: res.reductionPercent 
+      });
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Compression failed');
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const handleConvert = async () => {
     if (multiFiles.length === 0) return;
     setIsProcessing(true);
-    const pdf = await convertImagesToPdf(multiFiles, 'converted_bundle.pdf');
-    downloadFile(pdf);
-    setIsProcessing(false);
+    setErrorMsg(null);
+    try {
+      const pdf = await convertImagesToPdf(multiFiles, 'converted_bundle.pdf');
+      downloadFile(pdf);
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Conversion failed');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleFormatConvert = async () => {
+    if (!selectedFile) return;
+    setIsProcessing(true);
+    setErrorMsg(null);
+    try {
+      const converted = await convertImageFormat(selectedFile, targetFormat);
+      downloadFile(converted);
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Format conversion failed');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleTxtPdfConvert = async () => {
+    if (!selectedFile) return;
+    setIsProcessing(true);
+    setErrorMsg(null);
+    try {
+      if (txtPdfMode === 'txt-to-pdf') {
+        const pdf = await convertTxtToPdf(selectedFile);
+        downloadFile(pdf);
+      } else {
+        const text = await extractPdfText(selectedFile);
+        setExtractedTextResult(text);
+      }
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Text conversion failed');
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const handleMerge = async () => {
     if (multiFiles.length === 0) return;
     setIsProcessing(true);
-    const merged = await mergePdfFiles(multiFiles, 'merged_application_bundle.pdf');
-    downloadFile(merged);
-    setIsProcessing(false);
+    setErrorMsg(null);
+    try {
+      const merged = await mergePdfFiles(multiFiles, 'merged_application_bundle.pdf');
+      downloadFile(merged);
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Merge failed');
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const handleEnhance = async () => {
     if (!selectedFile) return;
     setIsProcessing(true);
-    const enhanced = await enhanceImageReadability(selectedFile);
-    downloadFile(enhanced);
-    setIsProcessing(false);
+    setErrorMsg(null);
+    try {
+      const enhanced = await enhanceImageReadability(selectedFile);
+      downloadFile(enhanced);
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Enhancement failed');
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const handleRename = () => {
@@ -100,14 +181,17 @@ export const DocumentToolsPage: React.FC = () => {
         
         {/* Header */}
         <div className="mb-6 pb-4 border-b-2 border-[#3F2928]">
-          <div className="font-mono text-xs font-bold text-[#7A302F] uppercase tracking-widest mb-1">
-            DOCUMENT PREPARATION
+          <div className="font-mono text-xs font-bold text-[#7A302F] uppercase tracking-widest mb-1 flex items-center gap-2">
+            <span>DOCUMENT PREPARATION // BACKEND SERVICES CONNECTED</span>
+            <span className="inline-flex items-center gap-1 text-[10px] text-[#7A302F] bg-[#FFF8EA] px-2 py-0.5 border border-[#7A302F]">
+              <Server className="w-3 h-3" /> NODE ENGINE
+            </span>
           </div>
           <h1 className="font-heading text-3xl sm:text-4xl md:text-5xl font-bold text-[#3F2928]">
-            DOCUMENT PREPARATION TOOLS
+            DOCUMENT PREPARATION
           </h1>
           <p className="font-body text-sm text-[#3F2928] mt-1">
-            Client-side document manipulation suite. Compress PDFs to custom portal limits, convert images, merge bundles, and enhance scan contrast.
+            Server-accelerated document manipulation suite. Compress PDFs & images to portal limits, convert formats, extract text, merge bundles, and enhance contrast.
           </p>
         </div>
 
@@ -116,6 +200,8 @@ export const DocumentToolsPage: React.FC = () => {
           {[
             { id: 'compress', label: 'COMPRESS PDF / IMAGE', icon: FileCheck2 },
             { id: 'convert', label: 'JPG / PNG → PDF', icon: FileText },
+            { id: 'format', label: 'IMAGE FORMAT (WEBP/JPG/PNG)', icon: RefreshCw },
+            { id: 'txtpdf', label: 'TXT ↔ PDF', icon: FileCode2 },
             { id: 'merge', label: 'MERGE PDFs', icon: Layers },
             { id: 'enhance', label: 'IMPROVE READABILITY', icon: Sparkles },
             { id: 'rename', label: 'RENAME FILE', icon: Edit3 },
@@ -125,7 +211,14 @@ export const DocumentToolsPage: React.FC = () => {
             return (
               <button
                 key={t.id}
-                onClick={() => { setActiveTool(t.id as any); setSelectedFile(null); setMultiFiles([]); setCompressedResult(null); }}
+                onClick={() => { 
+                  setActiveTool(t.id as any); 
+                  setSelectedFile(null); 
+                  setMultiFiles([]); 
+                  setCompressedResult(null); 
+                  setExtractedTextResult(null);
+                  setErrorMsg(null);
+                }}
                 className={`px-3 sm:px-4 py-2 border font-bold flex items-center gap-2 transition-all text-[11px] sm:text-xs ${
                   isActive
                     ? 'bg-[#3F2928] text-[#FFF8EA] border-[#3F2928] shadow-[3px_3px_0px_#D47794]'
@@ -142,6 +235,12 @@ export const DocumentToolsPage: React.FC = () => {
         {/* Main Active Tool Card Workspace */}
         <div className="bg-[#FFF8EA] border-2 border-[#3F2928] p-4 sm:p-8 shadow-[6px_6px_0px_#3F2928]">
           
+          {errorMsg && (
+            <div className="p-3 mb-4 bg-[#E8B9B8] border-2 border-[#7A302F] text-[#7A302F] font-mono text-xs font-bold">
+              ERROR: {errorMsg}
+            </div>
+          )}
+
           {/* File Upload Zone for Active Tool */}
           <div className="mb-6">
             <label className="font-mono text-xs font-bold text-[#3F2928] block mb-2 uppercase">
@@ -153,7 +252,13 @@ export const DocumentToolsPage: React.FC = () => {
               ref={fileInputRef}
               onChange={handleFileSelect}
               multiple={activeTool === 'convert' || activeTool === 'merge'}
-              accept={activeTool === 'convert' ? 'image/*' : '.pdf,.png,.jpg,.jpeg'}
+              accept={
+                activeTool === 'convert' || activeTool === 'format' || activeTool === 'enhance'
+                  ? 'image/png,image/jpeg,image/webp'
+                  : activeTool === 'txtpdf'
+                  ? '.txt,.pdf'
+                  : '.pdf,.png,.jpg,.jpeg,.webp'
+              }
               className="hidden"
             />
 
@@ -172,7 +277,7 @@ export const DocumentToolsPage: React.FC = () => {
             </button>
           </div>
 
-          {/* TOOL 1: COMPRESS PDF */}
+          {/* TOOL 1: COMPRESS PDF / IMAGE */}
           {activeTool === 'compress' && (
             <div className="space-y-6 font-mono text-xs">
               <div>
@@ -197,7 +302,7 @@ export const DocumentToolsPage: React.FC = () => {
                 disabled={!selectedFile || isProcessing}
                 className="w-full sm:w-auto bg-[#7A302F] hover:bg-[#5c2322] text-[#FFF8EA] px-6 py-3 border-2 border-[#3F2928] shadow-[3px_3px_0px_#3F2928] font-heading text-base sm:text-lg font-bold disabled:opacity-50"
               >
-                {isProcessing ? 'PROCESSING COMPRESSION...' : `COMPRESS FILE BELOW ${targetMb} MB`}
+                {isProcessing ? 'PROCESSING BACKEND COMPRESSION...' : `COMPRESS FILE BELOW ${targetMb} MB`}
               </button>
 
               {compressedResult && (
@@ -209,6 +314,9 @@ export const DocumentToolsPage: React.FC = () => {
                   <div className="space-y-1 mb-4 text-[#3F2928]">
                     <div>BEFORE SIZE: <strong>{compressedResult.oldSize} MB</strong></div>
                     <div>AFTER SIZE: <strong className="text-[#7A302F]">{compressedResult.newSize} MB</strong></div>
+                    {compressedResult.reductionPercent && (
+                      <div>REDUCTION: <strong className="text-[#7A302F]">{compressedResult.reductionPercent}% SMALLER</strong></div>
+                    )}
                     <div className="text-[11px] text-[#7A302F]">✓ READY FOR SUBMISSION</div>
                   </div>
 
@@ -228,19 +336,96 @@ export const DocumentToolsPage: React.FC = () => {
           {activeTool === 'convert' && (
             <div className="space-y-6 font-mono text-xs">
               <p className="text-[#A58B7B]">
-                Select one or more PNG/JPG photos. Dr. Doc will bundle them into a clean A4 PDF document.
+                Select one or more PNG/JPG/WEBP photos. The backend sharp + pdf-lib engine bundles them into a multi-page A4 PDF document.
               </p>
               <button
                 onClick={handleConvert}
                 disabled={multiFiles.length === 0 || isProcessing}
                 className="w-full sm:w-auto bg-[#7A302F] text-[#FFF8EA] px-6 py-3 border-2 border-[#3F2928] shadow-[3px_3px_0px_#3F2928] font-heading text-base sm:text-lg font-bold disabled:opacity-50"
               >
-                CONVERT {multiFiles.length} IMAGE(S) TO PDF & DOWNLOAD
+                {isProcessing ? 'CONVERTING ON BACKEND...' : `CONVERT ${multiFiles.length} IMAGE(S) TO PDF & DOWNLOAD`}
               </button>
             </div>
           )}
 
-          {/* TOOL 3: MERGE PDFs */}
+          {/* TOOL 3: FORMAT CONVERSION */}
+          {activeTool === 'format' && (
+            <div className="space-y-6 font-mono text-xs">
+              <div>
+                <label className="font-bold text-[#3F2928] block mb-2">TARGET IMAGE FORMAT:</label>
+                <div className="flex gap-3">
+                  {(['webp', 'jpg', 'png'] as const).map((fmt) => (
+                    <button
+                      key={fmt}
+                      onClick={() => setTargetFormat(fmt)}
+                      className={`px-4 py-2 border font-bold uppercase ${
+                        targetFormat === fmt
+                          ? 'bg-[#3F2928] text-[#FFF8EA] border-[#3F2928] shadow-[2px_2px_0px_#7A302F]'
+                          : 'bg-[#F3E4C8] text-[#3F2928] border-[#3F2928]'
+                      }`}
+                    >
+                      {fmt.toUpperCase()}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <button
+                onClick={handleFormatConvert}
+                disabled={!selectedFile || isProcessing}
+                className="w-full sm:w-auto bg-[#7A302F] text-[#FFF8EA] px-6 py-3 border-2 border-[#3F2928] shadow-[3px_3px_0px_#3F2928] font-heading text-base sm:text-lg font-bold disabled:opacity-50"
+              >
+                {isProcessing ? 'CONVERTING FORMAT...' : `CONVERT TO ${targetFormat.toUpperCase()} & DOWNLOAD`}
+              </button>
+            </div>
+          )}
+
+          {/* TOOL 4: TXT <-> PDF */}
+          {activeTool === 'txtpdf' && (
+            <div className="space-y-6 font-mono text-xs">
+              <div className="flex gap-3">
+                <button
+                  onClick={() => { setTxtPdfMode('txt-to-pdf'); setSelectedFile(null); }}
+                  className={`px-4 py-2 border font-bold ${
+                    txtPdfMode === 'txt-to-pdf'
+                      ? 'bg-[#3F2928] text-[#FFF8EA] border-[#3F2928]'
+                      : 'bg-[#F3E4C8] text-[#3F2928] border-[#3F2928]'
+                  }`}
+                >
+                  TXT → PDF (PDFKIT LAYOUT)
+                </button>
+                <button
+                  onClick={() => { setTxtPdfMode('pdf-to-txt'); setSelectedFile(null); }}
+                  className={`px-4 py-2 border font-bold ${
+                    txtPdfMode === 'pdf-to-txt'
+                      ? 'bg-[#3F2928] text-[#FFF8EA] border-[#3F2928]'
+                      : 'bg-[#F3E4C8] text-[#3F2928] border-[#3F2928]'
+                  }`}
+                >
+                  PDF → TXT (PDF-PARSE EXTRACTION)
+                </button>
+              </div>
+
+              <button
+                onClick={handleTxtPdfConvert}
+                disabled={!selectedFile || isProcessing}
+                className="w-full sm:w-auto bg-[#7A302F] text-[#FFF8EA] px-6 py-3 border-2 border-[#3F2928] shadow-[3px_3px_0px_#3F2928] font-heading text-base sm:text-lg font-bold disabled:opacity-50"
+              >
+                {isProcessing ? 'PROCESSING...' : txtPdfMode === 'txt-to-pdf' ? 'GENERATE PAGINATED PDF' : 'EXTRACT TEXT FROM PDF'}
+              </button>
+
+              {extractedTextResult && (
+                <div className="p-4 bg-[#F3E4C8] border-2 border-[#3F2928] mt-4">
+                  <div className="font-bold text-[#3F2928] mb-2 uppercase">EXTRACTED TEXT OUTPUT:</div>
+                  <pre className="whitespace-pre-wrap max-h-60 overflow-y-auto bg-[#FFF8EA] p-3 border border-[#3F2928] font-mono text-xs">
+                    {extractedTextResult}
+                  </pre>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* TOOL 5: MERGE PDFs */}
           {activeTool === 'merge' && (
             <div className="space-y-6 font-mono text-xs">
               <p className="text-[#A58B7B]">
@@ -256,7 +441,7 @@ export const DocumentToolsPage: React.FC = () => {
             </div>
           )}
 
-          {/* TOOL 4: IMPROVE READABILITY */}
+          {/* TOOL 6: IMPROVE READABILITY */}
           {activeTool === 'enhance' && (
             <div className="space-y-6 font-mono text-xs">
               <p className="text-[#A58B7B]">
@@ -272,7 +457,7 @@ export const DocumentToolsPage: React.FC = () => {
             </div>
           )}
 
-          {/* TOOL 5: RENAME FILE */}
+          {/* TOOL 7: RENAME FILE */}
           {activeTool === 'rename' && (
             <div className="space-y-6 font-mono text-xs">
               <div>
@@ -301,4 +486,3 @@ export const DocumentToolsPage: React.FC = () => {
     </div>
   );
 };
-

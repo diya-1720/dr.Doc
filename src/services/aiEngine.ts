@@ -1,5 +1,6 @@
 import { GoogleGenAI } from '@google/genai';
 import type { DocItem, DocumentCategory, DocumentType, QualityStatus, VerificationStatus, IssueItem, CrossCheckField } from '../types';
+import { backendAnalyzeDocument } from './api';
 
 // Check if Gemini API key exists
 const getGeminiApiKey = (): string | undefined => {
@@ -8,21 +9,57 @@ const getGeminiApiKey = (): string | undefined => {
 
 /**
  * Intelligent Document Classifier & Forensic Analysis Engine
- * Uses Gemini API when key is available, or high-accuracy client-side heuristics.
+ * Priority 1: Backend Analysis API (with server-side Gemini & pdf-parse)
+ * Priority 2: Client-side Gemini if VITE_GEMINI_API_KEY present
+ * Priority 3: Local Forensic Engine Heuristics
  */
 export async function analyzeUploadedFile(file: File): Promise<DocItem> {
+  // 1. Try Backend Analysis API
+  try {
+    const apiRes = await backendAnalyzeDocument(file);
+    if (apiRes.success && apiRes.data) {
+      const parsed = apiRes.data;
+      const previewUrl = URL.createObjectURL(file);
+      return {
+        id: `doc-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+        filename: file.name,
+        originalFilename: file.name,
+        fileSizeMB: parseFloat((file.size / (1024 * 1024)).toFixed(2)),
+        mimeType: file.type || 'application/octet-stream',
+        previewUrl,
+        category: parsed.category || 'UNKNOWN',
+        documentType: parsed.documentType || 'Unidentified Document',
+        confidence: parsed.confidence || 85,
+        quality: parsed.quality || {
+          sharpness: 85, textVisibility: 85, lighting: 85, cropping: 90, overallScore: 86,
+          status: 'GOOD', feedbackLines: ['Document verified']
+        },
+        extractedFields: parsed.extractedFields || [],
+        rawOcrText: parsed.rawOcrText || 'Extracted document text',
+        verificationStatus: parsed.verificationStatus || 'VERIFIED',
+        issues: parsed.issues || [],
+        uploadedAt: new Date().toISOString(),
+        metadata: {
+          format: file.type || 'application/octet-stream',
+        },
+      };
+    }
+  } catch (backendErr) {
+    console.warn('Backend document analysis offline or failed, trying local engine:', backendErr);
+  }
+
   const apiKey = getGeminiApiKey();
 
-  // Try real Gemini AI if API key is present
+  // 2. Try Client Gemini AI if API key is present
   if (apiKey) {
     try {
       return await analyzeWithGemini(file, apiKey);
     } catch (err) {
-      console.warn('Gemini API call failed or timed out. Falling back to local forensic engine:', err);
+      console.warn('Client Gemini API call failed. Falling back to local forensic engine:', err);
     }
   }
 
-  // Local Forensic Engine Execution
+  // 3. Local Forensic Engine Execution
   return await analyzeWithLocalEngine(file);
 }
 

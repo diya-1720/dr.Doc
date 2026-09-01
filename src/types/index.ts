@@ -83,6 +83,33 @@ export interface IssueItem {
   resolved: boolean;
 }
 
+export interface FieldComparisonDetail {
+  match: boolean | 'Unable to verify' | 'UNABLE_TO_VERIFY';
+  document1: string;
+  document2: string;
+  notes?: string;
+}
+
+export interface CrossCheckResult {
+  overallMatch: boolean;
+  matchScore: number;
+  fields: {
+    name?: FieldComparisonDetail;
+    dateOfBirth?: FieldComparisonDetail;
+    documentNumber?: FieldComparisonDetail;
+    gender?: FieldComparisonDetail;
+    address?: FieldComparisonDetail;
+    fatherOrSpouseName?: FieldComparisonDetail;
+    [key: string]: FieldComparisonDetail | undefined;
+  };
+  matchedFields?: string[];
+  mismatches?: string[];
+  unableToVerify?: string[];
+  explanation: string;
+  document1Type?: string;
+  document2Type?: string;
+}
+
 export interface CrossCheckField {
   id: string;
   fieldName: string; // e.g. "Full Name", "Date of Birth", "Address", "Tax ID"

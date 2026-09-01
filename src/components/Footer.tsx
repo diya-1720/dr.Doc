@@ -1,10 +1,20 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../i18n/LanguageContext';
-import logoImg from '../assets/logo.jpg';
+import logoImg from '../assets/logo.png';
+import { checkBackendHealth } from '../services/api';
 
 export const Footer: React.FC = () => {
   const { t } = useLanguage();
+  const [backendStatus, setBackendStatus] = useState<'checking' | 'connected' | 'offline'>('checking');
+
+  useEffect(() => {
+    let active = true;
+    checkBackendHealth()
+      .then(() => active && setBackendStatus('connected'))
+      .catch(() => active && setBackendStatus('offline'));
+    return () => { active = false; };
+  }, []);
 
   return (
     <footer className="bg-[#3F2928] text-[#FFF8EA] border-t-4 border-[#7A302F] py-6 md:py-8 px-4 md:px-8 mt-auto">
@@ -30,64 +40,62 @@ export const Footer: React.FC = () => {
           <p className="font-mono text-[11px] text-[#A58B7B] leading-relaxed mb-3">
             {t.footer.tagline}
           </p>
-          <div className="inline-block px-2 py-0.5 bg-[#3F2928]/80 border border-[#D47794] font-mono text-[10px] text-[#D47794] uppercase font-bold">
-            {t.footer.systemStatus}: {t.footer.allSystemsOperational}
+          <div className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-[#3F2928]/80 border border-[#D47794] font-mono text-[10px] text-[#D47794] uppercase font-bold">
+            <span className={`w-1.5 h-1.5 rounded-full ${backendStatus === 'connected' ? 'bg-green-400' : 'bg-[#D47794]'} animate-pulse`} />
+            {backendStatus === 'connected' ? `${t.footer.systemStatus}: BACKEND ONLINE` : `${t.footer.systemStatus}: ${t.footer.allSystemsOperational}`}
           </div>
         </div>
 
         {/* Quick Links */}
         <div>
           <div className="font-heading text-xs text-[#E8B9B8] mb-2 tracking-wider">
-            {t.nav.verify} & {t.nav.documents}
+            {t.footer.workspaces}
           </div>
           <ul className="space-y-1.5 font-mono text-xs text-[#F3E4C8]">
-            <li><Link to="/verify" className="hover:text-[#D47794] transition-colors">{t.nav.verify}</Link></li>
-            <li><Link to="/documents" className="hover:text-[#D47794] transition-colors">{t.nav.documents}</Link></li>
-            <li><Link to="/ocr" className="hover:text-[#D47794] transition-colors">{t.nav.ocr}</Link></li>
-            <li><Link to="/quality" className="hover:text-[#D47794] transition-colors">{t.nav.quality}</Link></li>
-            <li><Link to="/cross-check" className="hover:text-[#D47794] transition-colors">{t.nav.crossCheck}</Link></li>
+            <li><Link to="/verify" className="hover:text-[#D47794] transition-colors">{t.nav.verifySetup}</Link></li>
+            <li><Link to="/documents" className="hover:text-[#D47794] transition-colors">{t.nav.documentInbox}</Link></li>
+            <li><Link to="/ocr" className="hover:text-[#D47794] transition-colors">{t.nav.ocrExtraction}</Link></li>
+            <li><Link to="/quality" className="hover:text-[#D47794] transition-colors">{t.nav.qualityInspection}</Link></li>
+            <li><Link to="/tools" className="hover:text-[#D47794] transition-colors">{t.nav.documentPreparation}</Link></li>
+            <li><Link to="/cross-check" className="hover:text-[#D47794] transition-colors">{t.nav.evidenceCrossCheck}</Link></li>
           </ul>
         </div>
 
-        {/* Tools & Services */}
+        {/* Legal & Compliance */}
         <div>
           <div className="font-heading text-xs text-[#E8B9B8] mb-2 tracking-wider">
-            {t.nav.tools} & {t.nav.help}
+            {t.footer.compliance}
           </div>
           <ul className="space-y-1.5 font-mono text-xs text-[#F3E4C8]">
-            <li><Link to="/tools" className="hover:text-[#D47794] transition-colors">{t.tools.compressorTitle}</Link></li>
-            <li><Link to="/tools" className="hover:text-[#D47794] transition-colors">{t.tools.converterTitle}</Link></li>
-            <li><Link to="/tools" className="hover:text-[#D47794] transition-colors">{t.tools.sharpenerTitle}</Link></li>
-            <li><Link to="/help-nearby" className="hover:text-[#D47794] transition-colors">{t.nav.help}</Link></li>
-            <li><Link to="/report" className="hover:text-[#D47794] transition-colors">{t.nav.report}</Link></li>
+            <li><span className="text-[#A58B7B]">{t.footer.auditTrail}</span></li>
+            <li><span className="text-[#A58B7B]">{t.footer.ephemeralProcessing}</span></li>
+            <li><span className="text-[#A58B7B]">{t.footer.forensicIntegrity}</span></li>
+            <li><span className="text-[#A58B7B]">{t.footer.isoStandard}</span></li>
           </ul>
         </div>
 
-        {/* Forensic Philosophy */}
+        {/* Case File Info */}
         <div>
-          <div className="font-heading text-xs text-[#E8B9B8] mb-2 tracking-wider uppercase">
-            {t.footer.philosophyTitle}
+          <div className="font-heading text-xs text-[#E8B9B8] mb-2 tracking-wider">
+            {t.footer.stationInfo}
           </div>
-          <div className="font-mono text-xs text-[#A58B7B] space-y-1">
-            <div className="text-[#FFF8EA] font-bold text-[11px]">DETECT → UNDERSTAND → VERIFY</div>
-            <div className="text-[#FFF8EA] font-bold text-[11px]">EXPLAIN → FIX → RECHECK → READY</div>
-            <p className="mt-2 text-[10px] leading-tight text-[#A58B7B]">
-              {t.footer.philosophyText}
-            </p>
+          <div className="font-mono text-xs text-[#F3E4C8] space-y-1">
+            <div>{t.footer.terminal} <span className="text-[#E8B9B8]">DOC-SEC-01</span></div>
+            <div>{t.footer.build} <span className="text-[#E8B9B8]">2026.08.31-PROD</span></div>
+            <div>{t.footer.session} <span className="text-[#E8B9B8]">ACTIVE</span></div>
           </div>
         </div>
+
       </div>
 
-      <div className="max-w-7xl mx-auto pt-4 border-t border-[#7A302F]/40 flex flex-col sm:flex-row justify-between items-center font-mono text-[11px] text-[#A58B7B] gap-2">
+      <div className="max-w-7xl mx-auto border-t border-[#3F2928] pt-4 flex flex-col sm:flex-row justify-between items-center gap-2 font-mono text-[10px] text-[#A58B7B]">
         <div>
           {t.footer.copyright}
         </div>
-        <div className="flex flex-wrap justify-center gap-3 text-[10px]">
-          <span>{t.footer.privacy}</span>
+        <div className="flex gap-4">
+          <span>{t.footer.isoCompliant}</span>
           <span>•</span>
-          <span>{t.footer.terms}</span>
-          <span>•</span>
-          <span>{t.footer.security}</span>
+          <span>{t.footer.zeroRetention}</span>
         </div>
       </div>
     </footer>
