@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import logoImg from '../assets/logo.jpg';
 
 export const Footer: React.FC = () => {
   return (
@@ -8,16 +9,23 @@ export const Footer: React.FC = () => {
         
         {/* Brand Column */}
         <div>
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-7 h-7 bg-[#7A302F] text-[#FFF8EA] flex items-center justify-center font-heading text-base font-bold border border-[#FFF8EA]">
-              DR
-            </div>
-            <div className="font-heading text-xl font-bold tracking-wider text-white">
-              DR. DOC
+          <div className="flex items-center gap-2.5 mb-2">
+            <img
+              src={logoImg}
+              alt="DR. DOC Logo"
+              className="w-8 h-8 rounded-full object-cover border border-[#FFF8EA] shrink-0"
+            />
+            <div>
+              <div className="font-heading text-xl font-bold tracking-wider text-white leading-none">
+                DR. DOC
+              </div>
+              <div className="font-mono text-[9px] font-semibold text-[#E8B9B8] tracking-widest uppercase mt-0.5">
+                DOCUMENT INTELLIGENCE
+              </div>
             </div>
           </div>
           <p className="font-mono text-[11px] text-[#A58B7B] leading-relaxed mb-3">
-            AI-POWERED DOCUMENT FORENSICS & VERIFICATION PLATFORM.
+            DOCUMENT INTELLIGENCE & VERIFICATION PLATFORM.
             EXAMINE, CLASSIFY & VERIFY CASE FILES BEFORE SUBMISSION.
           </p>
           <div className="inline-block px-2 py-0.5 bg-[#3F2928]/80 border border-[#D47794] font-mono text-[10px] text-[#D47794] uppercase font-bold">
@@ -28,7 +36,7 @@ export const Footer: React.FC = () => {
         {/* Quick Links */}
         <div>
           <div className="font-heading text-xs text-[#E8B9B8] mb-2 tracking-wider">
-            FORENSIC WORKSPACE
+            WORKSPACES
           </div>
           <ul className="space-y-1.5 font-mono text-xs text-[#F3E4C8]">
             <li><Link to="/verify" className="hover:text-[#D47794] transition-colors">Verify Setup</Link></li>
@@ -70,7 +78,7 @@ export const Footer: React.FC = () => {
 
       <div className="max-w-7xl mx-auto pt-4 border-t border-[#7A302F]/40 flex flex-col sm:flex-row justify-between items-center font-mono text-[11px] text-[#A58B7B] gap-2">
         <div>
-          © 2026 DR. DOC FORENSICS LAB. ALL RIGHTS RESERVED.
+          © 2026 DR. DOC. ALL RIGHTS RESERVED.
         </div>
         <div className="flex flex-wrap justify-center gap-3 text-[10px]">
           <span>EVIDENCE SECURED</span>

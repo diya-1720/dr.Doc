@@ -2,6 +2,7 @@ import React from 'react';
 import { useForensics } from '../context/ForensicsContext';
 import { Sidebar } from '../components/Sidebar';
 import { Printer, Download } from 'lucide-react';
+import logoImg from '../assets/logo.jpg';
 
 export const VerificationReportPage: React.FC = () => {
   const { readinessScore, caseId, currentApplication, documents, issues, crossChecks } = useForensics();
@@ -29,9 +30,11 @@ export const VerificationReportPage: React.FC = () => {
           <div className="flex flex-col sm:flex-row justify-between items-start border-b-2 sm:border-b-4 border-[#3F2928] pb-4 sm:pb-6 mb-6 sm:mb-8 gap-4">
             <div>
               <div className="flex items-center gap-3 mb-2">
-                <div className="w-9 h-9 sm:w-10 sm:h-10 bg-[#3F2928] text-[#FFF8EA] flex items-center justify-center font-heading text-lg sm:text-xl font-bold border border-[#3F2928]">
-                  DR
-                </div>
+                <img
+                  src={logoImg}
+                  alt="DR. DOC Logo"
+                  className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover border border-[#3F2928] shadow-[2px_2px_0px_#7A302F] shrink-0"
+                />
                 <div>
                   <h1 className="font-heading text-2xl sm:text-3xl font-bold tracking-wider text-[#3F2928]">
                     DR. DOC
@@ -76,7 +79,7 @@ export const VerificationReportPage: React.FC = () => {
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 sm:p-6 border-2 border-[#3F2928] bg-[#F3E4C8] mb-6 sm:mb-8 gap-4">
             <div>
               <div className="font-mono text-xs text-[#A58B7B] font-bold uppercase mb-1">
-                FINAL FORENSIC VERIFICATION STATUS
+                FINAL VERIFICATION STATUS
               </div>
               <div className="font-heading text-xl sm:text-3xl font-bold text-[#3F2928]">
                 {isReady ? 'READY FOR PORTAL SUBMISSION' : 'ACTION REQUIRED BEFORE SUBMISSION'}
@@ -148,7 +151,7 @@ export const VerificationReportPage: React.FC = () => {
           {/* Footer Signature */}
           <div className="pt-6 border-t-2 border-[#3F2928] flex flex-col sm:flex-row justify-between items-start sm:items-end font-mono text-[10px] sm:text-[11px] text-[#A58B7B] gap-4">
             <div>
-              <div>DR. DOC FORENSICS LABORATORY</div>
+              <div>DR. DOC • VERIFICATION REPORT</div>
               <div>CONFIDENTIAL OFFICIAL REPORT</div>
             </div>
             <div className="sm:text-right w-full sm:w-auto">

@@ -15,10 +15,10 @@ export const CrossCheckPage: React.FC = () => {
         {/* Header */}
         <div className="mb-6 pb-4 border-b-2 border-[#3F2928]">
           <div className="font-mono text-xs font-bold text-[#7A302F] uppercase tracking-widest mb-1">
-            PHASE 06 // FORENSIC RELATIONSHIP GRAPH & MATRIX
+            PHASE 06 // EVIDENCE CROSS-CHECK
           </div>
           <h1 className="font-heading text-3xl sm:text-4xl md:text-5xl font-bold text-[#3F2928]">
-            CROSS-DOCUMENT VERIFICATION
+            EVIDENCE CROSS-CHECK
           </h1>
           <p className="font-body text-sm text-[#3F2928] mt-1">
             Detects discrepancies in name spelling, dates of birth, tax identifiers, and addresses across all uploaded documents simultaneously.
@@ -29,7 +29,7 @@ export const CrossCheckPage: React.FC = () => {
         <div className="bg-[#FFF8EA] border-2 border-[#3F2928] p-4 sm:p-6 shadow-[6px_6px_0px_#3F2928] mb-8 relative">
           <div className="flex justify-between items-center font-mono text-xs font-bold border-b border-[#3F2928] pb-2 mb-6">
             <span className="text-[#3F2928]">EVIDENCE LINKAGE MAP</span>
-            <span className="text-[#7A302F]">FORENSIC CROSS-CHECK</span>
+            <span className="text-[#7A302F]">EVIDENCE CROSS-CHECK</span>
           </div>
 
           {/* Desktop & Mobile Responsive Diagram / Vertical Comparison */}
@@ -94,7 +94,7 @@ export const CrossCheckPage: React.FC = () => {
             {/* Red String Alert Callout */}
             <div className="mt-4 sm:mt-6 inline-flex items-center gap-2 bg-[#7A302F] text-[#FFF8EA] px-3 sm:px-4 py-2 font-mono text-[11px] sm:text-xs font-bold border border-[#3F2928] shadow-[3px_3px_0px_#3F2928] text-left">
               <ShieldAlert className="w-4 h-4 text-[#E8B9B8] shrink-0" />
-              <span>FORENSIC FINDING: POSSIBLE NAME INCONSISTENCY ("R. Kumar" vs "Rahul Kumar")</span>
+              <span>CASE FINDING: POSSIBLE NAME INCONSISTENCY ("R. Kumar" vs "Rahul Kumar")</span>
             </div>
 
           </div>

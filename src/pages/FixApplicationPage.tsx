@@ -67,10 +67,10 @@ export const FixApplicationPage: React.FC = () => {
         {/* Header */}
         <div className="mb-6 pb-4 border-b-2 border-[#3F2928]">
           <div className="font-mono text-xs font-bold text-[#7A302F] uppercase tracking-widest mb-1">
-            PHASE 08 // GUIDED RESOLUTION WORKFLOW
+            PHASE 08 // RESOLUTION DESK
           </div>
           <h1 className="font-heading text-3xl sm:text-4xl md:text-5xl font-bold text-[#3F2928]">
-            YOUR FIX PLAN
+            RESOLUTION DESK
           </h1>
           <p className="font-body text-sm text-[#3F2928] mt-1">
             Step-by-step document optimization and re-upload workspace. Fix files directly inside Dr. Doc before final submission.

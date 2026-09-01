@@ -112,7 +112,7 @@ export const DocumentQualityPage: React.FC = () => {
                   {/* Feedback Observations */}
                   <div className="bg-[#F3E4C8] p-3 sm:p-4 border border-[#3F2928] font-mono text-xs mb-4">
                     <div className="font-bold text-[#3F2928] mb-2 uppercase text-[11px] sm:text-xs">
-                      FORENSIC OBSERVATIONS:
+                      QUALITY OBSERVATIONS:
                     </div>
                     <ul className="space-y-1 text-[#3F2928]">
                       {q.feedbackLines.map((line, idx) => (

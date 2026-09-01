@@ -33,10 +33,10 @@ export const IssuesPage: React.FC = () => {
         <div className="mb-6 pb-4 border-b-2 border-[#3F2928] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="font-mono text-xs font-bold text-[#7A302F] uppercase tracking-widest mb-1">
-              PHASE 07 // DETECTED DISCREPANCIES & AUDIT FLAGS
+              PHASE 07 // CASE FINDINGS
             </div>
             <h1 className="font-heading text-3xl sm:text-4xl md:text-5xl font-bold text-[#3F2928]">
-              ISSUES & EXPLANATIONS
+              CASE FINDINGS
             </h1>
           </div>
 

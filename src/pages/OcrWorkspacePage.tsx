@@ -53,10 +53,10 @@ export const OcrWorkspacePage: React.FC = () => {
         <div className="mb-6 pb-4 border-b-2 border-[#3F2928] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="font-mono text-xs font-bold text-[#7A302F] uppercase tracking-widest mb-1">
-              PHASE 03 // OCR & FORENSIC FIELD EXTRACTION
+              PHASE 03 // EXTRACTION DESK
             </div>
             <h1 className="font-heading text-3xl sm:text-4xl md:text-5xl font-bold text-[#3F2928]">
-              OCR EXTRACTION WORKSPACE
+              EXTRACTION DESK
             </h1>
           </div>
 
@@ -135,7 +135,7 @@ export const OcrWorkspacePage: React.FC = () => {
                     EXTRACTED INFORMATION
                   </h3>
                   <div className="font-mono text-[11px] sm:text-xs text-[#A58B7B]">
-                    STRUCTURED JSON PARSED BY GEMINI / FORENSIC ENGINE
+                    STRUCTURED JSON PARSED BY GEMINI / EXTRACTION ENGINE
                   </div>
                 </div>
 

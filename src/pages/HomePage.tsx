@@ -36,7 +36,7 @@ export const HomePage: React.FC = () => {
             {/* Top Tag */}
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#3F2928] text-[#FFF8EA] font-mono text-[11px] sm:text-xs font-bold uppercase tracking-widest mb-4 md:mb-6 border border-[#3F2928] shadow-[2px_2px_0px_#7A302F]">
               <span className="w-2 h-2 rounded-full bg-[#D47794] animate-pulse" />
-              DR. DOC • DOCUMENT FORENSICS LAB
+              DR. DOC • DOCUMENT INTELLIGENCE
             </div>
 
             {/* Main Headline */}
@@ -174,7 +174,7 @@ export const HomePage: React.FC = () => {
       {/* MARQUEE SCROLLING TICKER */}
       <section className="bg-[#3F2928] text-[#FFF8EA] border-b-2 border-[#3F2928] py-2.5 md:py-3 overflow-hidden">
         <div className="animate-marquee font-mono text-[11px] sm:text-xs font-bold uppercase tracking-widest whitespace-nowrap flex gap-6 sm:gap-8">
-          <span>DOCUMENT FORENSICS</span>
+          <span>DOCUMENT INTELLIGENCE</span>
           <span className="text-[#D47794]">•</span>
           <span>OCR ANALYSIS</span>
           <span className="text-[#D47794]">•</span>
@@ -193,7 +193,7 @@ export const HomePage: React.FC = () => {
           <span>RECHECK</span>
           <span className="text-[#D47794]">•</span>
           {/* Duplicate set for seamless infinite marquee loop */}
-          <span>DOCUMENT FORENSICS</span>
+          <span>DOCUMENT INTELLIGENCE</span>
           <span className="text-[#D47794]">•</span>
           <span>OCR ANALYSIS</span>
           <span className="text-[#D47794]">•</span>
@@ -269,7 +269,7 @@ export const HomePage: React.FC = () => {
         <div className="max-w-7xl mx-auto">
           
           <div className="font-mono text-xs font-bold text-[#7A302F] uppercase tracking-widest mb-2">
-            SECTION 02 // FORENSIC METHODOLOGY
+            SECTION 02 // EXAMINATION METHODOLOGY
           </div>
           <h2 className="font-heading text-2xl sm:text-4xl md:text-5xl font-bold text-[#3F2928] mb-8 md:mb-12">
             HOW DR. DOC WORKS
@@ -397,7 +397,7 @@ export const HomePage: React.FC = () => {
             <div className="bg-[#3F2928] text-[#FFF8EA] p-4 border border-[#3F2928] font-mono text-xs flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
               <div className="flex items-center gap-3">
                 <ShieldAlert className="w-5 h-5 text-[#E8B9B8] shrink-0" />
-                <span>FORENSIC FINDING: <strong>POSSIBLE NAME MISMATCH</strong></span>
+                <span>CASE FINDING: <strong>POSSIBLE NAME MISMATCH</strong></span>
               </div>
               <Link to="/cross-check" className="text-[#D47794] underline hover:text-[#FFF8EA]">
                 VIEW RELATIONSHIP MATRIX →
@@ -464,7 +464,7 @@ export const HomePage: React.FC = () => {
           </h2>
 
           <p className="font-body text-base sm:text-lg text-[#F3E4C8] mb-6 sm:mb-8 max-w-xl mx-auto leading-relaxed">
-            Avoid costly delays, rejected business registrations, and manual document re-submissions. Perform a forensic checkup right now.
+            Avoid costly delays, rejected business registrations, and manual document re-submissions. Perform a document checkup right now.
           </p>
 
           <div className="flex flex-col sm:flex-row justify-center items-stretch sm:items-center gap-3 sm:gap-4">

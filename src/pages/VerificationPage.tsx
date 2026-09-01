@@ -72,7 +72,7 @@ export const VerificationPage: React.FC = () => {
                 to="/report"
                 className="font-mono text-xs uppercase font-bold bg-[#FFF8EA] hover:bg-[#E8B9B8] text-[#3F2928] px-4 py-2 border border-[#3F2928] shadow-[2px_2px_0px_#3F2928] text-center"
               >
-                VIEW FULL FORENSIC REPORT →
+                VIEW FULL VERIFICATION REPORT →
               </Link>
             </div>
 

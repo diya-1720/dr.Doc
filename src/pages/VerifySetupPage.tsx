@@ -30,7 +30,7 @@ export const VerifySetupPage: React.FC = () => {
         {/* Page Header */}
         <div className="mb-6 sm:mb-8 pb-4 border-b-2 border-[#3F2928]">
           <div className="font-mono text-xs font-bold text-[#7A302F] uppercase tracking-widest mb-1">
-            PHASE 01 // SETUP & REQUIREMENT MATCHING
+            PHASE 01 // APPLICATION CHECKUP
           </div>
           <h1 className="font-heading text-3xl sm:text-4xl md:text-5xl font-bold text-[#3F2928]">
             SELECT YOUR APPLICATION TYPE

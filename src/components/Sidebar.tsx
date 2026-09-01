@@ -16,6 +16,8 @@ import {
   ChevronUp
 } from 'lucide-react';
 
+import logoImg from '../assets/logo.jpg';
+
 export const Sidebar: React.FC = () => {
   const { documents, issues, readinessScore, currentApplication, caseId } = useForensics();
   const [isOpenMobile, setIsOpenMobile] = useState(false);
@@ -48,15 +50,22 @@ export const Sidebar: React.FC = () => {
         
         {/* Active Workspace Header with Mobile Collapsible Toggle */}
         <div className="pb-3 md:pb-4 border-b border-[#3F2928]/20 flex items-center justify-between md:block">
-          <div>
-            <div className="font-mono text-[10px] uppercase font-bold text-[#A58B7B]">
-              ACTIVE WORKSPACE
-            </div>
-            <div className="font-heading text-base md:text-lg font-bold text-[#3F2928] line-clamp-1">
-              {currentApplication.name}
-            </div>
-            <div className="font-mono text-[11px] text-[#7A302F] mt-0.5">
-              CASE: {caseId}
+          <div className="flex items-center gap-2.5">
+            <img
+              src={logoImg}
+              alt="DR. DOC Logo"
+              className="w-8 h-8 rounded-full object-cover border border-[#3F2928] shadow-[1px_1px_0px_#7A302F] shrink-0"
+            />
+            <div>
+              <div className="font-mono text-[10px] uppercase font-bold text-[#A58B7B]">
+                ACTIVE WORKSPACE
+              </div>
+              <div className="font-heading text-base md:text-lg font-bold text-[#3F2928] line-clamp-1">
+                {currentApplication.name}
+              </div>
+              <div className="font-mono text-[11px] text-[#7A302F] mt-0.5">
+                CASE: {caseId}
+              </div>
             </div>
           </div>
 
@@ -119,7 +128,7 @@ export const Sidebar: React.FC = () => {
           />
         </div>
         <div className="text-[10px] text-[#A58B7B] mt-2 text-center uppercase tracking-widest">
-          DR. DOC FORENSIC ENGINE v2.4
+          DR. DOC ENGINE v2.4
         </div>
       </div>
     </aside>

@@ -44,10 +44,10 @@ export const NearbyHelpPage: React.FC = () => {
         {/* Header */}
         <div className="mb-6 pb-4 border-b-2 border-[#3F2928]">
           <div className="font-mono text-xs font-bold text-[#7A302F] uppercase tracking-widest mb-1">
-            PHYSICAL ASSISTANCE LOCATOR
+            ASSISTANCE DESK
           </div>
           <h1 className="font-heading text-3xl sm:text-4xl md:text-5xl font-bold text-[#3F2928]">
-            NEARBY ASSISTANCE CENTRES
+            ASSISTANCE DESK
           </h1>
           <p className="font-body text-sm text-[#3F2928] mt-1">
             Find verified offline document centers, Aadhaar Seva Kendras, CSC Digital desks, and notarization service providers near you.
