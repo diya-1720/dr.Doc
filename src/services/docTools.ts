@@ -1,5 +1,6 @@
 import { jsPDF } from 'jspdf';
 import { PDFDocument } from 'pdf-lib';
+import type { DocItem } from '../types';
 import { 
   backendCompressPdf, 
   backendCompressImage, 
@@ -100,72 +101,61 @@ export async function compressDocumentFile(
       }
     }
   } catch (err) {
-    console.warn('Backend compression failed or offline, falling back to local engine:', err);
+    console.warn('Backend compression failed or offline, falling back to local canvas/PDF compression:', err);
   }
 
-  // Client-side fallback
+  // Client fallback for images
   if (file.type.startsWith('image/')) {
-    const img = await loadImage(URL.createObjectURL(file));
+    const dataUrl = await fileToDataUrl(file);
+    const img = await loadImage(dataUrl);
     const canvas = document.createElement('canvas');
+    canvas.width = img.width;
+    canvas.height = img.height;
     const ctx = canvas.getContext('2d')!;
+    ctx.drawImage(img, 0, 0);
 
-    let width = img.width;
-    let height = img.height;
-    const maxDim = 1600;
-    if (width > maxDim || height > maxDim) {
-      if (width > height) {
-        height = Math.round((height * maxDim) / width);
-        width = maxDim;
-      } else {
-        width = Math.round((width * maxDim) / height);
-        height = maxDim;
-      }
-    }
-
-    canvas.width = width;
-    canvas.height = height;
-    ctx.drawImage(img, 0, 0, width, height);
-
-    let q = 0.75;
-    let blob: Blob = await new Promise(res => canvas.toBlob(b => res(b!), 'image/jpeg', q));
-
-    while (blob.size / (1024 * 1024) > targetSizeMB && q > 0.2) {
-      q -= 0.15;
-      blob = await new Promise(res => canvas.toBlob(b => res(b!), 'image/jpeg', q));
-    }
-
-    const compressedName = file.name.replace(/\.[^/.]+$/, '') + '_compressed.jpg';
+    const clientQuality = targetSizeMB <= 1 ? 0.4 : targetSizeMB <= 5 ? 0.7 : 0.85;
+    const blob: Blob = await new Promise(res => canvas.toBlob(b => res(b!), 'image/jpeg', clientQuality));
+    const ext = file.name.substring(file.name.lastIndexOf('.'));
+    const compressedName = file.name.replace(/\.[^/.]+$/, '') + '_compressed' + ext;
     const compressedFile = new File([blob], compressedName, { type: 'image/jpeg' });
     const newSizeMB = parseFloat((compressedFile.size / (1024 * 1024)).toFixed(2));
 
-    return { compressedFile, oldSizeMB, newSizeMB };
+    return {
+      compressedFile,
+      oldSizeMB,
+      newSizeMB,
+      reductionPercent: Math.round(((oldSizeMB - newSizeMB) / oldSizeMB) * 100),
+    };
   }
 
-  // PDF Client-side copy fallback
-  const compressedName = file.name.replace(/\.[^/.]+$/, '') + '_compressed.pdf';
-  const compressedFile = new File([file], compressedName, { type: 'application/pdf' });
-  return { compressedFile, oldSizeMB, newSizeMB: oldSizeMB };
+  return {
+    compressedFile: file,
+    oldSizeMB,
+    newSizeMB: oldSizeMB,
+    reductionPercent: 0,
+  };
 }
 
 /**
- * Converts image format (e.g. JPG <-> PNG <-> WEBP) via backend
+ * Converts Image Format (WEBP / JPG / PNG)
  */
-export async function convertImageFormat(
-  file: File, 
-  targetFormat: 'png' | 'jpg' | 'jpeg' | 'webp'
-): Promise<File> {
+export async function convertImageFormat(file: File, targetFormat: 'webp' | 'jpg' | 'png'): Promise<File> {
   try {
     const res = await backendConvertImageFormat(file, targetFormat);
     if (res.downloadUrl) {
-      const outName = file.name.replace(/\.[^/.]+$/, '') + `.${targetFormat}`;
-      return await fetchBackendProcessedFile(res.downloadUrl, outName, `image/${targetFormat === 'jpg' ? 'jpeg' : targetFormat}`);
+      const mime = targetFormat === 'png' ? 'image/png' : targetFormat === 'webp' ? 'image/webp' : 'image/jpeg';
+      const ext = targetFormat === 'jpg' ? '.jpg' : targetFormat === 'png' ? '.png' : '.webp';
+      const newName = file.name.replace(/\.[^/.]+$/, '') + ext;
+      return await fetchBackendProcessedFile(res.downloadUrl, newName, mime);
     }
   } catch (err) {
-    console.warn('Backend image format conversion failed, using canvas fallback:', err);
+    console.warn('Backend format conversion failed, using canvas fallback:', err);
   }
 
-  // Canvas format conversion fallback
-  const img = await loadImage(URL.createObjectURL(file));
+  // Canvas Client Fallback
+  const dataUrl = await fileToDataUrl(file);
+  const img = await loadImage(dataUrl);
   const canvas = document.createElement('canvas');
   canvas.width = img.width;
   canvas.height = img.height;
@@ -174,28 +164,31 @@ export async function convertImageFormat(
 
   const mime = targetFormat === 'png' ? 'image/png' : targetFormat === 'webp' ? 'image/webp' : 'image/jpeg';
   const blob: Blob = await new Promise(res => canvas.toBlob(b => res(b!), mime, 0.92));
-  const outName = file.name.replace(/\.[^/.]+$/, '') + `.${targetFormat}`;
-  return new File([blob], outName, { type: mime });
+  const ext = targetFormat === 'jpg' ? '.jpg' : targetFormat === 'png' ? '.png' : '.webp';
+  const newName = file.name.replace(/\.[^/.]+$/, '') + ext;
+  return new File([blob], newName, { type: mime });
 }
 
 /**
- * Converts Plain Text (.txt) file to paginated PDF
+ * Converts TXT to PDF layout
  */
 export async function convertTxtToPdf(file: File): Promise<File> {
   try {
     const res = await backendTxtToPdf(file);
     if (res.downloadUrl) {
-      const outName = file.name.replace(/\.[^/.]+$/, '') + '.pdf';
-      return await fetchBackendProcessedFile(res.downloadUrl, outName, 'application/pdf');
+      const newName = file.name.replace(/\.[^/.]+$/, '') + '.pdf';
+      return await fetchBackendProcessedFile(res.downloadUrl, newName, 'application/pdf');
     }
   } catch (err) {
-    console.warn('Backend TXT to PDF failed, using client fallback:', err);
+    console.warn('Backend TXT to PDF failed:', err);
   }
 
+  // Client jsPDF Fallback
   const text = await file.text();
   const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
   doc.setFont('courier', 'normal');
   doc.setFontSize(10);
+
   const lines = doc.splitTextToSize(text, 180);
   doc.text(lines, 15, 20);
   const pdfArrayBuffer = doc.output('arraybuffer');
@@ -237,6 +230,106 @@ export async function mergePdfFiles(files: File[], outputFilename: string = 'mer
   const mergedBytes = await mergedPdf.save();
   const blob = new Blob([mergedBytes.buffer as ArrayBuffer], { type: 'application/pdf' });
   return new File([blob], outputFilename, { type: 'application/pdf' });
+}
+
+/**
+ * Merges selected DocItems (Images and PDFs) into a single consolidated master PDF bundle
+ */
+export async function mergeSelectedDocsIntoPdf(docs: DocItem[], outputFilename: string = 'consolidated_case_documents.pdf'): Promise<File> {
+  const mergedPdf = await PDFDocument.create();
+
+  for (const doc of docs) {
+    if (doc.fileObj && (doc.fileObj.type.includes('pdf') || doc.filename.toLowerCase().endsWith('.pdf'))) {
+      try {
+        const bytes = await doc.fileObj.arrayBuffer();
+        const pdf = await PDFDocument.load(bytes);
+        const copiedPages = await mergedPdf.copyPages(pdf, pdf.getPageIndices());
+        copiedPages.forEach((page) => mergedPdf.addPage(page));
+      } catch (err) {
+        console.warn(`Failed to merge PDF page for ${doc.filename}:`, err);
+      }
+    } else {
+      try {
+        let imageBytes: ArrayBuffer;
+        const isPng = doc.mimeType.includes('png') || doc.filename.toLowerCase().endsWith('.png');
+
+        if (doc.fileObj) {
+          imageBytes = await doc.fileObj.arrayBuffer();
+        } else {
+          const res = await fetch(doc.previewUrl);
+          imageBytes = await res.arrayBuffer();
+        }
+
+        let embeddedImage;
+        try {
+          if (isPng) {
+            embeddedImage = await mergedPdf.embedPng(imageBytes);
+          } else {
+            embeddedImage = await mergedPdf.embedJpg(imageBytes);
+          }
+        } catch {
+          const img = await loadImage(doc.previewUrl);
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext('2d')!;
+          ctx.drawImage(img, 0, 0);
+          const pngBlob: Blob = await new Promise(res => canvas.toBlob(b => res(b!), 'image/png'));
+          embeddedImage = await mergedPdf.embedPng(await pngBlob.arrayBuffer());
+        }
+
+        const page = mergedPdf.addPage([595.28, 841.89]); // A4 dimensions in points
+        const { width, height } = embeddedImage.scaleToFit(555.28, 801.89);
+        page.drawImage(embeddedImage, {
+          x: 20 + (555.28 - width) / 2,
+          y: 20 + (801.89 - height) / 2,
+          width,
+          height,
+        });
+      } catch (imgErr) {
+        console.warn(`Failed to embed image in consolidated PDF for ${doc.filename}:`, imgErr);
+      }
+    }
+  }
+
+  const mergedBytes = await mergedPdf.save();
+  const blob = new Blob([mergedBytes.buffer as ArrayBuffer], { type: 'application/pdf' });
+  return new File([blob], outputFilename, { type: 'application/pdf' });
+}
+
+/**
+ * Downloads a single document converted to the user's selected format and auto-renamed by its classification
+ */
+export async function downloadDocInFormat(doc: DocItem, targetFormat: 'pdf' | 'png' | 'jpg' | 'webp', customFilename?: string) {
+  let finalFile: File;
+  const baseName = customFilename || doc.suggestedFilename?.replace(/\.[^/.]+$/, '') || `${doc.documentType.toUpperCase().replace(/\s+/g, '_')}_${doc.filename.replace(/\.[^/.]+$/, '')}`;
+  const outName = `${baseName}.${targetFormat}`;
+
+  if (targetFormat === 'pdf') {
+    if (doc.fileObj && doc.fileObj.type.includes('pdf')) {
+      finalFile = new File([doc.fileObj], outName, { type: 'application/pdf' });
+    } else {
+      const pseudoFile = doc.fileObj || new File([await (await fetch(doc.previewUrl)).blob()], doc.filename, { type: doc.mimeType });
+      finalFile = await convertImagesToPdf([pseudoFile], outName);
+    }
+  } else {
+    const img = await loadImage(doc.previewUrl);
+    const canvas = document.createElement('canvas');
+    canvas.width = img.width;
+    canvas.height = img.height;
+    const ctx = canvas.getContext('2d')!;
+    ctx.drawImage(img, 0, 0);
+    const mime = targetFormat === 'png' ? 'image/png' : targetFormat === 'webp' ? 'image/webp' : 'image/jpeg';
+    const blob: Blob = await new Promise(res => canvas.toBlob(b => res(b!), mime, 0.95));
+    finalFile = new File([blob], outName, { type: mime });
+  }
+
+  const url = URL.createObjectURL(finalFile);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = finalFile.name;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 /**

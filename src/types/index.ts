@@ -39,6 +39,14 @@ export interface DocumentQuality {
   feedbackLines: string[];
 }
 
+export interface PhotoAudit {
+  hasPhoto: boolean;
+  estimatedPhotoAge?: string;
+  ageMatch: boolean;
+  photoStatus: 'VERIFIED_CURRENT' | 'OUTDATED_RECOMMEND_UPDATE' | 'NOT_APPLICABLE';
+  photoFeedback?: string;
+}
+
 export interface DocItem {
   id: string;
   filename: string;
@@ -57,6 +65,9 @@ export interface DocItem {
   rawOcrText: string;
   verificationStatus: VerificationStatus;
   issues: string[];
+  calculatedAge?: number;
+  photoAudit?: PhotoAudit;
+  suggestedFilename?: string;
   uploadedAt: string;
   metadata: {
     pageCount?: number;
