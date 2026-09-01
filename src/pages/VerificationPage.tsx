@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useForensics } from '../context/ForensicsContext';
+import { useLanguage } from '../i18n/LanguageContext';
 import { Sidebar } from '../components/Sidebar';
 import { 
   CheckCircle2, 
@@ -12,6 +13,7 @@ import {
 
 export const VerificationPage: React.FC = () => {
   const { readinessScore, currentApplication, documents, issues, crossChecks } = useForensics();
+  const { t } = useLanguage();
 
   const isEvaluated = documents.length > 0;
   const verifiedCount = documents.filter(d => d.verificationStatus === 'VERIFIED').length;
@@ -46,13 +48,13 @@ export const VerificationPage: React.FC = () => {
         {/* Header */}
         <div className="mb-6 sm:mb-8 pb-4 border-b-2 border-[#3F2928]">
           <div className="font-mono text-xs font-bold text-[#7A302F] uppercase tracking-widest mb-1">
-            DOCUMENT VERIFICATION
+            {t.verification.tag}
           </div>
           <h1 className="font-heading text-3xl sm:text-4xl md:text-5xl font-bold text-[#3F2928]">
-            APPLICATION READINESS
+            {t.verification.title}
           </h1>
           <p className="font-body text-sm sm:text-base text-[#3F2928] mt-1">
-            Application: <strong className="font-bold text-[#7A302F]">{currentApplication.name}</strong>
+            {t.verification.subtitlePrefix} <strong className="font-bold text-[#7A302F]">{currentApplication.name}</strong>
           </p>
         </div>
 
@@ -62,16 +64,16 @@ export const VerificationPage: React.FC = () => {
             
             <div>
               <div className="font-mono text-xs font-bold text-[#A58B7B] uppercase mb-1 tracking-wider">
-                APPLICATION READINESS SCORE
+                {t.verification.readinessScoreLabel}
               </div>
 
               {!isEvaluated ? (
                 <div>
                   <div className="font-heading text-3xl sm:text-4xl font-bold text-[#A58B7B] uppercase tracking-wider my-2">
-                    NOT EVALUATED
+                    {t.verification.notEvaluatedText}
                   </div>
                   <p className="font-mono text-xs text-[#7A302F]">
-                    Upload your required documents to calculate application readiness.
+                    {t.verification.uploadDocsPrompt}
                   </p>
                 </div>
               ) : (
@@ -88,19 +90,19 @@ export const VerificationPage: React.FC = () => {
                         isReady ? 'stamp-verified' : 'stamp-critical'
                       }`}
                     >
-                      {isReady ? 'READY FOR SUBMISSION ✓' : 'ACTION REQUIRED'}
+                      {isReady ? `${t.common.readyForSubmission} ✓` : t.common.actionRequired}
                     </span>
                   </div>
 
                   {/* Analyzed Documents Micro Stats Breakdown */}
                   <div className="mt-4 pt-3 border-t border-[#3F2928]/20 flex flex-wrap gap-x-4 gap-y-1 font-mono text-xs text-[#3F2928]">
-                    <span><strong className="text-[#3F2928]">{documents.length}</strong> documents analyzed</span>
+                    <span><strong className="text-[#3F2928]">{documents.length}</strong> {t.verification.analyzedDocsCount}</span>
                     <span className="text-[#A58B7B]">•</span>
-                    <span><strong className="text-[#7A302F]">{verifiedCount}</strong> verified</span>
+                    <span><strong className="text-[#7A302F]">{verifiedCount}</strong> {t.verification.verifiedCount}</span>
                     <span className="text-[#A58B7B]">•</span>
-                    <span><strong className="text-[#7A302F]">{reviewCount}</strong> needs review</span>
+                    <span><strong className="text-[#7A302F]">{reviewCount}</strong> {t.verification.reviewCount}</span>
                     <span className="text-[#A58B7B]">•</span>
-                    <span><strong className="text-[#7A302F]">{missingCount}</strong> missing</span>
+                    <span><strong className="text-[#7A302F]">{missingCount}</strong> {t.verification.missingCount}</span>
                   </div>
                 </div>
               )}
@@ -114,7 +116,7 @@ export const VerificationPage: React.FC = () => {
                   className="font-heading text-base sm:text-lg font-bold bg-[#7A302F] hover:bg-[#5c2322] text-[#FFF8EA] px-6 py-3.5 border-2 border-[#3F2928] shadow-[3px_3px_0px_#3F2928] active:translate-x-[1px] active:translate-y-[1px] transition-all flex items-center justify-center gap-2 text-center"
                 >
                   <Upload className="w-5 h-5 text-[#FFF8EA]" />
-                  UPLOAD DOCUMENTS TO START
+                  {t.home.startCheckupBtn}
                 </Link>
               ) : (
                 <>
@@ -122,14 +124,14 @@ export const VerificationPage: React.FC = () => {
                     to="/fix"
                     className="font-heading text-base sm:text-lg font-bold bg-[#7A302F] hover:bg-[#5c2322] text-[#FFF8EA] px-6 py-3 border-2 border-[#3F2928] shadow-[3px_3px_0px_#3F2928] active:translate-x-[1px] active:translate-y-[1px] transition-all flex items-center justify-center gap-2 text-center"
                   >
-                    GO TO FIX APPLICATION WORKFLOW
+                    {t.verification.goFixWorkflowBtn}
                     <ArrowRight className="w-5 h-5 text-[#FFF8EA]" />
                   </Link>
                   <Link
                     to="/report"
                     className="font-mono text-xs uppercase font-bold bg-[#FFF8EA] hover:bg-[#E8B9B8] text-[#3F2928] px-4 py-2.5 border border-[#3F2928] shadow-[2px_2px_0px_#3F2928] text-center"
                   >
-                    VIEW FULL VERIFICATION REPORT →
+                    {t.verification.viewReportBtn}
                   </Link>
                 </>
               )}
@@ -152,10 +154,10 @@ export const VerificationPage: React.FC = () => {
         <div className="bg-[#FFF8EA] border-2 border-[#3F2928] p-4 sm:p-6 shadow-[4px_4px_0px_#3F2928] mb-8">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#3F2928] pb-3 mb-4">
             <h2 className="font-heading text-xl sm:text-2xl font-bold text-[#3F2928]">
-              REQUIRED DOCUMENTS
+              {t.verification.requiredDocsTitle}
             </h2>
             <div className="font-mono text-xs font-bold text-[#7A302F] bg-[#F3E4C8] px-3 py-1 border border-[#3F2928]">
-              {providedCount} / {requiredList.length} DOCUMENTS PROVIDED
+              {providedCount} / {requiredList.length} {t.verification.docsProvidedCount}
             </div>
           </div>
 
@@ -201,7 +203,7 @@ export const VerificationPage: React.FC = () => {
                         : 'bg-[#E8B9B8] text-[#7A302F] border-[#7A302F]'
                     }`}
                   >
-                    {isVerified ? 'VERIFIED ✓' : isReview ? 'NEEDS REVIEW ⚠' : 'MISSING ✕'}
+                    {isVerified ? `${t.common.verified} ✓` : isReview ? `${t.common.needsReview} ⚠` : `${t.common.missing} ✕`}
                   </span>
                 </div>
               );
@@ -215,14 +217,14 @@ export const VerificationPage: React.FC = () => {
           {/* Verification Summary Meters (Left / 7 cols) */}
           <div className="lg:col-span-7 bg-[#FFF8EA] border-2 border-[#3F2928] p-4 sm:p-6 shadow-[4px_4px_0px_#3F2928]">
             <div className="font-mono text-xs font-bold text-[#3F2928] uppercase tracking-widest mb-4 border-b border-[#3F2928] pb-2">
-              VERIFICATION SUMMARY
+              {t.verification.summaryTitle}
             </div>
 
             <div className="grid grid-cols-2 gap-3 font-mono text-xs">
               
               {/* Meter 1: Document Validity */}
               <div className="p-3 bg-[#F3E4C8] border border-[#3F2928]">
-                <div className="text-[#A58B7B] text-[10px] font-bold uppercase">Document Validity</div>
+                <div className="text-[#A58B7B] text-[10px] font-bold uppercase">{t.verification.validityMeter}</div>
                 <div className="font-heading text-xl sm:text-2xl font-bold text-[#3F2928] my-1">
                   {validityScore}%
                 </div>
@@ -233,7 +235,7 @@ export const VerificationPage: React.FC = () => {
 
               {/* Meter 2: Document Quality */}
               <div className="p-3 bg-[#F3E4C8] border border-[#3F2928]">
-                <div className="text-[#A58B7B] text-[10px] font-bold uppercase">Document Quality</div>
+                <div className="text-[#A58B7B] text-[10px] font-bold uppercase">{t.verification.qualityMeter}</div>
                 <div className="font-heading text-xl sm:text-2xl font-bold text-[#3F2928] my-1">
                   {qualityScore}%
                 </div>
@@ -244,7 +246,7 @@ export const VerificationPage: React.FC = () => {
 
               {/* Meter 3: Information Consistency */}
               <div className="p-3 bg-[#F3E4C8] border border-[#3F2928]">
-                <div className="text-[#A58B7B] text-[10px] font-bold uppercase">Info Consistency</div>
+                <div className="text-[#A58B7B] text-[10px] font-bold uppercase">{t.verification.consistencyMeter}</div>
                 <div className="font-heading text-xl sm:text-2xl font-bold text-[#3F2928] my-1">
                   {consistencyScore}%
                 </div>
@@ -255,7 +257,7 @@ export const VerificationPage: React.FC = () => {
 
               {/* Meter 4: Completeness */}
               <div className="p-3 bg-[#F3E4C8] border border-[#3F2928]">
-                <div className="text-[#A58B7B] text-[10px] font-bold uppercase">Completeness</div>
+                <div className="text-[#A58B7B] text-[10px] font-bold uppercase">{t.verification.completenessMeter}</div>
                 <div className="font-heading text-xl sm:text-2xl font-bold text-[#3F2928] my-1">
                   {completenessScore}%
                 </div>
@@ -271,7 +273,7 @@ export const VerificationPage: React.FC = () => {
           <div className="lg:col-span-5 bg-[#FFF8EA] border-2 border-[#3F2928] p-4 sm:p-6 shadow-[4px_4px_0px_#3F2928] flex flex-col justify-between">
             <div>
               <div className="font-mono text-xs font-bold text-[#7A302F] uppercase tracking-widest mb-4 border-b border-[#3F2928] pb-2 flex items-center justify-between">
-                <span>ISSUES REQUIRING ATTENTION</span>
+                <span>{t.verification.issuesTitle}</span>
                 {unresolvedIssues.length > 0 && (
                   <span className="bg-[#7A302F] text-[#FFF8EA] px-1.5 py-0.2 text-[10px]">
                     {unresolvedIssues.length}
@@ -282,11 +284,11 @@ export const VerificationPage: React.FC = () => {
               {unresolvedIssues.length === 0 ? (
                 <div className="p-4 bg-[#F3E4C8] border border-[#3F2928] text-center font-mono text-xs my-auto py-6">
                   <CheckCircle2 className="w-8 h-8 text-[#7A302F] mx-auto mb-2" />
-                  <div className="font-bold text-sm text-[#3F2928] mb-1">✓ NO ISSUES FOUND</div>
+                  <div className="font-bold text-sm text-[#3F2928] mb-1">{t.verification.noIssuesFound}</div>
                   <div className="text-[11px] text-[#A58B7B]">
                     {isEvaluated 
-                      ? 'All uploaded documents comply with application rules and requirements.'
-                      : 'Upload files to check for potential mismatches or errors.'}
+                      ? t.verification.noIssuesDesc
+                      : t.verification.uploadDocsPrompt}
                   </div>
                 </div>
               ) : (
@@ -316,7 +318,7 @@ export const VerificationPage: React.FC = () => {
                 to="/issues"
                 className="mt-4 font-mono text-xs uppercase font-bold bg-[#3F2928] hover:bg-[#7A302F] text-[#FFF8EA] py-2.5 px-4 border border-[#3F2928] shadow-[2px_2px_0px_#7A302F] text-center transition-colors block"
               >
-                REVIEW ISSUES ({unresolvedIssues.length}) →
+                {t.verification.reviewIssuesBtn} ({unresolvedIssues.length}) →
               </Link>
             )}
           </div>

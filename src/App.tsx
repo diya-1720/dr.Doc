@@ -18,6 +18,8 @@ import { DocumentToolsPage } from './pages/DocumentToolsPage';
 import { NearbyHelpPage } from './pages/NearbyHelpPage';
 import { VerificationReportPage } from './pages/VerificationReportPage';
 
+import { LanguageProvider } from './i18n/LanguageContext';
+
 const ScrollToTop: React.FC = () => {
   const { pathname } = useLocation();
 
@@ -30,10 +32,11 @@ const ScrollToTop: React.FC = () => {
 
 export const App: React.FC = () => {
   return (
-    <ForensicsProvider>
-      <Router>
-        <ScrollToTop />
-        <div className="min-h-screen flex flex-col bg-[#F3E4C8] text-[#3F2928] antialiased">
+    <LanguageProvider>
+      <ForensicsProvider>
+        <Router>
+          <ScrollToTop />
+          <div className="min-h-screen flex flex-col bg-[#F3E4C8] text-[#3F2928] antialiased">
           <Header />
 
           <div className="flex-1">
@@ -57,6 +60,7 @@ export const App: React.FC = () => {
         </div>
       </Router>
     </ForensicsProvider>
+  </LanguageProvider>
   );
 };
 

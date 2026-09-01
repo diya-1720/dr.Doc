@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useForensics } from '../context/ForensicsContext';
-import { Play, Menu, X } from 'lucide-react';
+import { useLanguage } from '../i18n/LanguageContext';
+import type { Language } from '../i18n/translations';
+import { Play, Menu, X, Globe, ChevronDown } from 'lucide-react';
 
 import logoImg from '../assets/logo.png';
 
@@ -9,7 +11,11 @@ export const Header: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { caseId, readinessScore, documents, isDemoMode, loadDemoMode } = useForensics();
+  const { language, setLanguage, t } = useLanguage();
+  
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isLangOpen, setIsLangOpen] = useState(false);
+  const langDropdownRef = useRef<HTMLDivElement>(null);
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -19,13 +25,24 @@ export const Header: React.FC = () => {
     navigate('/documents');
   };
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (langDropdownRef.current && !langDropdownRef.current.contains(event.target as Node)) {
+        setIsLangOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const navLinks = [
-    { label: 'Home', path: '/' },
-    { label: 'Verify', path: '/verify' },
-    { label: 'Documents', path: '/documents', badge: documents.length > 0 ? documents.length : undefined },
-    { label: 'OCR', path: '/ocr' },
-    { label: 'Tools', path: '/tools' },
-    { label: 'Help', path: '/help-nearby' },
+    { label: t.nav.home, path: '/' },
+    { label: t.nav.verify, path: '/verify' },
+    { label: t.nav.documents, path: '/documents', badge: documents.length > 0 ? documents.length : undefined },
+    { label: t.nav.ocr, path: '/ocr' },
+    { label: t.nav.tools, path: '/tools' },
+    { label: t.nav.help, path: '/help-nearby' },
   ];
 
   return (
@@ -41,16 +58,16 @@ export const Header: React.FC = () => {
           />
           <div>
             <div className="font-heading text-xl font-bold tracking-wider leading-none text-[#3F2928]">
-              DR. DOC
+              {t.header.tagline}
             </div>
             <div className="font-mono text-[10px] font-semibold text-[#7A302F] tracking-widest uppercase">
-              DOCUMENT INTELLIGENCE
+              {t.header.descriptor}
             </div>
           </div>
         </Link>
 
         {/* Desktop Global Navigation Links */}
-        <nav className="hidden md:flex items-center gap-6 font-mono text-xs font-medium uppercase tracking-wider">
+        <nav className="hidden md:flex items-center gap-5 lg:gap-6 font-mono text-xs font-medium uppercase tracking-wider">
           {navLinks.map((item) => {
             const active = isActive(item.path);
             return (
@@ -74,12 +91,12 @@ export const Header: React.FC = () => {
           })}
         </nav>
 
-        {/* Right Side Action Indicators & Desktop Buttons */}
+        {/* Right Side Action Indicators, Language Selector & Desktop Buttons */}
         <div className="hidden md:flex items-center gap-3">
           
           {/* Case ID / Score Indicator */}
           {documents.length > 0 && (
-            <div className="hidden lg:flex items-center gap-2 border border-[#3F2928] bg-[#FFF8EA] px-2.5 py-1 text-xs font-mono">
+            <div className="hidden xl:flex items-center gap-2 border border-[#3F2928] bg-[#FFF8EA] px-2.5 py-1 text-xs font-mono">
               <span className="text-[#A58B7B]">CASE:</span>
               <span className="font-bold text-[#3F2928]">{caseId}</span>
               <span className="text-[#A58B7B] ml-1">| SCORE:</span>
@@ -88,6 +105,46 @@ export const Header: React.FC = () => {
               </span>
             </div>
           )}
+
+          {/* Desktop Language Selector Dropdown */}
+          <div className="relative" ref={langDropdownRef}>
+            <button
+              onClick={() => setIsLangOpen(!isLangOpen)}
+              className="font-mono text-xs uppercase font-bold bg-[#FFF8EA] hover:bg-[#F3E4C8] text-[#3F2928] px-2.5 py-1.5 border border-[#3F2928] shadow-[2px_2px_0px_#3F2928] flex items-center gap-1.5 transition-all"
+              aria-label="Select Language"
+            >
+              <Globe className="w-3.5 h-3.5 text-[#7A302F]" />
+              <span>{language.toUpperCase()}</span>
+              <ChevronDown className="w-3 h-3 text-[#3F2928]" />
+            </button>
+
+            {isLangOpen && (
+              <div className="absolute right-0 mt-1 w-36 bg-[#FFF8EA] border-2 border-[#3F2928] shadow-[4px_4px_0px_#3F2928] z-50 py-1 font-mono text-xs">
+                <div className="px-3 py-1 text-[10px] font-bold text-[#A58B7B] uppercase border-b border-[#3F2928]/20">
+                  {t.nav.selectLanguage}
+                </div>
+                {[
+                  { code: 'en', label: 'English' },
+                  { code: 'hi', label: 'हिंदी (Hindi)' },
+                  { code: 'mr', label: 'मराठी (Marathi)' },
+                ].map((lang) => (
+                  <button
+                    key={lang.code}
+                    onClick={() => {
+                      setLanguage(lang.code as Language);
+                      setIsLangOpen(false);
+                    }}
+                    className={`w-full text-left px-3 py-1.5 hover:bg-[#F3E4C8] flex items-center justify-between transition-colors ${
+                      language === lang.code ? 'font-bold text-[#7A302F] bg-[#F3E4C8]' : 'text-[#3F2928]'
+                    }`}
+                  >
+                    <span>{lang.label}</span>
+                    {language === lang.code && <span className="text-[#7A302F] font-bold">✓</span>}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
 
           {/* TRY DEMO Button */}
           <button
@@ -100,7 +157,7 @@ export const Header: React.FC = () => {
             title="Load sample case file with documents & issues"
           >
             <Play className="w-3.5 h-3.5 text-[#7A302F]" fill="#7A302F" />
-            TRY DEMO
+            {t.nav.tryDemo}
           </button>
 
           {/* Primary CTA */}
@@ -108,7 +165,7 @@ export const Header: React.FC = () => {
             to="/verify"
             className="font-heading text-sm font-bold bg-[#7A302F] hover:bg-[#5c2322] text-[#FFF8EA] px-4 py-1.5 border border-[#3F2928] shadow-[2px_2px_0px_#3F2928] hover:shadow-[3px_3px_0px_#3F2928] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all flex items-center gap-1.5"
           >
-            START CHECKUP
+            {t.nav.startCheckup}
           </Link>
         </div>
 
@@ -168,6 +225,35 @@ export const Header: React.FC = () => {
             })}
           </div>
 
+          {/* Mobile Language Selector */}
+          <div className="bg-[#FFF8EA] border border-[#3F2928] p-2.5">
+            <div className="font-mono text-[10px] font-bold text-[#A58B7B] uppercase mb-1.5 flex items-center gap-1">
+              <Globe className="w-3.5 h-3.5 text-[#7A302F]" />
+              {t.nav.selectLanguage}
+            </div>
+            <div className="grid grid-cols-3 gap-1.5 font-mono text-xs">
+              {[
+                { code: 'en', label: 'English' },
+                { code: 'hi', label: 'हिंदी' },
+                { code: 'mr', label: 'मराठी' },
+              ].map((lang) => (
+                <button
+                  key={lang.code}
+                  onClick={() => {
+                    setLanguage(lang.code as Language);
+                  }}
+                  className={`py-1.5 px-2 text-center border font-bold transition-all ${
+                    language === lang.code
+                      ? 'bg-[#7A302F] text-[#FFF8EA] border-[#3F2928]'
+                      : 'bg-[#F3E4C8] text-[#3F2928] border-[#3F2928]'
+                  }`}
+                >
+                  {lang.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Mobile Actions */}
           <div className="flex flex-col sm:flex-row gap-2 pt-2 border-t border-[#3F2928]/30">
             <button
@@ -179,7 +265,7 @@ export const Header: React.FC = () => {
               }`}
             >
               <Play className="w-3.5 h-3.5 text-[#7A302F]" fill="#7A302F" />
-              TRY DEMO CASE
+              {t.nav.tryDemo}
             </button>
 
             <Link
@@ -187,7 +273,7 @@ export const Header: React.FC = () => {
               onClick={() => setIsMobileMenuOpen(false)}
               className="w-full text-center font-heading text-base font-bold bg-[#7A302F] text-[#FFF8EA] py-2.5 border border-[#3F2928] shadow-[2px_2px_0px_#3F2928]"
             >
-              START CHECKUP
+              {t.nav.startCheckup}
             </Link>
           </div>
 
@@ -196,4 +282,3 @@ export const Header: React.FC = () => {
     </header>
   );
 };
-

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useForensics } from '../context/ForensicsContext';
+import { useLanguage } from '../i18n/LanguageContext';
 import { 
   Inbox, 
   Scan, 
@@ -20,29 +21,30 @@ import logoImg from '../assets/logo.png';
 
 export const Sidebar: React.FC = () => {
   const { documents, issues, readinessScore, currentApplication } = useForensics();
+  const { t } = useLanguage();
   const [isOpenMobile, setIsOpenMobile] = useState(false);
 
   const criticalCount = issues.filter(i => i.severity === 'CRITICAL' && !i.resolved).length;
   const reviewCount = issues.filter(i => i.severity === 'NEEDS REVIEW' && !i.resolved).length;
 
   const navItems = [
-    { label: 'OVERVIEW', path: '/', icon: Activity },
-    { label: 'DOCUMENT INBOX', path: '/documents', icon: Inbox, badge: documents.length },
-    { label: 'OCR & EXTRACTION', path: '/ocr', icon: Scan },
-    { label: 'QUALITY CHECK', path: '/quality', icon: Layers },
-    { label: 'VERIFICATION', path: '/verification', icon: FileCheck2, badge: documents.length > 0 ? `${readinessScore}%` : undefined },
-    { label: 'CROSS-CHECK', path: '/cross-check', icon: GitCompare },
+    { label: t.nav.home, path: '/', icon: Activity },
+    { label: t.nav.documents, path: '/documents', icon: Inbox, badge: documents.length },
+    { label: t.nav.ocr, path: '/ocr', icon: Scan },
+    { label: t.nav.quality, path: '/quality', icon: Layers },
+    { label: t.nav.verification, path: '/verification', icon: FileCheck2, badge: documents.length > 0 ? `${readinessScore}%` : undefined },
+    { label: t.nav.crossCheck, path: '/cross-check', icon: GitCompare },
     { 
-      label: 'ISSUES', 
+      label: t.nav.issues, 
       path: '/issues', 
       icon: AlertOctagon, 
       badge: criticalCount + reviewCount > 0 ? `${criticalCount + reviewCount}` : undefined,
       badgeColor: criticalCount > 0 ? 'bg-[#7A302F] text-[#FFF8EA]' : 'bg-[#E8B9B8] text-[#7A302F]'
     },
-    { label: 'FIX APPLICATION', path: '/fix', icon: Wrench },
-    { label: 'DOCUMENT TOOLS', path: '/tools', icon: FileCheck2 },
-    { label: 'NEARBY HELP', path: '/help-nearby', icon: MapPin },
-    { label: 'FINAL REPORT', path: '/report', icon: FileText },
+    { label: t.nav.fix, path: '/fix', icon: Wrench },
+    { label: t.nav.tools, path: '/tools', icon: FileCheck2 },
+    { label: t.nav.help, path: '/help-nearby', icon: MapPin },
+    { label: t.nav.report, path: '/report', icon: FileText },
   ];
 
   return (
@@ -59,7 +61,7 @@ export const Sidebar: React.FC = () => {
             />
             <div>
               <div className="font-mono text-[10px] uppercase font-bold text-[#A58B7B]">
-                ACTIVE APPLICATION
+                {t.nav.activeApplication}
               </div>
               <div className="font-heading text-sm md:text-base font-bold text-[#3F2928] leading-tight break-words">
                 {currentApplication.name}
@@ -72,7 +74,7 @@ export const Sidebar: React.FC = () => {
             onClick={() => setIsOpenMobile(!isOpenMobile)}
             className="md:hidden flex items-center gap-1 font-mono text-xs font-bold text-[#3F2928] bg-[#F3E4C8] border border-[#3F2928] px-2.5 py-1.5 shadow-[2px_2px_0px_#3F2928]"
           >
-            <span>MENU</span>
+            <span>{t.nav.menu}</span>
             {isOpenMobile ? <ChevronUp className="w-4 h-4 text-[#7A302F]" /> : <ChevronDown className="w-4 h-4" />}
           </button>
         </div>
@@ -116,7 +118,7 @@ export const Sidebar: React.FC = () => {
       {/* Footer Status Panel (Visible on Desktop or when mobile drawer open) */}
       <div className={`mt-6 pt-4 border-t border-[#3F2928]/20 font-mono text-[11px] ${isOpenMobile ? 'block' : 'hidden md:block'}`}>
         <div className="flex justify-between items-center text-[#A58B7B] mb-1">
-          <span>READINESS:</span>
+          <span>{t.home.readinessScore}:</span>
           <span className="font-bold text-[#7A302F]">{readinessScore}/100</span>
         </div>
         <div className="w-full h-2 bg-[#F3E4C8] border border-[#3F2928]">
@@ -132,4 +134,3 @@ export const Sidebar: React.FC = () => {
     </aside>
   );
 };
-

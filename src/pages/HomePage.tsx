@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForensics } from '../context/ForensicsContext';
+import { useLanguage } from '../i18n/LanguageContext';
 import { 
   ShieldAlert, 
   ArrowRight, 
@@ -13,6 +14,7 @@ import {
 export const HomePage: React.FC = () => {
   const navigate = useNavigate();
   const { loadDemoMode } = useForensics();
+  const { t } = useLanguage();
 
   const handleStartCheckup = () => {
     navigate('/verify');
@@ -36,18 +38,18 @@ export const HomePage: React.FC = () => {
             {/* Top Tag */}
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#3F2928] text-[#FFF8EA] font-mono text-[11px] sm:text-xs font-bold uppercase tracking-widest mb-4 md:mb-6 border border-[#3F2928] shadow-[2px_2px_0px_#7A302F]">
               <span className="w-2 h-2 rounded-full bg-[#D47794] animate-pulse" />
-              DR. DOC • DOCUMENT INTELLIGENCE
+              {t.home.heroTag}
             </div>
 
             {/* Main Headline */}
             <h1 className="font-heading text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-[#3F2928] leading-none mb-4 md:mb-6">
-              YOUR DOCUMENTS.<br />
-              <span className="text-[#7A302F]">UNDER EXAMINATION.</span>
+              {t.home.heroTitleLine1}<br />
+              <span className="text-[#7A302F]">{t.home.heroTitleLine2}</span>
             </h1>
 
             {/* Subheadline */}
             <p className="font-body text-base sm:text-lg lg:text-xl text-[#3F2928] leading-relaxed mb-6 md:mb-8 max-w-xl">
-              Upload your documents. Dr. Doc identifies, extracts, verifies and cross-checks them before submission. No rejected applications due to missing files or name mismatches.
+              {t.home.heroSubtitle}
             </p>
 
             {/* CTAs */}
@@ -56,7 +58,7 @@ export const HomePage: React.FC = () => {
                 onClick={handleStartCheckup}
                 className="w-full sm:w-auto font-heading text-lg sm:text-xl font-bold bg-[#7A302F] hover:bg-[#5c2322] text-[#FFF8EA] px-6 sm:px-8 py-3.5 border-2 border-[#3F2928] shadow-[4px_4px_0px_#3F2928] hover:shadow-[6px_6px_0px_#3F2928] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all flex items-center justify-center gap-3"
               >
-                START A DOCUMENT CHECKUP
+                {t.home.startCheckupBtn}
                 <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 text-[#FFF8EA]" />
               </button>
 
@@ -65,23 +67,23 @@ export const HomePage: React.FC = () => {
                 className="w-full sm:w-auto font-mono text-xs sm:text-sm uppercase font-bold bg-[#FFF8EA] hover:bg-[#E8B9B8] text-[#3F2928] px-5 sm:px-6 py-3.5 sm:py-4 border-2 border-[#3F2928] shadow-[4px_4px_0px_#3F2928] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all flex items-center justify-center gap-2"
               >
                 <Play className="w-4 h-4 text-[#7A302F]" fill="#7A302F" />
-                EXPLORE HOW IT WORKS
+                {t.home.exploreDemoBtn}
               </button>
             </div>
 
             {/* Micro Stats */}
             <div className="mt-8 md:mt-10 pt-4 sm:pt-6 border-t border-[#3F2928]/20 grid grid-cols-1 sm:grid-cols-3 gap-4 font-mono text-xs text-[#3F2928]">
               <div>
-                <span className="block font-bold text-sm sm:text-base text-[#3F2928]">100% AUTOMATED</span>
-                <span className="text-[#A58B7B] text-[11px]">Multi-Doc Classification</span>
+                <span className="block font-bold text-sm sm:text-base text-[#3F2928]">{t.home.stat1Title}</span>
+                <span className="text-[#A58B7B] text-[11px]">{t.home.stat1Desc}</span>
               </div>
               <div>
-                <span className="block font-bold text-sm sm:text-base text-[#7A302F]">CROSS-DOCUMENT</span>
-                <span className="text-[#A58B7B] text-[11px]">Inconsistency Detection</span>
+                <span className="block font-bold text-sm sm:text-base text-[#7A302F]">{t.home.stat2Title}</span>
+                <span className="text-[#A58B7B] text-[11px]">{t.home.stat2Desc}</span>
               </div>
               <div>
-                <span className="block font-bold text-sm sm:text-base text-[#7A302F]">IN-LINE FIX</span>
-                <span className="text-[#A58B7B] text-[11px]">Compression & Tools</span>
+                <span className="block font-bold text-sm sm:text-base text-[#7A302F]">{t.home.stat3Title}</span>
+                <span className="text-[#A58B7B] text-[11px]">{t.home.stat3Desc}</span>
               </div>
             </div>
           </div>
@@ -461,15 +463,15 @@ export const HomePage: React.FC = () => {
         <div className="max-w-4xl mx-auto text-center relative z-10">
           
           <div className="inline-block px-3 py-1 bg-[#F3E4C8] border border-[#3F2928] font-mono text-xs font-bold text-[#7A302F] uppercase tracking-widest mb-3">
-            CONFIDENT APPLICATION SUBMISSION
+            {t.home.ctaEyebrow}
           </div>
 
           <h2 className="font-heading text-3xl sm:text-5xl md:text-6xl font-bold text-[#3F2928] mb-3 sm:mb-4">
-            READY BEFORE YOU SUBMIT.
+            {t.home.ctaTitle}
           </h2>
 
           <p className="font-body text-base sm:text-lg text-[#3F2928] mb-6 sm:mb-8 max-w-xl mx-auto leading-relaxed">
-            Avoid costly delays, rejected business registrations, and manual document re-submissions. Perform a document checkup right now.
+            {t.home.ctaSubtitle}
           </p>
 
           <div className="flex flex-col sm:flex-row justify-center items-stretch sm:items-center gap-3 sm:gap-4 font-mono">
@@ -477,7 +479,7 @@ export const HomePage: React.FC = () => {
               onClick={handleStartCheckup}
               className="w-full sm:w-auto font-heading text-lg sm:text-xl font-bold bg-[#7A302F] hover:bg-[#5c2322] text-[#FFF8EA] px-8 py-3.5 sm:py-4 border-2 border-[#3F2928] shadow-[4px_4px_0px_#3F2928] hover:shadow-[6px_6px_0px_#3F2928] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all flex items-center justify-center gap-2"
             >
-              START VERIFICATION
+              {t.home.startVerificationBtn}
               <ArrowRight className="w-5 h-5 text-[#FFF8EA]" />
             </button>
 
@@ -486,7 +488,7 @@ export const HomePage: React.FC = () => {
               className="w-full sm:w-auto font-mono text-xs sm:text-sm uppercase font-bold bg-[#FFF8EA] hover:bg-[#E8B9B8] text-[#3F2928] px-6 py-3.5 sm:py-4 border-2 border-[#3F2928] shadow-[4px_4px_0px_#3F2928] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all flex items-center justify-center gap-2"
             >
               <Play className="w-4 h-4 text-[#7A302F]" fill="#7A302F" />
-              LAUNCH DEMO
+              {t.home.launchDemoBtn}
             </button>
           </div>
 
