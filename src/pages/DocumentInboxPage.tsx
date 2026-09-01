@@ -11,7 +11,6 @@ import {
   Search, 
   Loader2,
   ShieldAlert,
-  Play,
   Wrench,
   ArrowRightLeft,
   Sliders,
@@ -37,7 +36,6 @@ export const DocumentInboxPage: React.FC = () => {
     processingProgress, 
     deleteDocument, 
     setActiveDocument,
-    loadDemoMode,
     uploadWarning,
     dismissWarning,
     crossChecks
@@ -173,16 +171,6 @@ export const DocumentInboxPage: React.FC = () => {
               Upload up to 5 documents. AI automatically classifies document types, performs deep field OCR, verifies Name & Address cross-consistency, and audits photo aging.
             </p>
           </div>
-
-          {documents.length === 0 && (
-            <button
-              onClick={loadDemoMode}
-              className="font-mono text-xs font-bold bg-[#E8B9B8] hover:bg-[#D47794] text-[#7A302F] hover:text-[#FFF8EA] px-4 py-2.5 border border-[#3F2928] shadow-[2px_2px_0px_#3F2928] flex items-center justify-center gap-2 self-stretch sm:self-start transition-colors"
-            >
-              <Play className="w-4 h-4" fill="currentColor" />
-              LOAD DEMO CASE (5 DOCS)
-            </button>
-          )}
         </div>
 
         {/* Warning / Notification Banner if upload limits exceeded */}

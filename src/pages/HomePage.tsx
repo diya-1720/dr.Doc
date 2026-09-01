@@ -7,13 +7,13 @@ import {
   ArrowRight, 
   FileWarning, 
   Layers, 
-  GitCompare, 
-  Play
+  GitCompare,
+  FolderOpen
 } from 'lucide-react';
 
 export const HomePage: React.FC = () => {
   const navigate = useNavigate();
-  const { loadDemoMode, documents, readinessScore, issues, currentApplication, caseId } = useForensics();
+  const { documents, readinessScore, issues, currentApplication, caseId } = useForensics();
   const { t } = useLanguage();
 
   const unresolvedIssues = issues.filter(i => !i.resolved);
@@ -24,8 +24,7 @@ export const HomePage: React.FC = () => {
     navigate('/verify');
   };
 
-  const handleTryDemo = () => {
-    loadDemoMode();
+  const handleGoToInbox = () => {
     navigate('/documents');
   };
 
@@ -67,11 +66,11 @@ export const HomePage: React.FC = () => {
               </button>
 
               <button
-                onClick={handleTryDemo}
+                onClick={handleGoToInbox}
                 className="w-full sm:w-auto font-mono text-xs sm:text-sm uppercase font-bold bg-[#FFF8EA] hover:bg-[#E8B9B8] text-[#3F2928] px-5 sm:px-6 py-3.5 sm:py-4 border-2 border-[#3F2928] shadow-[4px_4px_0px_#3F2928] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all flex items-center justify-center gap-2"
               >
-                <Play className="w-4 h-4 text-[#7A302F]" fill="#7A302F" />
-                {t.home.exploreDemoBtn}
+                <FolderOpen className="w-4 h-4 text-[#7A302F]" />
+                DOCUMENT INBOX ({documents.length}/5)
               </button>
             </div>
 
@@ -520,11 +519,11 @@ export const HomePage: React.FC = () => {
             </button>
 
             <button
-              onClick={handleTryDemo}
+              onClick={handleGoToInbox}
               className="w-full sm:w-auto font-mono text-xs sm:text-sm uppercase font-bold bg-[#FFF8EA] hover:bg-[#E8B9B8] text-[#3F2928] px-6 py-3.5 sm:py-4 border-2 border-[#3F2928] shadow-[4px_4px_0px_#3F2928] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all flex items-center justify-center gap-2"
             >
-              <Play className="w-4 h-4 text-[#7A302F]" fill="#7A302F" />
-              {t.home.launchDemoBtn}
+              <FolderOpen className="w-4 h-4 text-[#7A302F]" />
+              OPEN DOCUMENT INBOX
             </button>
           </div>
 

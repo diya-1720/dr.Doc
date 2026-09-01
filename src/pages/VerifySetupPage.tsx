@@ -2,22 +2,17 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForensics } from '../context/ForensicsContext';
 import { Sidebar } from '../components/Sidebar';
-import { CheckSquare, ArrowRight, Play } from 'lucide-react';
+import { CheckSquare, ArrowRight } from 'lucide-react';
 
 export const VerifySetupPage: React.FC = () => {
   const navigate = useNavigate();
-  const { applications, currentApplication, setApplication, loadDemoMode } = useForensics();
+  const { applications, currentApplication, setApplication } = useForensics();
 
   const handleSelectApp = (id: string) => {
     setApplication(id);
   };
 
   const handleProceedToInbox = () => {
-    navigate('/documents');
-  };
-
-  const handleDemo = () => {
-    loadDemoMode();
     navigate('/documents');
   };
 
@@ -110,18 +105,10 @@ export const VerifySetupPage: React.FC = () => {
             ))}
           </div>
 
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4 pt-4 border-t border-[#3F2928]">
-            <button
-              onClick={handleDemo}
-              className="w-full sm:w-auto font-mono text-xs font-bold bg-[#E8B9B8] hover:bg-[#D47794] text-[#7A302F] hover:text-[#FFF8EA] px-4 py-2.5 border border-[#3F2928] shadow-[2px_2px_0px_#3F2928] flex items-center justify-center gap-2 transition-colors text-center"
-            >
-              <Play className="w-3.5 h-3.5" fill="currentColor" />
-              LOAD DEMO CASE WITH REALISTIC ISSUES
-            </button>
-
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 sm:gap-4 pt-4 border-t border-[#3F2928]">
             <button
               onClick={handleProceedToInbox}
-              className="w-full sm:w-auto font-heading text-base sm:text-lg font-bold bg-[#7A302F] hover:bg-[#5c2322] text-[#FFF8EA] px-6 py-2.5 border-2 border-[#3F2928] shadow-[4px_4px_0px_#3F2928] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all flex items-center justify-center gap-2"
+              className="w-full sm:w-auto font-heading text-base sm:text-lg font-bold bg-[#7A302F] hover:bg-[#5c2322] text-[#FFF8EA] px-8 py-3 border-2 border-[#3F2928] shadow-[4px_4px_0px_#3F2928] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all flex items-center justify-center gap-2"
             >
               CONTINUE TO DOCUMENT INBOX
               <ArrowRight className="w-5 h-5" />
