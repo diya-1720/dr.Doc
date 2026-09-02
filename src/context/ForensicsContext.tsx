@@ -23,6 +23,8 @@ interface ForensicsContextType {
   loadDemoMode: () => void;
   deleteDocument: (id: string) => void;
   replaceDocument: (id: string, file: File) => Promise<void>;
+  renameDocument: (id: string, newFilename: string) => void;
+  applySuggestedFilenames: () => void;
   resolveIssue: (issueId: string) => void;
   setActiveDocument: (id: string | null) => void;
   resetCase: () => void;
@@ -35,17 +37,97 @@ const ForensicsContext = createContext<ForensicsContextType | undefined>(undefin
 
 export const ForensicsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [applications] = useState<ApplicationRequirement[]>(DEFAULT_APPLICATIONS);
-  const [currentApplication, setCurrentApplication] = useState<ApplicationRequirement>(DEFAULT_APPLICATIONS[0]);
-  const [documents, setDocuments] = useState<DocItem[]>([]);
+
+  const [currentApplication, setCurrentApplication] = useState<ApplicationRequirement>(() => {
+    try {
+      const savedAppId = localStorage.getItem('dr_doc_current_app_id');
+      if (savedAppId) {
+        const found = DEFAULT_APPLICATIONS.find(a => a.id === savedAppId);
+        if (found) return found;
+      }
+    } catch (e) {
+      console.warn('Error reading current app from localStorage:', e);
+    }
+    return DEFAULT_APPLICATIONS[0];
+  });
+
+  const [documents, setDocuments] = useState<DocItem[]>(() => {
+    try {
+      const savedDocs = localStorage.getItem('dr_doc_documents');
+      if (savedDocs) {
+        const parsed = JSON.parse(savedDocs);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      }
+    } catch (e) {
+      console.warn('Error reading documents from localStorage:', e);
+    }
+    return [];
+  });
+
   const [issues, setIssues] = useState<IssueItem[]>([]);
   const [crossChecks, setCrossChecks] = useState<CrossCheckField[]>([]);
   const [readinessScore, setReadinessScore] = useState<number>(0);
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
   const [processingProgress, setProcessingProgress] = useState({ current: 0, total: 0, stage: '' });
-  const [activeDocumentId, setActiveDocumentId] = useState<string | null>(null);
-  const [caseId, setCaseId] = useState<string>('DR-2026-00142');
-  const [isDemoMode, setIsDemoMode] = useState<boolean>(false);
+  
+  const [activeDocumentId, setActiveDocumentId] = useState<string | null>(() => {
+    try {
+      const savedActive = localStorage.getItem('dr_doc_active_doc_id');
+      if (savedActive) return savedActive;
+    } catch (e) {}
+    return null;
+  });
+
+  const [caseId, setCaseId] = useState<string>(() => {
+    try {
+      const savedCase = localStorage.getItem('dr_doc_case_id');
+      if (savedCase) return savedCase;
+    } catch (e) {}
+    return 'DR-2026-00142';
+  });
+
+  const [isDemoMode, setIsDemoMode] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('dr_doc_is_demo_mode') === 'true';
+    } catch (e) {}
+    return false;
+  });
+
   const [uploadWarning, setUploadWarning] = useState<string | null>(null);
+
+  // Sync state to localStorage so refresh (F5) preserves everything
+  useEffect(() => {
+    try {
+      if (documents.length > 0) {
+        const serializable = documents.map(({ fileObj, ...rest }) => rest);
+        localStorage.setItem('dr_doc_documents', JSON.stringify(serializable));
+      } else {
+        localStorage.removeItem('dr_doc_documents');
+      }
+    } catch (e) {
+      console.warn('LocalStorage save failed for documents:', e);
+    }
+  }, [documents]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('dr_doc_current_app_id', currentApplication.id);
+    } catch (e) {}
+  }, [currentApplication]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('dr_doc_case_id', caseId);
+      localStorage.setItem('dr_doc_is_demo_mode', String(isDemoMode));
+      if (activeDocumentId) {
+        localStorage.setItem('dr_doc_active_doc_id', activeDocumentId);
+      } else {
+        localStorage.removeItem('dr_doc_active_doc_id');
+      }
+    } catch (e) {}
+  }, [caseId, isDemoMode, activeDocumentId]);
 
   // Recalculate evaluation state whenever documents or current application changes
   useEffect(() => {
@@ -82,20 +164,22 @@ export const ForensicsProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     if (files.length === 0) return;
     setUploadWarning(null);
 
-    // Strict 5 files limit enforcement
+    const MAX_LIMIT = 20;
+
+    // Strict 20 files limit enforcement
     let filesToProcess = files;
-    if (files.length > 5) {
-      setUploadWarning(`Maximum 5 files allowed per upload batch. Ingesting first 5 files.`);
-      filesToProcess = files.slice(0, 5);
+    if (files.length > MAX_LIMIT) {
+      setUploadWarning(`Maximum ${MAX_LIMIT} files allowed per upload batch. Ingesting first ${MAX_LIMIT} files.`);
+      filesToProcess = files.slice(0, MAX_LIMIT);
     }
 
-    const maxAllowedRemaining = Math.max(0, 5 - documents.length);
-    if (documents.length + filesToProcess.length > 5) {
+    const maxAllowedRemaining = Math.max(0, MAX_LIMIT - documents.length);
+    if (documents.length + filesToProcess.length > MAX_LIMIT) {
       if (maxAllowedRemaining === 0) {
-        setUploadWarning('Case document capacity reached (maximum 5 files). Delete an existing document to upload new files.');
+        setUploadWarning(`Case document capacity reached (maximum ${MAX_LIMIT} files). Delete an existing document to upload new files.`);
         return;
       }
-      setUploadWarning(`Case capacity is 5 files. Ingesting ${maxAllowedRemaining} document(s).`);
+      setUploadWarning(`Case capacity is ${MAX_LIMIT} files. Ingesting ${maxAllowedRemaining} document(s).`);
       filesToProcess = filesToProcess.slice(0, maxAllowedRemaining);
     }
 
@@ -197,6 +281,25 @@ export const ForensicsProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   };
 
+  const renameDocument = (id: string, newFilename: string) => {
+    if (!newFilename.trim()) return;
+    setDocuments(prev => prev.map(d => (d.id === id ? { ...d, filename: newFilename.trim() } : d)));
+  };
+
+  const applySuggestedFilenames = () => {
+    setDocuments(prev => prev.map(d => {
+      if (d.suggestedFilename) {
+        return { ...d, filename: d.suggestedFilename };
+      }
+      // Generate fallback standardized name
+      const cleanType = (d.documentType || 'DOCUMENT').toUpperCase().replace(/[^A-Z0-9]/g, '_');
+      const nameField = d.extractedFields.find(f => f.key.toLowerCase().includes('name'));
+      const applicantName = (nameField?.value || 'APPLICANT').toUpperCase().replace(/[^A-Z0-9]/g, '_');
+      const ext = d.filename.includes('.') ? d.filename.split('.').pop() : 'pdf';
+      return { ...d, filename: `${cleanType}_${applicantName}.${ext}` };
+    }));
+  };
+
   const resolveIssue = (issueId: string) => {
     setIssues(prev => prev.map(i => (i.id === issueId ? { ...i, resolved: true } : i)));
   };
@@ -209,7 +312,7 @@ export const ForensicsProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setDocuments(prev => prev.map(d => {
       if (d.id === id) {
         let cat = d.category;
-        if (['PAN Card', 'Aadhaar Card', 'Passport'].includes(type)) cat = 'IDENTITY';
+        if (['PAN Card', 'Aadhaar Card', 'Passport', 'Driving License', 'Voter ID'].includes(type)) cat = 'IDENTITY';
         else if (['Electricity Bill', 'Bank Statement'].includes(type)) cat = 'ADDRESS';
         else if (type === 'GST Certificate') cat = 'BUSINESS';
         else if (type === 'Photograph') cat = 'PERSONAL';
@@ -236,6 +339,11 @@ export const ForensicsProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setActiveDocumentId(null);
     setIsDemoMode(false);
     setUploadWarning(null);
+    try {
+      localStorage.removeItem('dr_doc_documents');
+      localStorage.removeItem('dr_doc_active_doc_id');
+      localStorage.removeItem('dr_doc_is_demo_mode');
+    } catch (e) {}
     setCaseId(`DR-2026-${Math.floor(10000 + Math.random() * 90000)}`);
   };
 
@@ -259,6 +367,8 @@ export const ForensicsProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         loadDemoMode,
         deleteDocument,
         replaceDocument,
+        renameDocument,
+        applySuggestedFilenames,
         resolveIssue,
         setActiveDocument,
         resetCase,

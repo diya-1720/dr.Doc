@@ -76,7 +76,7 @@ export const NearbyHelpPage: React.FC = () => {
             className="w-full sm:w-auto bg-[#3F2928] text-[#FFF8EA] px-4 py-2.5 border border-[#3F2928] shadow-[2px_2px_0px_#7A302F] font-bold flex items-center justify-center gap-2 hover:bg-[#7A302F] transition-colors"
           >
             <Navigation className="w-4 h-4 text-[#D47794] shrink-0" />
-            <span>{isLocating ? 'LOCATING...' : userLocation ? `GPS: ${userLocation}` : 'USE CURRENT GPS LOCATION'}</span>
+            <span>{isLocating ? t.help.locating : userLocation ? `GPS: ${userLocation}` : t.help.useGps}</span>
           </button>
         </div>
 
@@ -107,7 +107,7 @@ export const NearbyHelpPage: React.FC = () => {
 
                 {/* Services List */}
                 <div className="space-y-1 font-mono text-[11px] mb-4">
-                  <span className="text-[#3F2928] font-bold block text-[10px]">SERVICES OFFERED:</span>
+                  <span className="text-[#3F2928] font-bold block text-[10px]">{t.help.servicesOffered}</span>
                   <div className="flex flex-wrap gap-1">
                     {center.services.map((s, idx) => (
                       <span key={idx} className="px-1.5 py-0.5 bg-[#F3E4C8] border border-[#3F2928] text-[#3F2928] text-[10px]">

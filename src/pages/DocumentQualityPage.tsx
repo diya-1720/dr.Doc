@@ -66,7 +66,7 @@ export const DocumentQualityPage: React.FC = () => {
                           isGood ? 'stamp-verified' : 'stamp-critical'
                         }`}
                       >
-                        {isGood ? 'QUALITY COMPLIANT' : 'NEEDS ATTENTION'}
+                        {isGood ? t.quality.qualityCompliant : t.common.needsReview}
                       </span>
                       <span className="font-mono text-lg sm:text-xl font-bold text-[#7A302F]">
                         {q.overallScore} / 100
@@ -78,7 +78,7 @@ export const DocumentQualityPage: React.FC = () => {
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 font-mono text-xs mb-4 sm:mb-6">
                     
                     <div className="p-3 bg-[#F3E4C8] border border-[#3F2928]">
-                      <div className="text-[#A58B7B] mb-1 text-[10px] sm:text-xs">SHARPNESS</div>
+                      <div className="text-[#A58B7B] mb-1 text-[10px] sm:text-xs">{t.quality.sharpness}</div>
                       <div className="font-bold text-sm sm:text-base text-[#3F2928]">{q.sharpness}%</div>
                       <div className="w-full h-1.5 bg-[#FFF8EA] mt-2 border border-[#3F2928]/30">
                         <div className="bg-[#3F2928] h-full" style={{ width: `${q.sharpness}%` }} />
@@ -86,7 +86,7 @@ export const DocumentQualityPage: React.FC = () => {
                     </div>
 
                     <div className="p-3 bg-[#F3E4C8] border border-[#3F2928]">
-                      <div className="text-[#A58B7B] mb-1 text-[10px] sm:text-xs">TEXT VISIBILITY</div>
+                      <div className="text-[#A58B7B] mb-1 text-[10px] sm:text-xs">{t.quality.textVisibility}</div>
                       <div className="font-bold text-sm sm:text-base text-[#3F2928]">{q.textVisibility}%</div>
                       <div className="w-full h-1.5 bg-[#FFF8EA] mt-2 border border-[#3F2928]/30">
                         <div className="bg-[#3F2928] h-full" style={{ width: `${q.textVisibility}%` }} />
@@ -94,7 +94,7 @@ export const DocumentQualityPage: React.FC = () => {
                     </div>
 
                     <div className="p-3 bg-[#F3E4C8] border border-[#3F2928]">
-                      <div className="text-[#A58B7B] mb-1 text-[10px] sm:text-xs">LIGHTING</div>
+                      <div className="text-[#A58B7B] mb-1 text-[10px] sm:text-xs">{t.quality.lighting}</div>
                       <div className="font-bold text-sm sm:text-base text-[#3F2928]">{q.lighting}%</div>
                       <div className="w-full h-1.5 bg-[#FFF8EA] mt-2 border border-[#3F2928]/30">
                         <div className="bg-[#3F2928] h-full" style={{ width: `${q.lighting}%` }} />
@@ -102,7 +102,7 @@ export const DocumentQualityPage: React.FC = () => {
                     </div>
 
                     <div className="p-3 bg-[#F3E4C8] border border-[#3F2928]">
-                      <div className="text-[#A58B7B] mb-1 text-[10px] sm:text-xs">CROPPING & ALIGNMENT</div>
+                      <div className="text-[#A58B7B] mb-1 text-[10px] sm:text-xs">{t.quality.cropping}</div>
                       <div className="font-bold text-sm sm:text-base text-[#3F2928]">{q.cropping}%</div>
                       <div className="w-full h-1.5 bg-[#FFF8EA] mt-2 border border-[#3F2928]/30">
                         <div className="bg-[#7A302F] h-full" style={{ width: `${q.cropping}%` }} />
@@ -114,8 +114,8 @@ export const DocumentQualityPage: React.FC = () => {
                   {/* Recommendations and Tools CTA */}
                   <div className="bg-[#F3E4C8] p-3.5 sm:p-4 border border-[#3F2928] flex flex-col sm:flex-row sm:items-center justify-between gap-3 font-mono text-xs">
                     <div>
-                      <div className="font-bold text-[#3F2928] mb-0.5">FORENSIC RECOMMENDATION:</div>
-                      <p className="text-[#7A302F]">{q.feedbackLines && q.feedbackLines.length > 0 ? q.feedbackLines.join('; ') : 'All forensic quality metrics pass verification thresholds.'}</p>
+                      <div className="font-bold text-[#3F2928] mb-0.5">{t.quality.forensicRecommendation}</div>
+                      <p className="text-[#7A302F]">{q.feedbackLines && q.feedbackLines.length > 0 ? q.feedbackLines.join('; ') : t.quality.passAllThresholds}</p>
                     </div>
 
                     {!isGood && (

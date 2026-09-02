@@ -47,6 +47,15 @@ export const Sidebar: React.FC = () => {
     { label: t.nav.report, path: '/report', icon: FileText },
   ];
 
+  const getTranslatedAppName = (appId: string, fallback: string) => {
+    if (appId === 'app-default-universal') return t.applications.universal.name;
+    if (appId === 'app-biz-reg') return t.applications.bizReg.name;
+    if (appId === 'app-kyc-bank') return t.applications.kycBank.name;
+    if (appId === 'app-loan-grant') return t.applications.loanGrant.name;
+    if (appId === 'app-college-adm') return t.applications.collegeAdm.name;
+    return fallback;
+  };
+
   return (
     <aside className="w-full md:w-64 bg-[#FFF8EA] border-b-2 md:border-b-0 md:border-r-2 border-[#3F2928] p-4 flex flex-col justify-between shrink-0">
       <div>
@@ -64,7 +73,7 @@ export const Sidebar: React.FC = () => {
                 {t.nav.activeApplication}
               </div>
               <div className="font-heading text-sm md:text-base font-bold text-[#3F2928] leading-tight break-words">
-                {currentApplication.name}
+                {getTranslatedAppName(currentApplication.id, currentApplication.name)}
               </div>
             </div>
           </div>

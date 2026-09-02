@@ -4,11 +4,15 @@ export type DocumentType =
   | 'PAN Card' 
   | 'Aadhaar Card' 
   | 'Passport' 
+  | 'Driving License'
+  | 'Voter ID'
   | 'Electricity Bill' 
   | 'Bank Statement' 
   | 'GST Certificate' 
   | 'Photograph' 
-  | 'Unidentified Document';
+  | 'Identity Document'
+  | 'Unidentified Document'
+  | string;
 
 export type QualityStatus = 'GOOD' | 'NEEDS ATTENTION' | 'POOR';
 
@@ -68,6 +72,10 @@ export interface DocItem {
   calculatedAge?: number;
   photoAudit?: PhotoAudit;
   suggestedFilename?: string;
+  detectedOrientation?: string;
+  orientationLabel?: string;
+  correctedPreviewUrl?: string;
+  orientationAngle?: number;
   uploadedAt: string;
   metadata: {
     pageCount?: number;

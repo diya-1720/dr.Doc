@@ -49,7 +49,7 @@ export const Footer: React.FC = () => {
         {/* Quick Links */}
         <div>
           <div className="font-heading text-xs text-[#E8B9B8] mb-2 tracking-wider">
-            WORKSPACES
+            {t.footer.workspaces}
           </div>
           <ul className="space-y-1.5 font-mono text-xs text-[#F3E4C8]">
             <li><Link to="/verify" className="hover:text-[#D47794] transition-colors">{t.nav.verify}</Link></li>
@@ -64,7 +64,7 @@ export const Footer: React.FC = () => {
         {/* Legal & Compliance */}
         <div>
           <div className="font-heading text-xs text-[#E8B9B8] mb-2 tracking-wider">
-            SECURITY & COMPLIANCE
+            {t.footer.security}
           </div>
           <ul className="space-y-1.5 font-mono text-xs text-[#F3E4C8]">
             <li><span className="text-[#A58B7B]">{t.footer.privacy}</span></li>
@@ -77,12 +77,12 @@ export const Footer: React.FC = () => {
         {/* Case File Info */}
         <div>
           <div className="font-heading text-xs text-[#E8B9B8] mb-2 tracking-wider">
-            STATION INFO
+            {t.footer.stationInfo}
           </div>
           <div className="font-mono text-xs text-[#F3E4C8] space-y-1">
-            <div>TERMINAL: <span className="text-[#E8B9B8]">DOC-SEC-01</span></div>
-            <div>BUILD: <span className="text-[#E8B9B8]">2026.09.01-PROD</span></div>
-            <div>SESSION: <span className="text-[#E8B9B8]">ACTIVE</span></div>
+            <div>{t.footer.terminal}: <span className="text-[#E8B9B8]">DOC-SEC-01</span></div>
+            <div>{t.footer.build}: <span className="text-[#E8B9B8]">2026.09.01-PROD</span></div>
+            <div>{t.footer.session}: <span className="text-[#E8B9B8]">{t.footer.active}</span></div>
           </div>
         </div>
 

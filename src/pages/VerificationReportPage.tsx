@@ -121,7 +121,7 @@ export const VerificationReportPage: React.FC = () => {
             </div>
             <div>
               <span className="text-[#A58B7B] block text-[10px] uppercase">{t.nav.documents}</span>
-              <strong className="text-[#3F2928]">{documents.length} / 5 Files</strong>
+              <strong className="text-[#3F2928]">{documents.length} / 20 Files</strong>
             </div>
             <div>
               <span className="text-[#A58B7B] block text-[10px] uppercase">{t.issues.title}</span>
@@ -159,11 +159,11 @@ export const VerificationReportPage: React.FC = () => {
               <table className="w-full text-left font-mono text-xs border-collapse min-w-[550px]">
                 <thead>
                   <tr className="bg-[#3F2928] text-[#FFF8EA]">
-                    <th className="p-2 border border-[#3F2928]">CLASSIFIED TYPE</th>
-                    <th className="p-2 border border-[#3F2928]">EXTRACTED CREDENTIALS</th>
-                    <th className="p-2 border border-[#3F2928]">PHOTO AUDIT</th>
-                    <th className="p-2 border border-[#3F2928]">QUALITY</th>
-                    <th className="p-2 border border-[#3F2928]">STATUS</th>
+                    <th className="p-2 border border-[#3F2928]">{t.report.tableType}</th>
+                    <th className="p-2 border border-[#3F2928]">{t.report.tableCredentials}</th>
+                    <th className="p-2 border border-[#3F2928]">{t.report.tablePhotoAudit}</th>
+                    <th className="p-2 border border-[#3F2928]">{t.report.tableQuality}</th>
+                    <th className="p-2 border border-[#3F2928]">{t.report.tableStatus}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -178,19 +178,19 @@ export const VerificationReportPage: React.FC = () => {
                           <span className="text-[10px] text-[#A58B7B]">{doc.category}</span>
                         </td>
                         <td className="p-2 border border-[#3F2928]">
-                          {applicantName && <div>Name: <strong>{applicantName}</strong></div>}
-                          {docNumber && <div>ID: <strong className="text-[#7A302F]">{docNumber}</strong></div>}
-                          {doc.calculatedAge ? <div className="text-[10px] text-[#A58B7B]">Age: {doc.calculatedAge} yrs</div> : null}
+                          {applicantName && <div>{t.docCard.name} <strong>{applicantName}</strong></div>}
+                          {docNumber && <div>{t.docCard.idNo} <strong className="text-[#7A302F]">{docNumber}</strong></div>}
+                          {doc.calculatedAge ? <div className="text-[10px] text-[#A58B7B]">{t.docCard.dobAge} {doc.calculatedAge} {t.docCard.years}</div> : null}
                         </td>
                         <td className="p-2 border border-[#3F2928]">
                           {doc.photoAudit && doc.photoAudit.hasPhoto ? (
                             doc.photoAudit.photoStatus === 'OUTDATED_RECOMMEND_UPDATE' || !doc.photoAudit.ageMatch ? (
                               <span className="text-[#7A302F] font-bold flex items-center gap-1">
-                                <UserX className="w-3.5 h-3.5" /> Outdated ⚠
+                                <UserX className="w-3.5 h-3.5" /> {t.docCard.photoAgeMismatch}
                               </span>
                             ) : (
                               <span className="text-green-800 font-bold flex items-center gap-1">
-                                <UserCheck className="w-3.5 h-3.5" /> Verified ✓
+                                <UserCheck className="w-3.5 h-3.5" /> {t.docCard.photoAgeVerified}
                               </span>
                             )
                           ) : (
@@ -238,7 +238,7 @@ export const VerificationReportPage: React.FC = () => {
             </div>
             <div className="sm:text-right w-full sm:w-auto">
               <div className="border-b border-[#3F2928] w-48 mb-1" />
-              <div>AUTHORIZED DIGITAL SIGNATURE</div>
+              <div>{t.report.authorizedSignature}</div>
             </div>
           </div>
 
@@ -253,13 +253,13 @@ export const VerificationReportPage: React.FC = () => {
               <div>
                 <span className="font-mono text-[10px] font-bold text-[#7A302F] uppercase flex items-center gap-1.5">
                   <Layers className="w-4 h-4 text-[#7A302F]" />
-                  COMPLETE SUBMISSION PACKAGE
+                  {t.report.submissionPackage}
                 </span>
                 <h3 className="font-heading text-xl sm:text-2xl font-bold text-[#3F2928]">
-                  CONSOLIDATED MASTER APPLICATION PDF
+                  {t.report.consolidatedPdfTitle}
                 </h3>
                 <p className="font-mono text-xs text-[#A58B7B] mt-0.5">
-                  Bundles all {documents.length} verified case documents into one unified, paginated A4 master submission PDF.
+                  {t.report.consolidatedPdfDesc}
                 </p>
               </div>
 
@@ -269,9 +269,9 @@ export const VerificationReportPage: React.FC = () => {
                 className="w-full sm:w-auto bg-[#7A302F] hover:bg-[#5c2322] text-[#FFF8EA] px-6 py-3 border-2 border-[#3F2928] shadow-[3px_3px_0px_#3F2928] font-heading text-base font-bold flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 {isDownloadingBundle ? (
-                  <><Loader2 className="w-5 h-5 animate-spin" /> GENERATING MASTER BUNDLE...</>
+                  <><Loader2 className="w-5 h-5 animate-spin" /> {t.common.loading}</>
                 ) : (
-                  <><Download className="w-5 h-5" /> DOWNLOAD CONSOLIDATED PDF BUNDLE</>
+                  <><Download className="w-5 h-5" /> {t.report.downloadConsolidatedPdf}</>
                 )}
               </button>
             </div>
@@ -289,10 +289,10 @@ export const VerificationReportPage: React.FC = () => {
             <div className="bg-[#FFF8EA] border-2 border-[#3F2928] p-5 sm:p-6 shadow-[4px_4px_0px_#3F2928]">
               <h3 className="font-heading text-lg sm:text-xl font-bold text-[#3F2928] mb-1 flex items-center gap-2">
                 <FileText className="w-5 h-5 text-[#7A302F]" />
-                INDIVIDUAL CLASSIFIED DOCUMENT EXPORTS
+                {t.report.individualExportsTitle}
               </h3>
               <p className="font-mono text-xs text-[#A58B7B] mb-4">
-                Download individual documents with standardized classified filenames in your choice of format (PDF, PNG, JPG, WEBP).
+                {t.report.individualExportsDesc}
               </p>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -307,7 +307,7 @@ export const VerificationReportPage: React.FC = () => {
                       onClick={() => openDownloadModal(doc)}
                       className="bg-[#3F2928] hover:bg-[#7A302F] text-[#FFF8EA] py-1.5 px-3 border border-[#3F2928] font-bold text-[11px] flex items-center justify-center gap-1.5 transition-colors"
                     >
-                      <Download className="w-3.5 h-3.5" /> EXPORT AS FORMAT
+                      <Download className="w-3.5 h-3.5" /> {t.report.exportAsFormat}
                     </button>
                   </div>
                 ))}
@@ -335,9 +335,9 @@ export const VerificationReportPage: React.FC = () => {
               
               <div className="flex justify-between items-start mb-4 border-b-2 border-[#3F2928] pb-2">
                 <div>
-                  <span className="text-[10px] text-[#7A302F] font-bold uppercase">CLASSIFIED EXPORT</span>
+                  <span className="text-[10px] text-[#7A302F] font-bold uppercase">{t.docCard.aiClassified}</span>
                   <h3 className="font-heading text-xl font-bold text-[#3F2928]">
-                    DOWNLOAD DOCUMENT
+                    {t.inbox.formatModalTitle}
                   </h3>
                 </div>
                 <button
@@ -350,14 +350,14 @@ export const VerificationReportPage: React.FC = () => {
 
               <div className="space-y-4 text-xs mb-6">
                 <div>
-                  <span className="text-[#A58B7B] block mb-1">CLASSIFIED FILENAME:</span>
+                  <span className="text-[#A58B7B] block mb-1">{t.tools.renameDesc}</span>
                   <div className="p-2 bg-[#F3E4C8] border border-[#3F2928] font-bold text-[#7A302F] truncate">
                     {downloadModalDoc.suggestedFilename || `${downloadModalDoc.documentType.toUpperCase().replace(/\s+/g, '_')}_${downloadModalDoc.filename}`}
                   </div>
                 </div>
 
                 <div>
-                  <label className="text-[#3F2928] font-bold block mb-2">CHOOSE EXPORT FORMAT:</label>
+                  <label className="text-[#3F2928] font-bold block mb-2">{t.report.chooseExportFormat}</label>
                   <div className="grid grid-cols-4 gap-2">
                     {(['pdf', 'png', 'jpg', 'webp'] as const).map((fmt) => (
                       <button
@@ -382,7 +382,7 @@ export const VerificationReportPage: React.FC = () => {
                   className="flex-1 bg-[#7A302F] hover:bg-[#5c2322] text-[#FFF8EA] py-2.5 font-heading text-base font-bold border border-[#3F2928] shadow-[2px_2px_0px_#3F2928] flex items-center justify-center gap-2"
                 >
                   <Download className="w-4 h-4" />
-                  DOWNLOAD AS {chosenFormat.toUpperCase()}
+                  {t.report.downloadAs} {chosenFormat.toUpperCase()}
                 </button>
                 <button
                   onClick={() => setDownloadModalDoc(null)}

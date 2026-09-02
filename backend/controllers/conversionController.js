@@ -71,14 +71,14 @@ const txtToPdf = asyncHandler(async (req, res) => {
 const pdfToTxt = asyncHandler(async (req, res) => {
   validateFile(req.file, ['.pdf'], 'PDF file');
 
-  let outPath;
+  let result;
   try {
-    outPath = await docService.pdfToTxt(req.file.path);
+    result = await docService.pdfToTxt(req.file.path);
   } finally {
     await safeDelete(req.file.path);
   }
 
-  res.json(buildSuccessResponse('Conversion successful', outPath));
+  res.json(buildSuccessResponse('Conversion successful', result.outPath, { text: result.text }));
 });
 
 /**

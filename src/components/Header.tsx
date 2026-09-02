@@ -90,10 +90,10 @@ export const Header: React.FC = () => {
           {/* Case ID / Score Indicator */}
           {documents.length > 0 && (
             <div className="hidden xl:flex items-center gap-2 border border-[#3F2928] bg-[#FFF8EA] px-2.5 py-1 text-xs font-mono">
-              <span className="text-[#A58B7B]">CASE:</span>
+              <span className="text-[#A58B7B]">{t.header.case}:</span>
               <strong className="text-[#3F2928]">{caseId}</strong>
               <span className="text-[#A58B7B]">|</span>
-              <span className="text-[#A58B7B]">READINESS:</span>
+              <span className="text-[#A58B7B]">{t.header.readiness}:</span>
               <strong className="text-[#7A302F]">{readinessScore}%</strong>
             </div>
           )}
@@ -113,7 +113,7 @@ export const Header: React.FC = () => {
             {isLangOpen && (
               <div className="absolute right-0 mt-1 w-36 bg-[#FFF8EA] border-2 border-[#3F2928] shadow-[4px_4px_0px_#3F2928] z-50 py-1 font-mono text-xs">
                 <div className="px-3 py-1 text-[10px] font-bold text-[#A58B7B] uppercase border-b border-[#3F2928]/20">
-                  LANGUAGE
+                  {t.nav.selectLanguage}
                 </div>
                 {[
                   { code: 'en', label: 'English' },
@@ -144,7 +144,7 @@ export const Header: React.FC = () => {
             className="font-mono text-xs uppercase font-bold bg-[#FFF8EA] hover:bg-[#E8B9B8] text-[#3F2928] px-3 py-1.5 border border-[#3F2928] shadow-[2px_2px_0px_#3F2928] flex items-center gap-1.5 transition-all"
           >
             <FolderOpen className="w-3.5 h-3.5 text-[#7A302F]" />
-            INBOX ({documents.length})
+            {t.header.inbox} ({documents.length})
           </Link>
 
           {/* Primary CTA */}

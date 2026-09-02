@@ -30,6 +30,45 @@ app.use(express.urlencoded({ extended: true, limit: '30mb' }));
 // --- Static download route for processed outputs ---
 app.use('/downloads', express.static(config.outputsDir));
 
+// --- Root Welcome Route ---
+app.get('/', (req, res) => {
+  if (req.accepts('html')) {
+    res.send(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>DR. DOC // Forensic API Server</title>
+          <style>
+            body { font-family: 'Courier New', monospace; background: #F3E4C8; color: #3F2928; padding: 40px; }
+            .card { background: #FFF8EA; border: 3px solid #3F2928; padding: 24px; max-width: 600px; box-shadow: 6px 6px 0px #3F2928; }
+            h1 { color: #7A302F; margin-top: 0; }
+            .btn { display: inline-block; background: #7A302F; color: #FFF8EA; padding: 12px 24px; text-decoration: none; font-weight: bold; border: 2px solid #3F2928; box-shadow: 3px 3px 0px #3F2928; margin-top: 16px; }
+            .btn:hover { background: #5c2322; }
+            .status { color: #2e7d32; font-weight: bold; }
+          </style>
+        </head>
+        <body>
+          <div class="card">
+            <h1>DR. DOC // BACKEND API</h1>
+            <p>Backend Service Status: <span class="status">● ONLINE & HEALTHY (Port 5000)</span></p>
+            <p>You are viewing the REST API server. To access the interactive web application interface, open the frontend portal below:</p>
+            <a href="http://localhost:5173" class="btn">🚀 OPEN DR. DOC WEB APP (PORT 5173)</a>
+            <hr style="margin-top:24px; border:1px solid #3F2928;" />
+            <p style="font-size:12px; color:#7A302F;">Active API Endpoints: /api/health • /api/analyze • /api/cross-check • /api/convert • /api/compress</p>
+          </div>
+        </body>
+      </html>
+    `);
+  } else {
+    res.json({
+      success: true,
+      message: 'DR. DOC Forensic Document Intelligence API is Online',
+      frontendUrl: 'http://localhost:5173',
+      endpoints: ['/api/health', '/api/analyze', '/api/cross-check', '/api/convert', '/api/compress']
+    });
+  }
+});
+
 // --- API routes ---
 app.use('/api/health', healthRoutes);
 app.use('/api/convert', conversionRoutes);

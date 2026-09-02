@@ -64,9 +64,9 @@ export const DocumentToolsPage: React.FC = () => {
     if (e.target.files && e.target.files.length > 0) {
       if (activeTool === 'convert' || activeTool === 'merge') {
         let filesArr = Array.from(e.target.files);
-        if (filesArr.length > 5) {
-          setErrorMsg('Batch tool limit is 5 files. Selected first 5 files.');
-          filesArr = filesArr.slice(0, 5);
+        if (filesArr.length > 20) {
+          setErrorMsg('Batch tool limit is 20 files. Selected first 20 files.');
+          filesArr = filesArr.slice(0, 20);
         }
         setMultiFiles(filesArr);
       } else {
@@ -254,21 +254,21 @@ export const DocumentToolsPage: React.FC = () => {
         {/* Tool Selector Tabs */}
         <div className="flex flex-wrap gap-2 font-mono text-xs mb-6 sm:mb-8">
           {[
-            { id: 'compress', label: 'COMPRESS PDF / IMAGE', icon: FileCheck2 },
-            { id: 'convert', label: 'JPG / PNG → PDF', icon: FileText },
-            { id: 'format', label: 'IMAGE FORMAT (WEBP/JPG/PNG)', icon: RefreshCw },
-            { id: 'txtpdf', label: 'TXT ↔ PDF', icon: FileCode2 },
-            { id: 'merge', label: 'MERGE PDFs', icon: Layers },
-            { id: 'enhance', label: 'IMPROVE READABILITY', icon: Sparkles },
-            { id: 'rename', label: 'RENAME FILE', icon: Edit3 },
-          ].map((t) => {
-            const Icon = t.icon;
-            const isActive = activeTool === t.id;
+            { id: 'compress', label: t.tools.compressTab, icon: FileCheck2 },
+            { id: 'convert', label: t.tools.convertTab, icon: FileText },
+            { id: 'format', label: t.tools.formatTab, icon: RefreshCw },
+            { id: 'txtpdf', label: t.tools.txtPdfTab, icon: FileCode2 },
+            { id: 'merge', label: t.tools.mergeTab, icon: Layers },
+            { id: 'enhance', label: t.tools.enhanceTab, icon: Sparkles },
+            { id: 'rename', label: t.tools.renameTab, icon: Edit3 },
+          ].map((item) => {
+            const Icon = item.icon;
+            const isActive = activeTool === item.id;
             return (
               <button
-                key={t.id}
+                key={item.id}
                 onClick={() => { 
-                  setActiveTool(t.id as any); 
+                  setActiveTool(item.id as any); 
                   setSelectedFile(null); 
                   setSelectedCaseDocId(null);
                   setMultiFiles([]); 
@@ -284,7 +284,7 @@ export const DocumentToolsPage: React.FC = () => {
                 }`}
               >
                 <Icon className="w-4 h-4 shrink-0" />
-                <span>{t.label}</span>
+                <span>{item.label}</span>
               </button>
             );
           })}
@@ -304,7 +304,7 @@ export const DocumentToolsPage: React.FC = () => {
             <div className="mb-5 p-3 bg-[#F3E4C8] border border-[#3F2928]">
               <div className="font-mono text-[11px] font-bold text-[#7A302F] uppercase mb-2 flex items-center gap-1.5">
                 <FolderOpen className="w-3.5 h-3.5" />
-                OR PICK FROM CURRENT CASE INBOX ({documents.length} DOCS):
+                {t.tools.pickFromInbox} ({documents.length} {t.nav.documents}):
               </div>
               <div className="flex flex-wrap gap-2">
                 {documents.map((d) => (
@@ -327,7 +327,7 @@ export const DocumentToolsPage: React.FC = () => {
           {/* File Upload Zone for Active Tool */}
           <div className="mb-6">
             <label className="font-mono text-xs font-bold text-[#3F2928] block mb-2 uppercase">
-              SELECT FILE(S) TO PROCESS (MAX 5 FILES):
+              {t.tools.selectFiles}
             </label>
 
             <input
@@ -352,10 +352,10 @@ export const DocumentToolsPage: React.FC = () => {
               <Upload className="w-5 h-5 text-[#7A302F] shrink-0" />
               <span className="truncate">
                 {selectedFile 
-                  ? `SELECTED: ${selectedFile.name} (${(selectedFile.size / (1024*1024)).toFixed(2)} MB)`
+                  ? `${selectedFile.name} (${(selectedFile.size / (1024*1024)).toFixed(2)} MB)`
                   : multiFiles.length > 0
-                  ? `SELECTED ${multiFiles.length} FILES (MAX 5)`
-                  : 'CLICK TO SELECT FILE FROM YOUR COMPUTER'}
+                  ? `${multiFiles.length} ${t.nav.documents}`
+                  : t.tools.clickToSelect}
               </span>
             </button>
           </div>
@@ -365,7 +365,7 @@ export const DocumentToolsPage: React.FC = () => {
             <div className="space-y-6 font-mono text-xs">
               <div>
                 <label className="font-bold text-[#3F2928] block mb-2">
-                  TARGET PORTAL FILE SIZE THRESHOLD (MB):
+                  {t.tools.compressThreshold}
                 </label>
                 <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
                   <input
@@ -376,7 +376,7 @@ export const DocumentToolsPage: React.FC = () => {
                     onChange={(e) => setTargetMb(parseInt(e.target.value))}
                     className="w-full sm:w-64 accent-[#7A302F]"
                   />
-                  <span className="font-bold text-base text-[#7A302F]">{targetMb} MB LIMIT</span>
+                  <span className="font-bold text-base text-[#7A302F]">{targetMb} MB {t.tools.limit}</span>
                 </div>
               </div>
 
@@ -385,22 +385,22 @@ export const DocumentToolsPage: React.FC = () => {
                 disabled={!selectedFile || isProcessing}
                 className="w-full sm:w-auto bg-[#7A302F] hover:bg-[#5c2322] text-[#FFF8EA] px-6 py-3 border-2 border-[#3F2928] shadow-[3px_3px_0px_#3F2928] font-heading text-base sm:text-lg font-bold disabled:opacity-50"
               >
-                {isProcessing ? 'PROCESSING BACKEND COMPRESSION...' : `COMPRESS FILE BELOW ${targetMb} MB`}
+                {isProcessing ? t.common.loading : `${t.tools.compressBtn} ${targetMb} MB`}
               </button>
 
               {compressedResult && (
                 <div className="p-4 bg-[#F3E4C8] border-2 border-[#7A302F] mt-6">
                   <div className="font-heading text-lg sm:text-xl font-bold text-[#7A302F] mb-2 flex items-center gap-2">
                     <CheckCircle2 className="w-5 h-5" />
-                    COMPRESSION SUCCESSFUL!
+                    {t.tools.compressSuccess}
                   </div>
                   <div className="space-y-1 mb-4 text-[#3F2928]">
-                    <div>BEFORE SIZE: <strong>{compressedResult.oldSize} MB</strong></div>
-                    <div>AFTER SIZE: <strong className="text-[#7A302F]">{compressedResult.newSize} MB</strong></div>
+                    <div>{t.tools.beforeSize} <strong>{compressedResult.oldSize} MB</strong></div>
+                    <div>{t.tools.afterSize} <strong className="text-[#7A302F]">{compressedResult.newSize} MB</strong></div>
                     {compressedResult.reductionPercent && (
-                      <div>REDUCTION: <strong className="text-[#7A302F]">{compressedResult.reductionPercent}% SMALLER</strong></div>
+                      <div>{t.tools.reduction} <strong className="text-[#7A302F]">{compressedResult.reductionPercent}% {t.tools.smaller}</strong></div>
                     )}
-                    <div className="text-[11px] text-[#7A302F]">✓ READY FOR SUBMISSION</div>
+                    <div className="text-[11px] text-[#7A302F]">{t.tools.readyForSub}</div>
                   </div>
 
                   <div className="flex flex-wrap gap-3">
@@ -409,7 +409,7 @@ export const DocumentToolsPage: React.FC = () => {
                       className="w-full sm:w-auto bg-[#7A302F] text-[#FFF8EA] px-5 py-2.5 border border-[#3F2928] shadow-[2px_2px_0px_#3F2928] font-bold flex items-center justify-center gap-2"
                     >
                       <Download className="w-4 h-4" />
-                      DOWNLOAD COMPRESSED FILE ({compressedResult.newSize} MB)
+                      {t.tools.downloadCompressed} ({compressedResult.newSize} MB)
                     </button>
 
                     {selectedCaseDocId && (
@@ -419,7 +419,7 @@ export const DocumentToolsPage: React.FC = () => {
                         className="w-full sm:w-auto bg-[#3F2928] text-[#FFF8EA] px-5 py-2.5 border border-[#3F2928] shadow-[2px_2px_0px_#3F2928] font-bold flex items-center justify-center gap-2 disabled:opacity-75"
                       >
                         <CheckCircle2 className="w-4 h-4 text-green-400" />
-                        {replacedInCase ? 'UPDATED IN CASE FILE ✓' : 'REPLACE IN CURRENT CASE FILE'}
+                        {replacedInCase ? t.tools.updatedInCase : t.tools.updateInCase}
                       </button>
                     )}
                   </div>
@@ -432,14 +432,14 @@ export const DocumentToolsPage: React.FC = () => {
           {activeTool === 'convert' && (
             <div className="space-y-6 font-mono text-xs">
               <p className="text-[#A58B7B]">
-                Select up to 5 PNG/JPG/WEBP photos. The backend sharp + pdf-lib engine bundles them into a multi-page A4 PDF document.
+                {t.tools.convertDesc}
               </p>
               <button
                 onClick={handleConvert}
                 disabled={multiFiles.length === 0 || isProcessing}
                 className="w-full sm:w-auto bg-[#7A302F] text-[#FFF8EA] px-6 py-3 border-2 border-[#3F2928] shadow-[3px_3px_0px_#3F2928] font-heading text-base sm:text-lg font-bold disabled:opacity-50"
               >
-                {isProcessing ? 'CONVERTING ON BACKEND...' : `CONVERT ${multiFiles.length} IMAGE(S) TO PDF & DOWNLOAD`}
+                {isProcessing ? t.common.loading : `${t.tools.convertBtn} (${multiFiles.length})`}
               </button>
             </div>
           )}
@@ -448,7 +448,7 @@ export const DocumentToolsPage: React.FC = () => {
           {activeTool === 'format' && (
             <div className="space-y-6 font-mono text-xs">
               <div>
-                <label className="font-bold text-[#3F2928] block mb-2">TARGET IMAGE FORMAT:</label>
+                <label className="font-bold text-[#3F2928] block mb-2">{t.tools.formatDesc}</label>
                 <div className="flex gap-3">
                   {(['webp', 'jpg', 'png'] as const).map((fmt) => (
                     <button
@@ -471,7 +471,7 @@ export const DocumentToolsPage: React.FC = () => {
                 disabled={!selectedFile || isProcessing}
                 className="w-full sm:w-auto bg-[#7A302F] text-[#FFF8EA] px-6 py-3 border-2 border-[#3F2928] shadow-[3px_3px_0px_#3F2928] font-heading text-base sm:text-lg font-bold disabled:opacity-50"
               >
-                {isProcessing ? 'CONVERTING FORMAT...' : `CONVERT TO ${targetFormat.toUpperCase()} & DOWNLOAD`}
+                {isProcessing ? t.common.loading : `${t.tools.formatBtn} (${targetFormat.toUpperCase()})`}
               </button>
             </div>
           )}
@@ -488,7 +488,7 @@ export const DocumentToolsPage: React.FC = () => {
                       : 'bg-[#F3E4C8] text-[#3F2928] border-[#3F2928]'
                   }`}
                 >
-                  TXT → PDF (PDFKIT LAYOUT)
+                  {t.tools.txtPdfTxtToPdf}
                 </button>
                 <button
                   onClick={() => { setTxtPdfMode('pdf-to-txt'); setSelectedFile(null); setSelectedCaseDocId(null); }}
@@ -498,7 +498,7 @@ export const DocumentToolsPage: React.FC = () => {
                       : 'bg-[#F3E4C8] text-[#3F2928] border-[#3F2928]'
                   }`}
                 >
-                  PDF → TXT (PDF-PARSE EXTRACTION)
+                  {t.tools.txtPdfPdfToTxt}
                 </button>
               </div>
 
@@ -507,12 +507,12 @@ export const DocumentToolsPage: React.FC = () => {
                 disabled={!selectedFile || isProcessing}
                 className="w-full sm:w-auto bg-[#7A302F] text-[#FFF8EA] px-6 py-3 border-2 border-[#3F2928] shadow-[3px_3px_0px_#3F2928] font-heading text-base sm:text-lg font-bold disabled:opacity-50"
               >
-                {isProcessing ? 'PROCESSING...' : txtPdfMode === 'txt-to-pdf' ? 'GENERATE PAGINATED PDF' : 'EXTRACT TEXT FROM PDF'}
+                {isProcessing ? t.common.loading : t.tools.txtPdfBtn}
               </button>
 
               {extractedTextResult && (
                 <div className="p-4 bg-[#F3E4C8] border-2 border-[#3F2928] mt-4">
-                  <div className="font-bold text-[#3F2928] mb-2 uppercase">EXTRACTED TEXT OUTPUT:</div>
+                  <div className="font-bold text-[#3F2928] mb-2 uppercase">{t.tools.extractedTextOutput}</div>
                   <pre className="whitespace-pre-wrap max-h-60 overflow-y-auto bg-[#FFF8EA] p-3 border border-[#3F2928] font-mono text-xs">
                     {extractedTextResult}
                   </pre>
@@ -525,14 +525,14 @@ export const DocumentToolsPage: React.FC = () => {
           {activeTool === 'merge' && (
             <div className="space-y-6 font-mono text-xs">
               <p className="text-[#A58B7B]">
-                Select up to 5 PDF files to concatenate into a single master submission PDF.
+                {t.tools.mergeDesc}
               </p>
               <button
                 onClick={handleMerge}
                 disabled={multiFiles.length === 0 || isProcessing}
                 className="w-full sm:w-auto bg-[#7A302F] text-[#FFF8EA] px-6 py-3 border-2 border-[#3F2928] shadow-[3px_3px_0px_#3F2928] font-heading text-base sm:text-lg font-bold disabled:opacity-50"
               >
-                MERGE {multiFiles.length} PDF(S) & DOWNLOAD
+                {isProcessing ? t.common.loading : `${t.tools.mergeBtn} (${multiFiles.length})`}
               </button>
             </div>
           )}
@@ -541,14 +541,14 @@ export const DocumentToolsPage: React.FC = () => {
           {activeTool === 'enhance' && (
             <div className="space-y-6 font-mono text-xs">
               <p className="text-[#A58B7B]">
-                Applies high-contrast grayscale binarization to remove dark shadows and enhance faint document text.
+                {t.tools.enhanceDesc}
               </p>
               <button
                 onClick={handleEnhance}
                 disabled={!selectedFile || isProcessing}
                 className="w-full sm:w-auto bg-[#7A302F] text-[#FFF8EA] px-6 py-3 border-2 border-[#3F2928] shadow-[3px_3px_0px_#3F2928] font-heading text-base sm:text-lg font-bold disabled:opacity-50"
               >
-                ENHANCE TEXT CONTRAST & DOWNLOAD
+                {isProcessing ? t.common.loading : t.tools.enhanceBtn}
               </button>
             </div>
           )}
@@ -557,7 +557,7 @@ export const DocumentToolsPage: React.FC = () => {
           {activeTool === 'rename' && (
             <div className="space-y-6 font-mono text-xs">
               <div>
-                <label className="font-bold text-[#3F2928] block mb-2">NEW FILENAME:</label>
+                <label className="font-bold text-[#3F2928] block mb-2">{t.tools.newFilename}</label>
                 <input
                   type="text"
                   value={renameInput}
@@ -571,7 +571,7 @@ export const DocumentToolsPage: React.FC = () => {
                 disabled={!selectedFile}
                 className="w-full sm:w-auto bg-[#7A302F] text-[#FFF8EA] px-6 py-3 border-2 border-[#3F2928] shadow-[3px_3px_0px_#3F2928] font-heading text-base sm:text-lg font-bold disabled:opacity-50"
               >
-                DOWNLOAD RENAMED FILE
+                {t.tools.renameBtn}
               </button>
             </div>
           )}

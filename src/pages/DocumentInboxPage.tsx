@@ -24,7 +24,8 @@ import {
   Layers,
   Sparkles,
   UserCheck,
-  UserX
+  UserX,
+  RotateCw
 } from 'lucide-react';
 
 export const DocumentInboxPage: React.FC = () => {
@@ -38,6 +39,8 @@ export const DocumentInboxPage: React.FC = () => {
     processingProgress, 
     deleteDocument, 
     setActiveDocument,
+    renameDocument,
+    applySuggestedFilenames,
     uploadWarning,
     dismissWarning,
     crossChecks
@@ -163,7 +166,7 @@ export const DocumentInboxPage: React.FC = () => {
             <div className="font-mono text-xs font-bold text-[#7A302F] uppercase tracking-widest mb-1 flex items-center gap-1.5">
               <span>PHASE 02 // {t.inbox.tag}</span>
               <span className="bg-[#FFF8EA] text-[#7A302F] px-1.5 py-0.2 border border-[#7A302F] text-[10px]">
-                5 MAX
+                20 MAX
               </span>
             </div>
             <h1 className="font-heading text-3xl sm:text-4xl md:text-5xl font-bold text-[#3F2928]">
@@ -173,6 +176,36 @@ export const DocumentInboxPage: React.FC = () => {
               {t.inbox.subtitle}
             </p>
           </div>
+
+          {/* Step-by-Step Direct Tour Navigation Toolbar */}
+          {documents.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2 font-mono text-xs">
+              <button
+                onClick={() => navigate('/ocr')}
+                className="px-3 py-1.5 bg-[#FFF8EA] hover:bg-[#3F2928] hover:text-[#FFF8EA] text-[#3F2928] border border-[#3F2928] font-bold flex items-center gap-1 shadow-[2px_2px_0px_#3F2928] transition-all"
+              >
+                {t.inboxTour.ocr}
+              </button>
+              <button
+                onClick={() => navigate('/quality')}
+                className="px-3 py-1.5 bg-[#FFF8EA] hover:bg-[#3F2928] hover:text-[#FFF8EA] text-[#3F2928] border border-[#3F2928] font-bold flex items-center gap-1 shadow-[2px_2px_0px_#3F2928] transition-all"
+              >
+                {t.inboxTour.quality}
+              </button>
+              <button
+                onClick={() => navigate('/verification')}
+                className="px-3 py-1.5 bg-[#FFF8EA] hover:bg-[#3F2928] hover:text-[#FFF8EA] text-[#3F2928] border border-[#3F2928] font-bold flex items-center gap-1 shadow-[2px_2px_0px_#3F2928] transition-all"
+              >
+                {t.inboxTour.verify}
+              </button>
+              <button
+                onClick={() => navigate('/cross-check')}
+                className="px-3 py-1.5 bg-[#7A302F] hover:bg-[#5c2322] text-[#FFF8EA] border border-[#3F2928] font-bold flex items-center gap-1 shadow-[2px_2px_0px_#3F2928] transition-all"
+              >
+                <ArrowRightLeft className="w-3.5 h-3.5" /> {t.inboxTour.crossCheck}
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Warning / Notification Banner if upload limits exceeded */}
@@ -196,7 +229,7 @@ export const DocumentInboxPage: React.FC = () => {
           <div className="bg-[#FFF8EA] border-2 border-[#7A302F] p-4 mb-6 shadow-[4px_4px_0px_#7A302F]">
             <div className="font-heading text-base font-bold text-[#7A302F] flex items-center gap-2 mb-2">
               <ShieldAlert className="w-5 h-5 text-[#7A302F]" />
-              CROSS-DOCUMENT MISMATCH FLAGGED ({mismatchChecks.length})
+              {t.crossCheckMatrix.mismatchBanner} ({mismatchChecks.length})
             </div>
             <div className="space-y-1.5 font-mono text-xs text-[#3F2928]">
               {mismatchChecks.map((chk, idx) => (
@@ -207,10 +240,16 @@ export const DocumentInboxPage: React.FC = () => {
             </div>
             <div className="mt-3 flex items-center gap-3">
               <button
-                onClick={() => navigate('/issues')}
-                className="font-mono text-xs font-bold bg-[#7A302F] text-[#FFF8EA] px-3 py-1.5 border border-[#3F2928]"
+                onClick={() => navigate('/cross-check')}
+                className="font-mono text-xs font-bold bg-[#7A302F] text-[#FFF8EA] px-3 py-1.5 border border-[#3F2928] hover:bg-[#5c2322] shadow-[2px_2px_0px_#3F2928]"
               >
-                VIEW DETAILED FINDINGS →
+                {t.crossCheckMatrix.openDesk}
+              </button>
+              <button
+                onClick={() => navigate('/issues')}
+                className="font-mono text-xs font-bold bg-[#FFF8EA] text-[#7A302F] px-3 py-1.5 border border-[#7A302F] hover:bg-[#F3E4C8]"
+              >
+                {t.verification.reviewIssuesBtn} →
               </button>
             </div>
           </div>
@@ -244,16 +283,16 @@ export const DocumentInboxPage: React.FC = () => {
             {t.inbox.uploadBoxTitle}
           </h3>
           <p className="font-mono text-xs text-[#A58B7B] mb-4">
-            {t.inbox.uploadBoxSubtitle}
+            Upload up to 20 documents simultaneously (PDF, PNG, JPG, WEBP). Auto-classifies and audits immediately.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <button
               onClick={() => fileInputRef.current?.click()}
-              disabled={isAnalyzing || documents.length >= 5}
+              disabled={isAnalyzing || documents.length >= 20}
               className="w-full sm:w-auto font-heading text-base font-bold bg-[#7A302F] hover:bg-[#5c2322] disabled:opacity-50 text-[#FFF8EA] px-8 py-3 border border-[#3F2928] shadow-[2px_2px_0px_#3F2928] active:translate-x-[1px] active:translate-y-[1px] transition-all"
             >
-              {documents.length >= 5 ? 'CASE CAPACITY REACHED (5/5)' : `${t.common.upload} (MAX 5)`}
+              {documents.length >= 20 ? 'CASE CAPACITY REACHED (20/20)' : `${t.common.upload} (MAX 20)`}
             </button>
           </div>
         </div>
@@ -289,20 +328,28 @@ export const DocumentInboxPage: React.FC = () => {
             {/* Status Summary & Multi-Doc Collaboration Bar */}
             <div className="bg-[#F3E4C8] border-2 border-[#3F2928] p-3 sm:p-4 mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 font-mono text-xs shadow-[2px_2px_0px_#3F2928]">
               <div className="flex flex-wrap items-center gap-3 sm:gap-4">
-                <span>CASE DOCUMENTS: <strong>{documents.length} / 5</strong></span>
+                <span>CASE DOCUMENTS: <strong>{documents.length} / 20</strong></span>
                 <span className="text-[#7A302F] font-bold">VERIFIED: {documents.filter(d => d.verificationStatus === 'VERIFIED').length}</span>
                 <span className="text-[#7A302F] font-bold">NEEDS REVIEW: {documents.filter(d => d.verificationStatus !== 'VERIFIED').length}</span>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  onClick={applySuggestedFilenames}
+                  className="px-3 py-1 bg-[#3F2928] hover:bg-[#7A302F] text-[#FFF8EA] border border-[#3F2928] font-bold flex items-center gap-1.5 shadow-[2px_2px_0px_#7A302F] text-[11px] transition-all"
+                  title="Automatically rename all documents based on AI classification and applicant name"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-[#E8B9B8]" /> {t.docCard.autoRename}
+                </button>
+
                 <button
                   onClick={handleSelectAll}
                   className="px-2.5 py-1 bg-[#FFF8EA] hover:bg-[#E8B9B8] border border-[#3F2928] font-bold flex items-center gap-1 text-[11px]"
                 >
                   {selectedDocIds.length === documents.length ? (
-                    <><CheckSquare className="w-3.5 h-3.5 text-[#7A302F]" /> CLEAR ALL</>
+                    <><CheckSquare className="w-3.5 h-3.5 text-[#7A302F]" /> {t.inbox.clearSelection}</>
                   ) : (
-                    <><Square className="w-3.5 h-3.5 text-[#7A302F]" /> SELECT ALL ({documents.length})</>
+                    <><Square className="w-3.5 h-3.5 text-[#7A302F]" /> {t.inbox.selectAll} ({documents.length})</>
                   )}
                 </button>
 
@@ -313,9 +360,9 @@ export const DocumentInboxPage: React.FC = () => {
                     className="px-3 py-1 bg-[#7A302F] hover:bg-[#5c2322] text-[#FFF8EA] border border-[#3F2928] font-bold flex items-center gap-1.5 shadow-[2px_2px_0px_#3F2928] text-[11px] disabled:opacity-50"
                   >
                     {isMergingBundle ? (
-                      <><Loader2 className="w-3.5 h-3.5 animate-spin" /> MERGING PDF...</>
+                      <><Loader2 className="w-3.5 h-3.5 animate-spin" /> {t.common.loading}</>
                     ) : (
-                      <><Layers className="w-3.5 h-3.5" /> MERGE SELECTED ({selectedDocIds.length}) TO 1 PDF</>
+                      <><Layers className="w-3.5 h-3.5" /> {t.inbox.mergeSelected} ({selectedDocIds.length})</>
                     )}
                   </button>
                 )}
@@ -335,17 +382,24 @@ export const DocumentInboxPage: React.FC = () => {
               
               {/* Category Filter Tabs */}
               <div className="flex flex-wrap gap-1 font-mono text-xs w-full md:w-auto">
-                {(['ALL', 'IDENTITY', 'ADDRESS', 'BUSINESS', 'PERSONAL', 'UNKNOWN'] as const).map((cat) => (
+                {[
+                  { key: 'ALL' as const, label: t.categories.all },
+                  { key: 'IDENTITY' as const, label: t.categories.identity },
+                  { key: 'ADDRESS' as const, label: t.categories.address },
+                  { key: 'BUSINESS' as const, label: t.categories.business },
+                  { key: 'PERSONAL' as const, label: t.categories.personal },
+                  { key: 'UNKNOWN' as const, label: t.categories.unknown },
+                ].map(({ key, label }) => (
                   <button
-                    key={cat}
-                    onClick={() => setSelectedCategory(cat)}
+                    key={key}
+                    onClick={() => setSelectedCategory(key)}
                     className={`px-3 py-1.5 border font-semibold transition-all text-[11px] sm:text-xs ${
-                      selectedCategory === cat
+                      selectedCategory === key
                         ? 'bg-[#3F2928] text-[#FFF8EA] border-[#3F2928] shadow-[2px_2px_0px_#D47794]'
                         : 'bg-[#FFF8EA] text-[#3F2928] border-[#3F2928] hover:bg-[#F3E4C8]'
                     }`}
                   >
-                    {cat} ({categoriesCount[cat]})
+                    {label} ({categoriesCount[key]})
                   </button>
                 ))}
               </div>
@@ -371,6 +425,12 @@ export const DocumentInboxPage: React.FC = () => {
                 const applicantName = doc.extractedFields.find(f => f.key.toLowerCase().includes('name') || f.key === 'applicantName')?.value;
                 const docNumber = doc.extractedFields.find(f => f.key.toLowerCase().includes('number') || f.key === 'documentNumber')?.value;
                 const dob = doc.extractedFields.find(f => f.key.toLowerCase().includes('dob'))?.value;
+                const bloodGroup = doc.extractedFields.find(f => f.key === 'bloodGroup')?.value;
+                const validity = doc.extractedFields.find(f => f.key === 'validity')?.value;
+                const fatherName = doc.extractedFields.find(f => f.key === 'fatherName')?.value;
+                const vid = doc.extractedFields.find(f => f.key === 'vid')?.value;
+                const gender = doc.extractedFields.find(f => f.key === 'gender')?.value;
+                const address = doc.extractedFields.find(f => f.key === 'address')?.value;
 
                 return (
                   <div
@@ -416,10 +476,10 @@ export const DocumentInboxPage: React.FC = () => {
                       {/* Thumbnail Preview */}
                       <div
                         onClick={() => handleCardClick(doc.id)}
-                        className="cursor-pointer group relative bg-[#3F2928]/5 border border-[#3F2928] mb-3 overflow-hidden h-36 flex items-center justify-center"
+                        className="cursor-pointer group relative bg-[#3F2928]/5 border border-[#3F2928] mb-2 overflow-hidden h-36 flex items-center justify-center"
                       >
                         <img
-                          src={doc.previewUrl}
+                          src={doc.correctedPreviewUrl || doc.previewUrl}
                           alt={doc.filename}
                           className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
                           onError={(e) => {
@@ -431,11 +491,28 @@ export const DocumentInboxPage: React.FC = () => {
                         </div>
                       </div>
 
+                      {/* Orientation Detection & Auto-Correction Status Pill */}
+                      <div className={`mb-2 px-2 py-1 border font-mono text-[9px] flex items-center justify-between ${
+                        doc.detectedOrientation && doc.detectedOrientation !== 'UPRIGHT'
+                          ? 'bg-[#D4E8B8] border-[#3F2928] text-[#3F2928] font-bold'
+                          : 'bg-[#FFF8EA] border-[#3F2928] text-[#A58B7B]'
+                      }`}>
+                        <span className="flex items-center gap-1">
+                          <RotateCw className="w-3 h-3 text-[#7A302F]" />
+                          {doc.detectedOrientation && doc.detectedOrientation !== 'UPRIGHT'
+                            ? `${t.docCard.orientation}: 90° ➔ ${t.docCard.autoCorrected} ${t.docCard.horizontal} ✓`
+                            : `${t.docCard.orientation}: ${t.docCard.upright}`}
+                        </span>
+                        <span className="text-[8px] bg-[#3F2928] text-white px-1 py-0.2">
+                          {doc.metadata?.dimensions || 'A4 / Standard'}
+                        </span>
+                      </div>
+
                       {/* AI Classified Document Type Header */}
                       <div className="mb-2">
                         <div className="font-mono text-[10px] font-bold text-[#7A302F] uppercase flex items-center gap-1">
                           <Sparkles className="w-3 h-3 text-[#7A302F]" />
-                          AI CLASSIFIED DOCUMENT:
+                          {t.docCard.aiClassified}
                         </div>
                         <h4 className="font-heading text-lg font-bold text-[#3F2928] line-clamp-1">
                           {doc.documentType}
@@ -445,30 +522,66 @@ export const DocumentInboxPage: React.FC = () => {
                         </div>
                       </div>
 
-                      {/* Extracted Credential Badges */}
+                      {/* Extracted Credential Badges with Document-Specific Attributes */}
                       <div className="space-y-1 font-mono text-[11px] bg-[#F3E4C8] p-2.5 border border-[#3F2928] mb-3">
                         {applicantName && (
                           <div className="flex justify-between truncate">
-                            <span className="text-[#A58B7B]">NAME:</span>
+                            <span className="text-[#A58B7B]">{t.docCard.name}</span>
                             <strong className="text-[#3F2928] truncate ml-1">{applicantName}</strong>
+                          </div>
+                        )}
+                        {fatherName && (
+                          <div className="flex justify-between truncate">
+                            <span className="text-[#A58B7B]">FATHER:</span>
+                            <strong className="text-[#3F2928] truncate ml-1">{fatherName}</strong>
                           </div>
                         )}
                         {docNumber && (
                           <div className="flex justify-between truncate">
-                            <span className="text-[#A58B7B]">ID NO:</span>
+                            <span className="text-[#A58B7B]">{t.docCard.idNo}</span>
                             <strong className="text-[#7A302F] truncate ml-1">{docNumber}</strong>
                           </div>
                         )}
                         {dob && (
                           <div className="flex justify-between">
-                            <span className="text-[#A58B7B]">DOB / AGE:</span>
+                            <span className="text-[#A58B7B]">{t.docCard.dobAge}</span>
                             <strong className="text-[#3F2928]">
-                              {dob} {doc.calculatedAge ? `(${doc.calculatedAge} yrs)` : ''}
+                              {dob.includes('(') ? dob : (doc.calculatedAge ? `${dob} (${doc.calculatedAge} ${t.docCard.years})` : dob)}
                             </strong>
                           </div>
                         )}
+                        {bloodGroup && (
+                          <div className="flex justify-between">
+                            <span className="text-[#A58B7B]">{t.docCard.bloodGroup}</span>
+                            <strong className="text-[#7A302F] font-bold">{bloodGroup}</strong>
+                          </div>
+                        )}
+                        {validity && (
+                          <div className="flex justify-between truncate">
+                            <span className="text-[#A58B7B]">VALIDITY:</span>
+                            <strong className="text-[#3F2928] truncate ml-1">{validity}</strong>
+                          </div>
+                        )}
+                        {vid && (
+                          <div className="flex justify-between truncate">
+                            <span className="text-[#A58B7B]">VID:</span>
+                            <strong className="text-[#3F2928] truncate ml-1">{vid}</strong>
+                          </div>
+                        )}
+                        {gender && gender !== 'Not detected' && (
+                          <div className="flex justify-between">
+                            <span className="text-[#A58B7B]">GENDER:</span>
+                            <strong className="text-[#3F2928]">{gender}</strong>
+                          </div>
+                        )}
+                        {address && address !== 'Not detected' && (
+                          <div className="text-[10px] text-[#A58B7B] pt-1 border-t border-[#3F2928]/10 line-clamp-1" title={address}>
+                            <span>{t.docCard.addr} </span>
+                            <span className="text-[#3F2928] font-bold">{address}</span>
+                          </div>
+                        )}
                         <div className="flex justify-between pt-1 border-t border-[#3F2928]/20">
-                          <span>QUALITY:</span>
+                          <span>{t.docCard.quality}</span>
                           <strong className="text-[#7A302F]">
                             {doc.quality.status} ({doc.quality.overallScore}%)
                           </strong>
@@ -486,7 +599,7 @@ export const DocumentInboxPage: React.FC = () => {
                             <>
                               <UserX className="w-3.5 h-3.5 text-[#7A302F] shrink-0 mt-0.5" />
                               <div>
-                                <span className="block font-bold">OUTDATED PHOTO DETECTED ⚠</span>
+                                <span className="block font-bold">{t.docCard.photoAgeMismatch}</span>
                                 <span>{doc.photoAudit.photoFeedback || 'Photo appears outdated relative to calculated age. Recommend updating.'}</span>
                               </div>
                             </>
@@ -494,8 +607,8 @@ export const DocumentInboxPage: React.FC = () => {
                             <>
                               <UserCheck className="w-3.5 h-3.5 text-green-700 shrink-0 mt-0.5" />
                               <div>
-                                <span className="block font-bold text-green-800">PHOTO AGE VERIFIED ✓</span>
-                                <span>{doc.photoAudit.photoFeedback || 'Photo matches current age criteria.'}</span>
+                                <span className="block font-bold text-green-800">{t.docCard.photoAgeVerified}</span>
+                                <span>{doc.photoAudit.photoFeedback || t.docCard.verifiedCurrent}</span>
                               </div>
                             </>
                           )}
@@ -518,16 +631,26 @@ export const DocumentInboxPage: React.FC = () => {
                           onClick={() => handleCardClick(doc.id)}
                           className="text-[#7A302F] hover:underline font-bold flex items-center gap-1"
                         >
-                          VIEW OCR →
+                          {t.docCard.viewOcr} →
                         </button>
 
                         <div className="flex items-center gap-1.5">
+                          {doc.suggestedFilename && doc.filename !== doc.suggestedFilename && (
+                            <button
+                              onClick={() => renameDocument(doc.id, doc.suggestedFilename!)}
+                              className="bg-[#3F2928] text-[#FFF8EA] px-2 py-0.5 text-[10px] font-bold hover:bg-[#7A302F]"
+                              title={`Apply AI suggested name: ${doc.suggestedFilename}`}
+                            >
+                              {t.docCard.autoRename}
+                            </button>
+                          )}
+
                           <button
                             onClick={(e) => handleDownloadSingle(doc, e)}
                             className="bg-[#FFF8EA] hover:bg-[#E8B9B8] text-[#7A302F] border border-[#3F2928] px-2 py-0.5 text-[10px] font-bold flex items-center gap-1"
                             title="Download classified file with custom format"
                           >
-                            <Download className="w-3 h-3" /> EXPORT
+                            <Download className="w-3 h-3" /> {t.docCard.export}
                           </button>
 
                           <button
@@ -545,21 +668,21 @@ export const DocumentInboxPage: React.FC = () => {
                           onClick={() => { setActiveDocument(doc.id); navigate('/quality'); }}
                           className="hover:text-[#7A302F] flex items-center gap-0.5"
                         >
-                          <Sliders className="w-3 h-3" /> Audit
+                          <Sliders className="w-3 h-3" /> {t.docCard.audit}
                         </button>
                         <span>•</span>
                         <button
                           onClick={() => navigate('/cross-check')}
                           className="hover:text-[#7A302F] flex items-center gap-0.5"
                         >
-                          <ArrowRightLeft className="w-3 h-3" /> Compare
+                          <ArrowRightLeft className="w-3 h-3" /> {t.docCard.compare}
                         </button>
                         <span>•</span>
                         <button
                           onClick={() => navigate('/tools')}
                           className="hover:text-[#7A302F] flex items-center gap-0.5"
                         >
-                          <Wrench className="w-3 h-3" /> Tools
+                          <Wrench className="w-3 h-3" /> {t.docCard.tools}
                         </button>
                       </div>
                     </div>

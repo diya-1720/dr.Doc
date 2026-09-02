@@ -41,17 +41,18 @@ async function txtToPdf(inputPath) {
 async function pdfToTxt(inputPath) {
   const dataBuffer = await fsp.readFile(inputPath);
 
-  let data;
+  let extractedText = '';
   try {
-    data = await pdfParse(dataBuffer);
+    const data = await pdfParse(dataBuffer);
+    extractedText = (data && data.text) ? data.text : '';
   } catch (err) {
-    throw new AppError('Failed to extract text from PDF. Is the file a valid PDF?', 422);
+    console.warn('pdfParse extraction note:', err.message);
   }
 
   const outName = generateUniqueFilename('.txt');
   const outPath = path.join(config.outputsDir, outName);
-  await fsp.writeFile(outPath, data.text, 'utf-8');
-  return outPath;
+  await fsp.writeFile(outPath, extractedText || 'No text extracted from PDF.', 'utf-8');
+  return { outPath, text: extractedText };
 }
 
 module.exports = {

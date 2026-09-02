@@ -153,6 +153,33 @@ export const OcrWorkspacePage: React.FC = () => {
                 </button>
               </div>
 
+              {/* Photo & Age Forensic Inspection */}
+              {currentDoc.photoAudit && currentDoc.photoAudit.hasPhoto && (
+                <div className={`p-3 border-2 mb-4 font-mono text-xs ${
+                  currentDoc.photoAudit.photoStatus === 'OUTDATED_RECOMMEND_UPDATE'
+                    ? 'bg-[#E8B9B8]/40 border-[#7A302F]'
+                    : 'bg-[#D4E8B8]/40 border-[#3F2928]'
+                }`}>
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="font-bold text-[#7A302F] flex items-center gap-1">
+                      📸 {t.ocr.photoAgingAudit}
+                    </span>
+                    <span className={`text-[10px] font-bold px-1.5 py-0.5 border ${
+                      currentDoc.photoAudit.photoStatus === 'OUTDATED_RECOMMEND_UPDATE'
+                        ? 'bg-[#7A302F] text-white border-[#7A302F]'
+                        : 'bg-[#D4E8B8] text-[#3F2928] border-[#3F2928]'
+                    }`}>
+                      {currentDoc.photoAudit.photoStatus === 'OUTDATED_RECOMMEND_UPDATE' ? `${t.docCard.photoAgeMismatch}` : `${t.docCard.photoAgeVerified}`}
+                    </span>
+                  </div>
+                  <div className="text-[11px] text-[#3F2928] space-y-0.5">
+                    <div>{t.ocr.estimatedPhotoAge} <strong>{currentDoc.photoAudit.estimatedPhotoAge || 'Adult'}</strong></div>
+                    {currentDoc.calculatedAge && <div>{t.ocr.dobCalculatedAge} <strong>{currentDoc.calculatedAge} {t.docCard.years}</strong></div>}
+                    <div className="text-[10px] text-[#7A302F] mt-1">{currentDoc.photoAudit.photoFeedback}</div>
+                  </div>
+                </div>
+              )}
+
               {/* Field Rows */}
               <div className="space-y-3 font-mono text-xs">
                 {currentDoc.extractedFields.map((field) => (

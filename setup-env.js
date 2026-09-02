@@ -1,6 +1,10 @@
 // setup-env.js: Safely copies .env.example -> .env if not present
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const rootExample = path.join(__dirname, '.env.example');
 const rootEnv = path.join(__dirname, '.env');

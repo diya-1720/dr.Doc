@@ -124,9 +124,9 @@ export const FixApplicationPage: React.FC = () => {
               >
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-[#3F2928] pb-3 mb-4 font-mono text-xs">
                   <span className="font-bold text-[#7A302F] uppercase">
-                    STEP {idx + 1}: {issue.severity}
+                    {t.fix.step} {idx + 1}: {issue.severity === 'CRITICAL' ? t.common.critical : t.common.needsReview}
                   </span>
-                  <span className="evidence-tag">{issue.affectedDocumentName || 'APPLICATION GENERAL'}</span>
+                  <span className="evidence-tag">{issue.affectedDocumentName || t.nav.activeApplication}</span>
                 </div>
 
                 <h3 className="font-heading text-xl sm:text-2xl font-bold text-[#3F2928] mb-2">
@@ -153,7 +153,7 @@ export const FixApplicationPage: React.FC = () => {
                         className="bg-[#7A302F] hover:bg-[#5c2322] disabled:opacity-50 text-[#FFF8EA] px-5 py-2.5 border border-[#3F2928] font-bold text-xs shadow-[2px_2px_0px_#3F2928] flex items-center gap-2"
                       >
                         {compressingId === issue.affectedDocumentId ? (
-                          <><Loader2 className="w-4 h-4 animate-spin" /> COMPRESSING...</>
+                          <><Loader2 className="w-4 h-4 animate-spin" /> {t.common.loading}</>
                         ) : (
                           <><FileCheck2 className="w-4 h-4" /> {t.fix.compressPdfTool}</>
                         )}

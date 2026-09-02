@@ -52,19 +52,26 @@ export const VerifySetupPage: React.FC = () => {
                 }`}
               >
                 <div className="flex justify-between items-start mb-3">
-                  <div className="font-mono text-[10px] font-bold px-2 py-0.5 bg-[#3F2928] text-[#FFF8EA]">
-                    {app.code}
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <div className="font-mono text-[10px] font-bold px-2 py-0.5 bg-[#3F2928] text-[#FFF8EA]">
+                      {app.code}
+                    </div>
+                    {app.id === 'app-default-universal' && (
+                      <span className="font-mono text-[9px] font-bold px-2 py-0.5 bg-[#7A302F] text-[#FFF8EA] uppercase tracking-wider">
+                        ★ {t.setup.defaultForensics}
+                      </span>
+                    )}
                   </div>
                   {isSelected && (
-                    <span className="stamp stamp-verified text-[10px]">SELECTED</span>
+                    <span className="stamp stamp-verified text-[10px]">{t.setup.selected}</span>
                   )}
                 </div>
 
                 <h3 className="font-heading text-lg sm:text-xl font-bold text-[#3F2928] mb-2">
-                  {app.name}
+                  {app.id === 'app-default-universal' ? t.applications.universal.name : app.id === 'app-biz-reg' ? t.applications.bizReg.name : app.id === 'app-kyc-bank' ? t.applications.kycBank.name : app.id === 'app-loan-grant' ? t.applications.loanGrant.name : app.id === 'app-college-adm' ? t.applications.collegeAdm.name : app.name}
                 </h3>
                 <p className="font-body text-xs text-[#3F2928] mb-4 leading-relaxed">
-                  {app.description}
+                  {app.id === 'app-default-universal' ? t.applications.universal.description : app.id === 'app-biz-reg' ? t.applications.bizReg.description : app.id === 'app-kyc-bank' ? t.applications.kycBank.description : app.id === 'app-loan-grant' ? t.applications.loanGrant.description : app.id === 'app-college-adm' ? t.applications.collegeAdm.description : app.description}
                 </p>
 
                 {/* Requirement pills */}
@@ -78,7 +85,7 @@ export const VerifySetupPage: React.FC = () => {
                     ))}
                   </div>
                   <div className="mt-2 text-[#7A302F]">
-                    PORTAL MAX FILE LIMIT: <strong>{app.portalMaxFileSizeMB} MB</strong>
+                    {t.setup.portalMaxLimit}: <strong>{app.portalMaxFileSizeMB} MB</strong>
                   </div>
                 </div>
               </div>
@@ -89,10 +96,10 @@ export const VerifySetupPage: React.FC = () => {
         {/* Selected Application Details & Checklist */}
         <div className="bg-[#FFF8EA] border-2 border-[#3F2928] p-4 sm:p-6 shadow-[4px_4px_0px_#3F2928] mb-8">
           <div className="font-mono text-xs font-bold text-[#7A302F] uppercase tracking-widest mb-2">
-            ACTIVE PROFILE CHECKLIST
+            {t.setup.activeProfileChecklist}
           </div>
           <h3 className="font-heading text-xl sm:text-2xl font-bold text-[#3F2928] mb-4">
-            {currentApplication.name} REQUIREMENTS
+            {currentApplication.id === 'app-default-universal' ? t.applications.universal.name : currentApplication.name} ({t.setup.requirements})
           </h3>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 font-mono text-xs mb-6">
@@ -102,7 +109,7 @@ export const VerifySetupPage: React.FC = () => {
                   <CheckSquare className="w-4 h-4 text-[#7A302F] shrink-0" />
                   <span className="font-bold text-[#3F2928]">{req}</span>
                 </div>
-                <span className="text-[10px] text-[#A58B7B]">MANDATORY</span>
+                <span className="text-[10px] text-[#A58B7B]">{t.setup.mandatory}</span>
               </div>
             ))}
           </div>
@@ -112,7 +119,7 @@ export const VerifySetupPage: React.FC = () => {
               onClick={handleProceedToInbox}
               className="w-full sm:w-auto font-heading text-base sm:text-lg font-bold bg-[#7A302F] hover:bg-[#5c2322] text-[#FFF8EA] px-8 py-3 border-2 border-[#3F2928] shadow-[4px_4px_0px_#3F2928] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all flex items-center justify-center gap-2"
             >
-              {t.nav.documents} (INBOX)
+              {t.nav.documents} ({t.header.inbox})
               <ArrowRight className="w-5 h-5" />
             </button>
           </div>

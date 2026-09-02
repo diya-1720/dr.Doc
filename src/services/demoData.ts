@@ -2,6 +2,14 @@ import type { DocItem, ApplicationRequirement, IssueItem, CrossCheckField, Nearb
 
 export const DEFAULT_APPLICATIONS: ApplicationRequirement[] = [
   {
+    id: 'app-default-universal',
+    name: 'Default: Universal Document Forensics & Ingestion',
+    code: 'UNIVERSAL_FORENSICS_v1',
+    description: 'Universal multi-document intake & deep audit pipeline. Ingest up to 20 documents of any category with automated classification, deep OCR, photo-aging audit, cross-check mismatch detection, and standardized renaming.',
+    requiredDocuments: ['Identity Proof (PAN / Aadhaar / Passport)', 'Address Proof (Electricity Bill / Statement)', 'Photograph / Photo ID'],
+    portalMaxFileSizeMB: 25
+  },
+  {
     id: 'app-biz-reg',
     name: 'Business Registration (GST / MSME)',
     code: 'BIZ_REG_2026',

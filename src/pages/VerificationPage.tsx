@@ -189,7 +189,7 @@ export const VerificationPage: React.FC = () => {
                         {isVerified ? `✓ ${reqType}` : isReview ? `⚠ ${reqType}` : `○ ${reqType}`}
                       </div>
                       <div className="text-[10px] text-[#A58B7B] truncate max-w-[160px] sm:max-w-[220px] mt-0.5">
-                        {matchedDoc ? matchedDoc.filename : 'NOT PROVIDED YET'}
+                        {matchedDoc ? matchedDoc.filename : t.common.missing}
                       </div>
                     </div>
                   </div>

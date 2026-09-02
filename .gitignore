@@ -10,6 +10,7 @@ lerna-debug.log*
 # Node dependencies
 node_modules
 */node_modules
+*.traineddata
 
 # Build outputs
 dist
