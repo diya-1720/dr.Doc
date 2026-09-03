@@ -1,7 +1,12 @@
 /**
  * Dr. Doc Share & Mobile Transfer Controller
  * Manages 30-minute self-expiring share packages
+ * Supports cross-lambda serverless & persistent disk caching
  */
+
+const fs = require('fs');
+const path = require('path');
+const os = require('os');
 
 // In-memory session store with 30-minute TTL
 const shareSessions = new Map();
@@ -9,12 +14,26 @@ const shareSessions = new Map();
 // Session TTL: 30 minutes in milliseconds
 const SESSION_TTL_MS = 30 * 60 * 1000;
 
+// Disk persistence directory for cross-request / serverless lambda caching
+const SHARES_DIR = path.join(os.tmpdir(), 'dr_doc_shares');
+try {
+  if (!fs.existsSync(SHARES_DIR)) {
+    fs.mkdirSync(SHARES_DIR, { recursive: true });
+  }
+} catch (e) {
+  console.warn('Could not initialize shares dir:', e);
+}
+
 // Periodic cleanup of expired sessions
 setInterval(() => {
   const now = Date.now();
   for (const [id, session] of shareSessions.entries()) {
     if (now > session.expiresAt) {
       shareSessions.delete(id);
+      try {
+        const filePath = path.join(SHARES_DIR, `${id}.json`);
+        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+      } catch (e) {}
     }
   }
 }, 60 * 1000);
@@ -26,6 +45,7 @@ setInterval(() => {
 exports.createShareSession = (req, res) => {
   try {
     const { 
+      shareId: incomingShareId,
       caseId = 'DR-DOC-CASE',
       applicantName = 'Applicant',
       readinessScore = 100,
@@ -34,12 +54,14 @@ exports.createShareSession = (req, res) => {
       mergedPdfDataUrl = null,
       hasReport = false,
       reportData = null,
-      customSettings = {}
+      customSettings = {},
+      createdAt: incomingCreatedAt,
+      expiresAt: incomingExpiresAt
     } = req.body;
 
-    const shareId = 'drshare_' + Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
-    const createdAt = Date.now();
-    const expiresAt = createdAt + SESSION_TTL_MS;
+    const shareId = incomingShareId || ('drshare_' + Math.random().toString(36).substring(2, 10) + Date.now().toString(36));
+    const createdAt = incomingCreatedAt || Date.now();
+    const expiresAt = incomingExpiresAt || (createdAt + SESSION_TTL_MS);
 
     const sessionData = {
       shareId,
@@ -56,7 +78,19 @@ exports.createShareSession = (req, res) => {
       expiresAt
     };
 
+    // Store in memory
     shareSessions.set(shareId, sessionData);
+
+    // Persist to disk for serverless persistence across lambda instances
+    try {
+      if (!fs.existsSync(SHARES_DIR)) {
+        fs.mkdirSync(SHARES_DIR, { recursive: true });
+      }
+      const filePath = path.join(SHARES_DIR, `${shareId}.json`);
+      fs.writeFileSync(filePath, JSON.stringify(sessionData), 'utf8');
+    } catch (fsErr) {
+      console.warn('Could not write share session to disk:', fsErr);
+    }
 
     return res.status(201).json({
       success: true,
@@ -82,7 +116,21 @@ exports.createShareSession = (req, res) => {
 exports.getShareSession = (req, res) => {
   try {
     const { shareId } = req.params;
-    const session = shareSessions.get(shareId);
+    let session = shareSessions.get(shareId);
+
+    // If not in memory, try loading from disk (for Vercel serverless / cross-instance requests)
+    if (!session) {
+      try {
+        const filePath = path.join(SHARES_DIR, `${shareId}.json`);
+        if (fs.existsSync(filePath)) {
+          const raw = fs.readFileSync(filePath, 'utf8');
+          session = JSON.parse(raw);
+          shareSessions.set(shareId, session);
+        }
+      } catch (fsErr) {
+        console.warn('Could not read share session from disk:', fsErr);
+      }
+    }
 
     if (!session) {
       return res.status(404).json({
@@ -95,6 +143,10 @@ exports.getShareSession = (req, res) => {
     const now = Date.now();
     if (now > session.expiresAt) {
       shareSessions.delete(shareId);
+      try {
+        const filePath = path.join(SHARES_DIR, `${shareId}.json`);
+        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+      } catch (e) {}
       return res.status(410).json({
         success: false,
         error: 'Share session expired. For security, Dr. Doc transfer QR codes are valid for 30 minutes.',
@@ -128,6 +180,11 @@ exports.deleteShareSession = (req, res) => {
     const existed = shareSessions.has(shareId);
     shareSessions.delete(shareId);
 
+    try {
+      const filePath = path.join(SHARES_DIR, `${shareId}.json`);
+      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+    } catch (e) {}
+
     return res.status(200).json({
       success: true,
       message: 'Share session revoked and deleted successfully for security.',
@@ -138,4 +195,5 @@ exports.deleteShareSession = (req, res) => {
     return res.status(500).json({ success: false, error: err.message || 'Failed to delete share session' });
   }
 };
+
 

@@ -79,7 +79,57 @@ async function runTests() {
     assert.ok(getJson.data.remainingSeconds > 1750, 'remainingSeconds should be close to 1800');
   });
 
-  // 3. Non-existent / Expired Session Check
+  // 3. Client ShareId Preservation & Disk Retrieval Test
+  await testAsync('Backend API respects incoming client shareId and returns exact payload', async () => {
+    const customShareId = 'drshare_test_mobile_scan_' + Date.now();
+    const res = await fetch('http://localhost:5000/api/share', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        shareId: customShareId,
+        caseId: 'DR-TEST-002',
+        applicantName: 'Ved Gharat',
+        readinessScore: 100,
+        documents: [
+          {
+            id: 'doc-ved-1',
+            originalFilename: 'dl_photo.png',
+            classifiedFilename: 'DRIVING_LICENCE_VED_GHARAT.pdf',
+            documentType: 'Driving Licence',
+            format: 'pdf',
+            mimeType: 'application/pdf',
+            dataUrl: 'data:application/pdf;base64,JVBERi0xLjQK...',
+            fileSizeBytes: 154000,
+            qualityScore: 99,
+            verificationStatus: 'VERIFIED'
+          }
+        ],
+        hasMergedPdf: true,
+        hasReport: true
+      })
+    });
+
+    assert.strictEqual(res.status, 201);
+    const json = await res.json();
+    assert.strictEqual(json.data.shareId, customShareId, 'Backend must use exact client shareId');
+
+    // Fetch by custom client shareId
+    const getRes = await fetch(`http://localhost:5000/api/share/${customShareId}`);
+    assert.strictEqual(getRes.status, 200);
+    const getJson = await getRes.json();
+    assert.strictEqual(getJson.data.applicantName, 'Ved Gharat');
+    assert.strictEqual(getJson.data.documents[0].classifiedFilename, 'DRIVING_LICENCE_VED_GHARAT.pdf');
+
+    // Early Deletion
+    const delRes = await fetch(`http://localhost:5000/api/share/${customShareId}`, { method: 'DELETE' });
+    assert.strictEqual(delRes.status, 200);
+
+    // Verify it is gone
+    const verifyDelRes = await fetch(`http://localhost:5000/api/share/${customShareId}`);
+    assert.strictEqual(verifyDelRes.status, 404);
+  });
+
+  // 4. Non-existent / Expired Session Check
   await testAsync('Backend API returns 404 / expired for invalid shareId', async () => {
     const res = await fetch('http://localhost:5000/api/share/invalid_session_id_12345');
     assert.strictEqual(res.status, 404);

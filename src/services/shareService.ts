@@ -213,12 +213,13 @@ export async function createSharePackage(
     console.warn('LocalStorage full, falling back to in-memory session only:', err);
   }
 
-  // Send to Backend API if online
+  // Send to Backend API with matching shareId and timestamps
   try {
-    await fetch('/api/share', {
+    const res = await fetch('/api/share', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        shareId: packageData.shareId,
         caseId: packageData.caseId,
         applicantName: packageData.applicantName,
         readinessScore: packageData.readinessScore,
@@ -226,9 +227,17 @@ export async function createSharePackage(
         hasMergedPdf: packageData.hasMergedPdf,
         mergedPdfDataUrl: packageData.mergedPdfDataUrl,
         hasReport: packageData.hasReport,
-        reportData: packageData.reportData
+        reportData: packageData.reportData,
+        createdAt: packageData.createdAt,
+        expiresAt: packageData.expiresAt
       })
     });
+    if (res.ok) {
+      const resJson = await res.json();
+      if (resJson?.data?.shareId) {
+        packageData.shareId = resJson.data.shareId;
+      }
+    }
   } catch (backendErr) {
     console.warn('Backend share API offline or unavailable, local sharing active:', backendErr);
   }
