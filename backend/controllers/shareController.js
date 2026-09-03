@@ -1,190 +1,141 @@
-const crypto = require('crypto');
-const path = require('path');
-const fs = require('fs');
-const fsp = fs.promises;
-const config = require('../utils/config');
-const { ensureDir } = require('../utils/fileHelpers');
+/**
+ * Dr. Doc Share & Mobile Transfer Controller
+ * Manages 30-minute self-expiring share packages
+ */
 
-// In-memory registry with TTL
-// Map<token, { caseId, applicationName, createdAt, expiresAt, files: Array<{ id, name, mimeType, sizeBytes, category, filePath, buffer }> }>
-const shareRegistry = new Map();
+// In-memory session store with 30-minute TTL
+const shareSessions = new Map();
 
-const DEFAULT_EXPIRY_MS = 24 * 60 * 60 * 1000; // 24 hours
+// Session TTL: 30 minutes in milliseconds
+const SESSION_TTL_MS = 30 * 60 * 1000;
 
-// Periodically clean up expired shares
+// Periodic cleanup of expired sessions
 setInterval(() => {
   const now = Date.now();
-  for (const [token, session] of shareRegistry.entries()) {
-    if (session.expiresAt && now > session.expiresAt) {
-      shareRegistry.delete(token);
+  for (const [id, session] of shareSessions.entries()) {
+    if (now > session.expiresAt) {
+      shareSessions.delete(id);
     }
   }
-}, 30 * 60 * 1000); // every 30 mins
+}, 60 * 1000);
 
 /**
+ * Creates a new 30-minute share session
  * POST /api/share
- * Creates a secure share bundle
  */
-async function createShareSession(req, res, next) {
+exports.createShareSession = (req, res) => {
   try {
-    const { caseId, applicationName, expiryHours, files } = req.body;
+    const { 
+      caseId = 'DR-DOC-CASE',
+      applicantName = 'Applicant',
+      readinessScore = 100,
+      documents = [],
+      hasMergedPdf = false,
+      mergedPdfDataUrl = null,
+      hasReport = false,
+      reportData = null,
+      customSettings = {}
+    } = req.body;
 
-    if (!files || !Array.isArray(files) || files.length === 0) {
-      return res.status(400).json({
-        success: false,
-        error: { message: 'No files provided to create a share link.' },
-      });
-    }
+    const shareId = 'drshare_' + Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
+    const createdAt = Date.now();
+    const expiresAt = createdAt + SESSION_TTL_MS;
 
-    const token = crypto.randomBytes(16).toString('hex');
-    const now = Date.now();
-    const hours = Math.min(Math.max(parseInt(expiryHours, 10) || 24, 1), 72);
-    const expiresAt = now + hours * 60 * 60 * 1000;
-
-    const sharesDir = path.join(config.outputsDir, 'shares', token);
-    await ensureDir(sharesDir);
-
-    const storedFiles = [];
-
-    for (let i = 0; i < files.length; i++) {
-      const f = files[i];
-      const fileId = f.id || `file_${i + 1}_${crypto.randomBytes(4).toString('hex')}`;
-      const safeName = (f.name || `document_${i + 1}`).replace(/[^a-zA-Z0-9._\-\s]/g, '_');
-      const mimeType = f.mimeType || 'application/octet-stream';
-      const category = f.category || 'DOCUMENT';
-
-      let filePath = null;
-      let sizeBytes = f.sizeBytes || 0;
-
-      if (f.base64Data) {
-        const base64Clean = f.base64Data.replace(/^data:[^;]+;base64,/, '');
-        const buffer = Buffer.from(base64Clean, 'base64');
-        filePath = path.join(sharesDir, safeName);
-        await fsp.writeFile(filePath, buffer);
-        sizeBytes = buffer.length;
-      } else if (f.existingOutputFilename) {
-        // Link to existing backend output file
-        const srcPath = path.join(config.outputsDir, path.basename(f.existingOutputFilename));
-        if (fs.existsSync(srcPath)) {
-          filePath = srcPath;
-          const stats = await fsp.stat(srcPath);
-          sizeBytes = stats.size;
-        }
-      }
-
-      storedFiles.push({
-        id: fileId,
-        name: safeName,
-        mimeType,
-        sizeBytes,
-        category,
-        filePath,
-      });
-    }
-
-    shareRegistry.set(token, {
-      caseId: caseId || 'CASE-' + crypto.randomBytes(3).toString('hex').toUpperCase(),
-      applicationName: applicationName || 'Document Verification Package',
-      createdAt: now,
-      expiresAt,
-      files: storedFiles,
-    });
-
-    res.status(201).json({
-      success: true,
-      token,
-      expiresAt: new Date(expiresAt).toISOString(),
-      fileCount: storedFiles.length,
+    const sessionData = {
+      shareId,
       caseId,
+      applicantName,
+      readinessScore,
+      documents,
+      hasMergedPdf,
+      mergedPdfDataUrl,
+      hasReport,
+      reportData,
+      customSettings,
+      createdAt,
+      expiresAt
+    };
+
+    shareSessions.set(shareId, sessionData);
+
+    return res.status(201).json({
+      success: true,
+      data: {
+        shareId,
+        expiresAt,
+        ttlMinutes: 30,
+        documentCount: documents.length,
+        hasMergedPdf,
+        hasReport
+      }
     });
   } catch (err) {
-    next(err);
+    console.error('Error creating share session:', err);
+    return res.status(500).json({ success: false, error: err.message || 'Failed to create share session' });
   }
-}
-
-/**
- * GET /api/share/:token
- * Returns metadata of files available in the share session
- */
-async function getShareSession(req, res) {
-  const { token } = req.params;
-
-  if (!token || !shareRegistry.has(token)) {
-    return res.status(404).json({
-      success: false,
-      error: { code: 'SHARE_NOT_FOUND', message: 'Share link not found or has expired.' },
-    });
-  }
-
-  const session = shareRegistry.get(token);
-  const now = Date.now();
-
-  if (session.expiresAt && now > session.expiresAt) {
-    shareRegistry.delete(token);
-    return res.status(410).json({
-      success: false,
-      error: { code: 'SHARE_EXPIRED', message: 'This document share link has expired.' },
-    });
-  }
-
-  // Public sanitized metadata only - NEVER expose filesystem paths or secrets
-  const publicFiles = session.files.map((f) => ({
-    id: f.id,
-    name: f.name,
-    mimeType: f.mimeType,
-    sizeBytes: f.sizeBytes,
-    category: f.category,
-    downloadUrl: `/api/share/${token}/download/${f.id}`,
-  }));
-
-  res.json({
-    success: true,
-    data: {
-      token,
-      caseId: session.caseId,
-      applicationName: session.applicationName,
-      createdAt: new Date(session.createdAt).toISOString(),
-      expiresAt: new Date(session.expiresAt).toISOString(),
-      files: publicFiles,
-    },
-  });
-}
-
-/**
- * GET /api/share/:token/download/:fileId
- * Streams a specific file for download
- */
-async function downloadShareFile(req, res, next) {
-  const { token, fileId } = req.params;
-
-  if (!token || !shareRegistry.has(token)) {
-    return res.status(404).send('Share link not found or expired.');
-  }
-
-  const session = shareRegistry.get(token);
-  if (session.expiresAt && Date.now() > session.expiresAt) {
-    shareRegistry.delete(token);
-    return res.status(410).send('This share link has expired.');
-  }
-
-  const targetFile = session.files.find((f) => f.id === fileId);
-  if (!targetFile || !targetFile.filePath || !fs.existsSync(targetFile.filePath)) {
-    return res.status(404).send('File not found in this share package.');
-  }
-
-  res.setHeader('Content-Type', targetFile.mimeType || 'application/octet-stream');
-  res.setHeader(
-    'Content-Disposition',
-    `attachment; filename="${encodeURIComponent(targetFile.name)}"`
-  );
-
-  const stream = fs.createReadStream(targetFile.filePath);
-  stream.on('error', next);
-  stream.pipe(res);
-}
-
-module.exports = {
-  createShareSession,
-  getShareSession,
-  downloadShareFile,
 };
+
+/**
+ * Retrieves an active share session by ID
+ * GET /api/share/:shareId
+ */
+exports.getShareSession = (req, res) => {
+  try {
+    const { shareId } = req.params;
+    const session = shareSessions.get(shareId);
+
+    if (!session) {
+      return res.status(404).json({
+        success: false,
+        error: 'Share session not found or has expired',
+        expired: true
+      });
+    }
+
+    const now = Date.now();
+    if (now > session.expiresAt) {
+      shareSessions.delete(shareId);
+      return res.status(410).json({
+        success: false,
+        error: 'Share session expired. For security, Dr. Doc transfer QR codes are valid for 30 minutes.',
+        expired: true
+      });
+    }
+
+    const remainingSeconds = Math.max(0, Math.floor((session.expiresAt - now) / 1000));
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        ...session,
+        remainingSeconds,
+        isExpired: false
+      }
+    });
+  } catch (err) {
+    console.error('Error fetching share session:', err);
+    return res.status(500).json({ success: false, error: err.message || 'Failed to retrieve share session' });
+  }
+};
+
+/**
+ * Deletes and revokes an active share session early
+ * DELETE /api/share/:shareId
+ */
+exports.deleteShareSession = (req, res) => {
+  try {
+    const { shareId } = req.params;
+    const existed = shareSessions.has(shareId);
+    shareSessions.delete(shareId);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Share session revoked and deleted successfully for security.',
+      deleted: existed
+    });
+  } catch (err) {
+    console.error('Error deleting share session:', err);
+    return res.status(500).json({ success: false, error: err.message || 'Failed to delete share session' });
+  }
+};
+

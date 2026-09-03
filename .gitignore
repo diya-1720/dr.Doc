@@ -43,3 +43,4 @@ backend/outputs/*
 *.njsproj
 *.sln
 *.sw?
+*.zip

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useForensics } from '../context/ForensicsContext';
 import { useLanguage } from '../i18n/LanguageContext';
+import { QrExportModal } from './QrExportModal';
 import { 
   Inbox, 
   Scan, 
@@ -14,7 +15,8 @@ import {
   Activity,
   Layers,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  QrCode
 } from 'lucide-react';
 
 import logoImg from '../assets/logo.png';
@@ -23,16 +25,17 @@ export const Sidebar: React.FC = () => {
   const { documents, issues, readinessScore, currentApplication } = useForensics();
   const { t } = useLanguage();
   const [isOpenMobile, setIsOpenMobile] = useState(false);
+  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
 
-  const criticalCount = issues.filter(i => i.severity === 'CRITICAL' && !i.resolved).length;
-  const reviewCount = issues.filter(i => i.severity === 'NEEDS REVIEW' && !i.resolved).length;
+  const criticalCount = (issues || []).filter(i => i.severity === 'CRITICAL' && !i.resolved).length;
+  const reviewCount = (issues || []).filter(i => i.severity === 'NEEDS REVIEW' && !i.resolved).length;
 
   const navItems = [
     { label: t.nav.home, path: '/', icon: Activity },
-    { label: t.nav.documents, path: '/documents', icon: Inbox, badge: documents.length },
+    { label: t.nav.documents, path: '/documents', icon: Inbox, badge: (documents || []).length },
     { label: t.nav.ocr, path: '/ocr', icon: Scan },
     { label: t.nav.quality, path: '/quality', icon: Layers },
-    { label: t.nav.verification, path: '/verification', icon: FileCheck2, badge: documents.length > 0 ? `${readinessScore}%` : undefined },
+    { label: t.nav.verification, path: '/verification', icon: FileCheck2, badge: (documents || []).length > 0 ? `${readinessScore || 0}%` : undefined },
     { label: t.nav.crossCheck, path: '/cross-check', icon: GitCompare },
     { 
       label: t.nav.issues, 
@@ -47,13 +50,13 @@ export const Sidebar: React.FC = () => {
     { label: t.nav.report, path: '/report', icon: FileText },
   ];
 
-  const getTranslatedAppName = (appId: string, fallback: string) => {
+  const getTranslatedAppName = (appId?: string, fallback?: string) => {
     if (appId === 'app-default-universal') return t.applications.universal.name;
     if (appId === 'app-biz-reg') return t.applications.bizReg.name;
     if (appId === 'app-kyc-bank') return t.applications.kycBank.name;
     if (appId === 'app-loan-grant') return t.applications.loanGrant.name;
     if (appId === 'app-college-adm') return t.applications.collegeAdm.name;
-    return fallback;
+    return fallback || 'Universal Identity Verification';
   };
 
   return (
@@ -73,7 +76,7 @@ export const Sidebar: React.FC = () => {
                 {t.nav.activeApplication}
               </div>
               <div className="font-heading text-sm md:text-base font-bold text-[#3F2928] leading-tight break-words">
-                {getTranslatedAppName(currentApplication.id, currentApplication.name)}
+                {getTranslatedAppName(currentApplication?.id, currentApplication?.name)}
               </div>
             </div>
           </div>
@@ -124,8 +127,19 @@ export const Sidebar: React.FC = () => {
         </div>
       </div>
 
-      {/* Footer Status Panel (Visible on Desktop or when mobile drawer open) */}
+      {/* Footer Status Panel & Quick QR Export (Visible on Desktop or when mobile drawer open) */}
       <div className={`mt-6 pt-4 border-t border-[#3F2928]/20 font-mono text-[11px] ${isOpenMobile ? 'block' : 'hidden md:block'}`}>
+        {documents.length > 0 && (
+          <button
+            type="button"
+            onClick={() => setIsQrModalOpen(true)}
+            className="w-full mb-3 py-2 px-2.5 bg-[#D97706] hover:bg-[#B45309] text-[#FFF8EA] border-2 border-[#3F2928] shadow-[2px_2px_0px_#3F2928] font-black uppercase tracking-wider text-[11px] flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
+          >
+            <QrCode className="w-4 h-4" />
+            <span>⚡ QR Transfer (30m)</span>
+          </button>
+        )}
+
         <div className="flex justify-between items-center text-[#A58B7B] mb-1">
           <span>{t.home.readinessScore}:</span>
           <span className="font-bold text-[#7A302F]">{readinessScore}/100</span>
@@ -140,6 +154,21 @@ export const Sidebar: React.FC = () => {
           DR. DOC ENGINE v2.4
         </div>
       </div>
+
+      {/* 30-Minute QR Code Mobile Export Modal */}
+      {isQrModalOpen && (
+        <QrExportModal
+          isOpen={isQrModalOpen}
+          onClose={() => setIsQrModalOpen(false)}
+          documents={documents || []}
+          applicantName={
+            (documents || [])
+              .map(d => (d?.extractedFields || []).find(f => f?.key && (String(f.key).toLowerCase().includes('name') || f.key === 'applicantName'))?.value)
+              .find(name => name && name !== 'Not detected' && name !== 'Not specified') || 'Applicant'
+          }
+          readinessScore={readinessScore || 0}
+        />
+      )}
     </aside>
   );
 };

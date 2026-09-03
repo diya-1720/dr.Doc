@@ -12,8 +12,12 @@ export function fileToDataUrl(file: File): Promise<string> {
   });
 }
 
-// Check if Gemini API key exists
-const getGeminiApiKey = (): string | undefined => {
+// Check if Gemini API key exists (prioritizing admin configured key in localStorage)
+export const getGeminiApiKey = (): string | undefined => {
+  const localKey = typeof window !== 'undefined' ? localStorage.getItem('dr_doc_gemini_api_key') : null;
+  if (localKey && localKey.trim().length > 5) {
+    return localKey.trim();
+  }
   return import.meta.env.VITE_GEMINI_API_KEY || import.meta.env.GEMINI_API_KEY || undefined;
 };
 
@@ -214,15 +218,9 @@ const NOISE_WORDS = new Set([
   'ELECTRICITY', 'BILL', 'CONSUMER', 'TARIFF', 'METER', 'READING', 'AMOUNT', 'DUE',
   'BANK', 'STATEMENT', 'PASSBOOK', 'BRANCH', 'IFSC', 'MICR', 'TRANSACTION', 'BALANCE',
   'WWW', 'HTTP', 'HTTPS', 'HELP', 'EMAIL', 'TO', 'THE', 'OF', 'AND', 'FOR', 'IN', 'BY', 'AT', 'ON', 'SR', 'NO', 'DETAILS', 'INFORMATION',
-  'ISSUED', 'VALIDITY', 'BLOOD', 'GROUP', 'REE', 'REF', 'TEL', 'VEL',
+  'ISSUED', 'VALIDITY', 'BLOOD', 'GROUP', 'NEAR', 'HOSTEL', 'BOYS', 'REE', 'REF', 'TEL', 'VEL',
   'XML', 'OFFLINE', 'ONLINE', 'QR', 'CODE', 'SCANNING', 'PROOF', 'CITIZENSHIP', 'AUTHENTICATION', 'VERIFICATION', 'THY', 'SEE', 'USED', 'WITH', 'SHOULD', 'NOT',
-  'MERA', 'MERI', 'PEHCHAN', 'AADHAAR', 'WE', 'RATE', 'OD', 'FEE', 'FA', 'OX', 'FED', 'FL',
-  // Address noise words
-  'ROAD', 'STREET', 'LANE', 'MARG', 'AVENUE', 'NAGAR', 'COLONY', 'SECTOR', 'VILLAGE', 'GRAM', 'TALUK', 'TALUKA', 'TEHSIL',
-  'DIST', 'DISTRICT', 'STATE', 'PIN', 'PINCODE', 'POST', 'PO', 'NEAR', 'BEHIND', 'OPP', 'OPPOSITE', 'HOSTEL', 'BOYS', 'GIRLS',
-  'BUILDING', 'FLOOR', 'FLAT', 'PLOT', 'HOUSE', 'HNO', 'H NO', 'APARTMENT', 'COMPLEX', 'SOCIETY', 'ENCLAVE',
-  'MAHARASHTRA', 'DELHI', 'MUMBAI', 'PUNE', 'THANE', 'PALGHAR', 'GUJARAT', 'KARNATAKA', 'TAMIL', 'NADU', 'RAJASTHAN',
-  'AUTHORITY', 'COMMISSIONER', 'RTO', 'REGIONAL', 'OFFICER', 'COMMISSION'
+  'MERA', 'MERI', 'PEHCHAN', 'AADHAAR', 'WE', 'RATE', 'OD', 'FEE', 'FA', 'OX', 'FED', 'FL'
 ]);
 
 const HEADER_PHRASES = [
@@ -230,8 +228,7 @@ const HEADER_PHRASES = [
   'UNIQUE IDENTIFICATION AUTHORITY OF INDIA', 'ELECTION COMMISSION OF INDIA', 'REPUBLIC OF INDIA',
   'UNION OF INDIA', 'MOTOR VEHICLES DEPARTMENT', 'TRANSPORT DEPARTMENT', 'STATE OF',
   'ISSUED BY GOVERNMENT', 'INDIAN UNION DRIVING LICENSE', 'INDIAN UNION DRIVING LICENCE',
-  'AADHAAR IS PROOF', 'PROOF OF IDENTITY', 'NOT OF CITIZENSHIP', 'OFFLINE XML', 'QR CODE', 'SCANNING OF',
-  'MAHARASHTRA STATE', 'GUJARAT STATE', 'KARNATAKA STATE', 'TAMIL NADU STATE'
+  'AADHAAR IS PROOF', 'PROOF OF IDENTITY', 'NOT OF CITIZENSHIP', 'OFFLINE XML', 'QR CODE', 'SCANNING OF'
 ];
 
 function isLikelyDevanagariGibberishClient(str: string): boolean {
@@ -444,19 +441,52 @@ async function analyzeWithLocalEngine(file: File): Promise<DocItem> {
   // 4. Strict Date of Birth & Age Extraction (Distinguish from other dates)
   let dob = 'Not detected';
   let calculatedAge: number | undefined = undefined;
-  const dobMatch = ocrText.match(/(?:DOB|Date of Birth|Birth|D\.O\.B)\s*[:\-\.]?\s*([0-3]?[0-9][\/\-\.][0-1]?[0-9][\/\-\.](?:19|20)[0-9]{2})/i) ||
-                   ocrText.match(/\b([0-3]?[0-9][\/\-\.][0-1]?[0-9][\/\-\.](?:19|20)[0-9]{2})\b/) ||
-                   ocrText.match(/(?:DOB|Date of Birth|Birth)\s*[:\-\.]?\s*([0-3]?[0-9][\s\-\/\.][A-Za-z]{3,9}[\s\-\/\.,](?:19|20)[0-9]{2})/i) ||
-                   ocrText.match(/(?:Year of Birth|YOB)\s*[:\-\.]?\s*((?:19|20)[0-9]{2})/i);
 
-  if (dobMatch && dobMatch[1]) {
-    const normDate = parseAndNormalizeDate(dobMatch[1]);
-    if (normDate) {
-      dob = normDate.formatted;
-      const currentYear = new Date().getFullYear();
-      if (normDate.year >= 1920 && normDate.year <= currentYear) {
-        calculatedAge = currentYear - normDate.year;
+  const candidates: { dob: string; year: number; score: number }[] = [];
+
+  const evalCand = (rawStr: string, score: number) => {
+    if (!rawStr) return;
+    const fixed = fixOcrDateNoise(rawStr);
+    const norm = normalizeDob(fixed) || normalizeDob(rawStr);
+    if (norm && !norm.isYearOnly) {
+      candidates.push({ dob: norm.canonicalDob, year: norm.year, score });
+    } else if (norm && norm.isYearOnly) {
+      candidates.push({ dob: `${norm.year}`, year: norm.year, score: score - 20 });
+    }
+  };
+
+  // Explicit label matches
+  const explicitDobRegex = /(?:Date\s*of\s*Birth|DOB|D[\.\s\/]*O[\.\s\/]*B[\.\s]*|Birth\s*Date|Date\s*Of\s*Birth|जन्म\s*तारीख|जन्म\s*दिनांक|जन्मतारीख|जन्म\s*तिथि|जन्म\s*दिनांक\s*[\/\-]\s*DOB)\s*[:\-\.]?\s*([0-3]?[0-9A-Za-z][\/\-\.\s][0-1]?[0-9A-Za-z][\/\-\.\s](?:19|20)[0-9A-Za-z]{2})/gi;
+  let dMatch: RegExpExecArray | null;
+  while ((dMatch = explicitDobRegex.exec(ocrText)) !== null) {
+    evalCand(dMatch[1], 100);
+  }
+
+  // YOB matches
+  const explicitYobRegex = /(?:Year\s*of\s*Birth|YOB|वर्ष)\s*[:\-\.]?\s*((?:19|20)[0-9A-Za-z]{2})/gi;
+  while ((dMatch = explicitYobRegex.exec(ocrText)) !== null) {
+    evalCand(dMatch[1], 70);
+  }
+
+  // Line by line scanning ignoring issue/validity lines
+  const issueKeywords = ['ISSUE', 'DOI', 'DATE OF ISSUE', 'ISSUED', 'VALID', 'VALIDITY', 'VALID TILL', 'VALID UPTO', 'EXPIR', 'EXPIRY', 'UPTO', 'THRU', 'FROM', 'TILL'];
+  for (const line of lines) {
+    const lUpper = line.toUpperCase();
+    const hasIssue = issueKeywords.some(kw => lUpper.includes(kw) && !lUpper.includes('DOB') && !lUpper.includes('BIRTH') && !lUpper.includes('जन्म'));
+    if (!hasIssue) {
+      const lineDate = line.match(/\b([0-3]?[0-9][\/\-\.][0-1]?[0-9][\/\-\.](?:19|20)[0-9]{2})\b/);
+      if (lineDate) {
+        evalCand(lineDate[1], 40);
       }
+    }
+  }
+
+  if (candidates.length > 0) {
+    candidates.sort((a, b) => b.score - a.score);
+    dob = candidates[0].dob;
+    const currentYear = new Date().getFullYear();
+    if (candidates[0].year && candidates[0].year >= 1900 && candidates[0].year <= currentYear) {
+      calculatedAge = currentYear - candidates[0].year;
     }
   }
 
@@ -758,15 +788,17 @@ export function calculateApplicationScore(docs: DocItem[], requiredTypes: Docume
 
   const crossChecks: CrossCheckField[] = [];
 
-  // 3. Cross-Document Name Verification across all uploaded documents (Pairwise independent check)
+  // 3. Cross-Document Name Verification across all uploaded documents
   const namesExtracted: { docId: string; docType: string; docName: string; name: string }[] = [];
   docs.forEach(d => {
-    const nameField = d.extractedFields.find(f => 
-      f.key.toLowerCase().includes('name') || 
-      f.key === 'applicantName' || 
-      f.key === 'full_name' || 
-      f.key === 'account_holder' || 
-      f.key === 'consumer_name'
+    const nameField = (d?.extractedFields || []).find(f => 
+      f?.key && (
+        String(f.key).toLowerCase().includes('name') || 
+        f.key === 'applicantName' || 
+        f.key === 'full_name' || 
+        f.key === 'account_holder' || 
+        f.key === 'consumer_name'
+      )
     );
     if (nameField && nameField.value && nameField.value !== 'Not detected' && nameField.value !== 'Not specified') {
       namesExtracted.push({
@@ -779,27 +811,26 @@ export function calculateApplicationScore(docs: DocItem[], requiredTypes: Docume
   });
 
   if (namesExtracted.length > 1) {
-    let foundMismatch: { docA: typeof namesExtracted[0]; docB: typeof namesExtracted[0]; notes: string } | null = null;
+    const mismatchesFound: { docA: typeof namesExtracted[0]; docB: typeof namesExtracted[0]; notes: string }[] = [];
     
-    // Pairwise comparison between every pair of documents
+    // Symmetric pairwise comparison
     for (let i = 0; i < namesExtracted.length; i++) {
       for (let j = i + 1; j < namesExtracted.length; j++) {
         const res = smartCompareNames(namesExtracted[i].name, namesExtracted[j].name);
         if (res.match === false) {
-          foundMismatch = { docA: namesExtracted[i], docB: namesExtracted[j], notes: res.notes };
-          break;
+          mismatchesFound.push({ docA: namesExtracted[i], docB: namesExtracted[j], notes: res.notes });
         }
       }
-      if (foundMismatch) break;
     }
 
-    if (foundMismatch) {
+    if (mismatchesFound.length > 0) {
       score -= 20;
+      const firstMismatch = mismatchesFound[0];
       crossChecks.push({
         id: 'cross-name-check',
         fieldName: 'Applicant Full Name',
         status: 'MISMATCH',
-        analysisNote: `Discrepancy found: ${foundMismatch.notes} ("${foundMismatch.docA.name}" on ${foundMismatch.docA.docType} vs "${foundMismatch.docB.name}" on ${foundMismatch.docB.docType}).`,
+        analysisNote: `Discrepancy found: Names contradict across documents (${namesExtracted.map(n => `"${n.name}" on ${n.docType}`).join(' vs ')}).`,
         sources: namesExtracted.map(n => ({
           documentId: n.docId,
           documentType: n.docType,
@@ -809,12 +840,12 @@ export function calculateApplicationScore(docs: DocItem[], requiredTypes: Docume
       });
 
       issues.push({
-        id: `mismatch-name-${foundMismatch.docB.docId}`,
-        title: `NAME CONTRADICTION: ${foundMismatch.docA.docType.toUpperCase()} VS ${foundMismatch.docB.docType.toUpperCase()}`,
+        id: `mismatch-name-${firstMismatch.docB.docId}`,
+        title: `NAME CONTRADICTION IN ${firstMismatch.docB.docType.toUpperCase()}`,
         severity: 'CRITICAL',
-        affectedDocumentId: foundMismatch.docB.docId,
-        affectedDocumentName: foundMismatch.docB.docName,
-        whyFlagged: `Name on ${foundMismatch.docB.docType} is "${foundMismatch.docB.name}", whereas ${foundMismatch.docA.docType} states "${foundMismatch.docA.name}".`,
+        affectedDocumentId: firstMismatch.docB.docId,
+        affectedDocumentName: firstMismatch.docB.docName,
+        whyFlagged: `Name on ${firstMismatch.docB.docType} is "${firstMismatch.docB.name}", whereas ${firstMismatch.docA.docType} states "${firstMismatch.docA.name}".`,
         recommendedAction: 'Ensure name matches across all identity records, or submit a Gazette Name Change / Notarized Affidavit.',
         fixActionType: 'reupload',
         resolved: false
@@ -835,10 +866,10 @@ export function calculateApplicationScore(docs: DocItem[], requiredTypes: Docume
     }
   }
 
-  // 4. Cross-Document Date of Birth & Age Verification (Pairwise canonical check)
+  // 4. Cross-Document Date of Birth & Age Verification
   const dobsExtracted: { docId: string; docType: string; docName: string; dob: string }[] = [];
   docs.forEach(d => {
-    const dobField = d.extractedFields.find(f => f.key.toLowerCase().includes('dob') || f.key.toLowerCase().includes('birth'));
+    const dobField = (d?.extractedFields || []).find(f => f?.key && (String(f.key).toLowerCase().includes('dob') || String(f.key).toLowerCase().includes('birth')));
     if (dobField && dobField.value && dobField.value !== 'Not detected' && dobField.value !== 'Not specified') {
       dobsExtracted.push({
         docId: d.id,
@@ -850,26 +881,26 @@ export function calculateApplicationScore(docs: DocItem[], requiredTypes: Docume
   });
 
   if (dobsExtracted.length > 1) {
-    let foundDobMismatch: { docA: typeof dobsExtracted[0]; docB: typeof dobsExtracted[0]; notes: string } | null = null;
+    const dobMismatches: { docA: typeof dobsExtracted[0]; docB: typeof dobsExtracted[0]; notes: string }[] = [];
     
+    // Symmetric pairwise comparison
     for (let i = 0; i < dobsExtracted.length; i++) {
       for (let j = i + 1; j < dobsExtracted.length; j++) {
-        const res = smartCompareDates(dobsExtracted[i].dob, dobsExtracted[j].dob);
+        const res = smartCompareDobs(dobsExtracted[i].dob, dobsExtracted[j].dob);
         if (res.match === false) {
-          foundDobMismatch = { docA: dobsExtracted[i], docB: dobsExtracted[j], notes: res.notes };
-          break;
+          dobMismatches.push({ docA: dobsExtracted[i], docB: dobsExtracted[j], notes: res.notes });
         }
       }
-      if (foundDobMismatch) break;
     }
 
-    if (foundDobMismatch) {
+    if (dobMismatches.length > 0) {
       score -= 15;
+      const firstMismatch = dobMismatches[0];
       crossChecks.push({
         id: 'cross-dob-check',
         fieldName: 'Date of Birth (DOB) & Age',
         status: 'MISMATCH',
-        analysisNote: `Discrepancy: Date of birth differs between ${foundDobMismatch.docA.docType} (${foundDobMismatch.docA.dob}) and ${foundDobMismatch.docB.docType} (${foundDobMismatch.docB.dob}).`,
+        analysisNote: `Discrepancy: Date of birth differs between ${dobsExtracted.map(d => `${d.docType} (${d.dob})`).join(' and ')}.`,
         sources: dobsExtracted.map(d => ({
           documentId: d.docId,
           documentType: d.docType,
@@ -878,12 +909,12 @@ export function calculateApplicationScore(docs: DocItem[], requiredTypes: Docume
         }))
       });
       issues.push({
-        id: `mismatch-dob-${foundDobMismatch.docB.docId}`,
+        id: `mismatch-dob-${firstMismatch.docB.docId}`,
         title: `DOB / AGE DISCREPANCY DETECTED`,
         severity: 'CRITICAL',
-        affectedDocumentId: foundDobMismatch.docB.docId,
-        affectedDocumentName: foundDobMismatch.docB.docName,
-        whyFlagged: `Date of birth on ${foundDobMismatch.docB.docType} (${foundDobMismatch.docB.dob}) contradicts ${foundDobMismatch.docA.docType} (${foundDobMismatch.docA.dob}).`,
+        affectedDocumentId: firstMismatch.docB.docId,
+        affectedDocumentName: firstMismatch.docB.docName,
+        whyFlagged: `Date of birth on ${firstMismatch.docB.docType} (${firstMismatch.docB.dob}) contradicts ${firstMismatch.docA.docType} (${firstMismatch.docA.dob}).`,
         recommendedAction: 'Ensure consistent birth records across PAN, Aadhaar, and Passport before portal submission.',
         fixActionType: 'reupload',
         resolved: false
@@ -904,10 +935,10 @@ export function calculateApplicationScore(docs: DocItem[], requiredTypes: Docume
     }
   }
 
-  // 5. Cross-Document Gender Verification (Pairwise check - ONLY IF PRESENT IN BOTH)
+  // 5. Cross-Document Gender Verification
   const gendersExtracted: { docId: string; docType: string; docName: string; gender: string }[] = [];
   docs.forEach(d => {
-    const gField = d.extractedFields.find(f => f.key.toLowerCase().includes('gender') || f.key.toLowerCase().includes('sex'));
+    const gField = (d?.extractedFields || []).find(f => f?.key && (String(f.key).toLowerCase().includes('gender') || String(f.key).toLowerCase().includes('sex')));
     if (gField && gField.value && gField.value !== 'Not specified' && gField.value !== 'Not detected') {
       gendersExtracted.push({
         docId: d.id,
@@ -919,24 +950,25 @@ export function calculateApplicationScore(docs: DocItem[], requiredTypes: Docume
   });
 
   if (gendersExtracted.length > 1) {
-    let foundGenderMismatch: { docA: typeof gendersExtracted[0]; docB: typeof gendersExtracted[0] } | null = null;
+    const genderMismatches: { docA: typeof gendersExtracted[0]; docB: typeof gendersExtracted[0]; notes: string }[] = [];
+    
     for (let i = 0; i < gendersExtracted.length; i++) {
       for (let j = i + 1; j < gendersExtracted.length; j++) {
-        if (gendersExtracted[i].gender.toUpperCase().charAt(0) !== gendersExtracted[j].gender.toUpperCase().charAt(0)) {
-          foundGenderMismatch = { docA: gendersExtracted[i], docB: gendersExtracted[j] };
-          break;
+        const res = smartCompareGenders(gendersExtracted[i].gender, gendersExtracted[j].gender);
+        if (res.match === false) {
+          genderMismatches.push({ docA: gendersExtracted[i], docB: gendersExtracted[j], notes: res.notes });
         }
       }
-      if (foundGenderMismatch) break;
     }
 
-    if (foundGenderMismatch) {
+    if (genderMismatches.length > 0) {
       score -= 15;
+      const firstMismatch = genderMismatches[0];
       crossChecks.push({
         id: 'cross-gender-check',
         fieldName: 'Applicant Gender',
         status: 'MISMATCH',
-        analysisNote: `Gender Mismatch: Stated gender contradicts between ${foundGenderMismatch.docA.docType} (${foundGenderMismatch.docA.gender}) and ${foundGenderMismatch.docB.docType} (${foundGenderMismatch.docB.gender}).`,
+        analysisNote: `Gender Mismatch: Stated gender contradicts across ${gendersExtracted.map(g => g.docType).join(' and ')}.`,
         sources: gendersExtracted.map(g => ({
           documentId: g.docId,
           documentType: g.docType,
@@ -945,12 +977,12 @@ export function calculateApplicationScore(docs: DocItem[], requiredTypes: Docume
         }))
       });
       issues.push({
-        id: `mismatch-gender-${foundGenderMismatch.docB.docId}`,
+        id: `mismatch-gender-${firstMismatch.docB.docId}`,
         title: `GENDER RECORD MISMATCH`,
         severity: 'CRITICAL',
-        affectedDocumentId: foundGenderMismatch.docB.docId,
-        affectedDocumentName: foundGenderMismatch.docB.docName,
-        whyFlagged: `Gender recorded on ${foundGenderMismatch.docB.docType} (${foundGenderMismatch.docB.gender}) contradicts ${foundGenderMismatch.docA.docType} (${foundGenderMismatch.docA.gender}).`,
+        affectedDocumentId: firstMismatch.docB.docId,
+        affectedDocumentName: firstMismatch.docB.docName,
+        whyFlagged: `Gender recorded on ${firstMismatch.docB.docType} (${firstMismatch.docB.gender}) contradicts ${firstMismatch.docA.docType} (${firstMismatch.docA.gender}).`,
         recommendedAction: 'Correct official gender record with the relevant department.',
         fixActionType: 'reupload',
         resolved: false
@@ -971,13 +1003,15 @@ export function calculateApplicationScore(docs: DocItem[], requiredTypes: Docume
     }
   }
 
-  // 6. Cross-Document Address Verification (Pairwise check - ONLY IF PRESENT IN BOTH)
+  // 6. Cross-Document Address Verification across address-bearing documents
   const addressesExtracted: { docId: string; docType: string; docName: string; address: string }[] = [];
   docs.forEach(d => {
-    const addressField = d.extractedFields.find(f => 
-      f.key.toLowerCase().includes('address') || 
-      f.key === 'billing_address' || 
-      f.key === 'residence'
+    const addressField = (d?.extractedFields || []).find(f => 
+      f?.key && (
+        String(f.key).toLowerCase().includes('address') || 
+        f.key === 'billing_address' || 
+        f.key === 'residence'
+      )
     );
     if (addressField && addressField.value && addressField.value !== 'Not detected' && addressField.value !== 'Not specified' && addressField.value.trim().length >= 8) {
       addressesExtracted.push({
@@ -990,25 +1024,25 @@ export function calculateApplicationScore(docs: DocItem[], requiredTypes: Docume
   });
 
   if (addressesExtracted.length > 1) {
-    let foundAddrMismatch: { docA: typeof addressesExtracted[0]; docB: typeof addressesExtracted[0]; notes: string } | null = null;
+    const addrMismatches: { docA: typeof addressesExtracted[0]; docB: typeof addressesExtracted[0]; notes: string }[] = [];
+    
     for (let i = 0; i < addressesExtracted.length; i++) {
       for (let j = i + 1; j < addressesExtracted.length; j++) {
         const res = smartCompareAddresses(addressesExtracted[i].address, addressesExtracted[j].address);
         if (res.match === false) {
-          foundAddrMismatch = { docA: addressesExtracted[i], docB: addressesExtracted[j], notes: res.notes };
-          break;
+          addrMismatches.push({ docA: addressesExtracted[i], docB: addressesExtracted[j], notes: res.notes });
         }
       }
-      if (foundAddrMismatch) break;
     }
 
-    if (foundAddrMismatch) {
+    if (addrMismatches.length > 0) {
       score -= 15;
+      const firstMismatch = addrMismatches[0];
       crossChecks.push({
         id: 'cross-address-check',
         fieldName: 'Residential Address',
         status: 'MISMATCH',
-        analysisNote: `Address Discrepancy: ${foundAddrMismatch.notes} between ${foundAddrMismatch.docA.docType} and ${foundAddrMismatch.docB.docType}.`,
+        analysisNote: `Address Discrepancy: Residential localities differ between ${addressesExtracted.map(a => a.docType).join(' and ')}.`,
         sources: addressesExtracted.map(a => ({
           documentId: a.docId,
           documentType: a.docType,
@@ -1018,12 +1052,12 @@ export function calculateApplicationScore(docs: DocItem[], requiredTypes: Docume
       });
 
       issues.push({
-        id: `mismatch-address-${foundAddrMismatch.docB.docId}`,
+        id: `mismatch-address-${firstMismatch.docB.docId}`,
         title: `RESIDENTIAL ADDRESS MISMATCH`,
         severity: 'NEEDS REVIEW',
-        affectedDocumentId: foundAddrMismatch.docB.docId,
-        affectedDocumentName: foundAddrMismatch.docB.docName,
-        whyFlagged: `Address on ${foundAddrMismatch.docB.docType} does not match locality on ${foundAddrMismatch.docA.docType}.`,
+        affectedDocumentId: firstMismatch.docB.docId,
+        affectedDocumentName: firstMismatch.docB.docName,
+        whyFlagged: `Address on ${firstMismatch.docB.docType} does not match locality on ${firstMismatch.docA.docType}.`,
         recommendedAction: 'Ensure all proof of residence documents display your current matching residential address.',
         fixActionType: 'reupload',
         resolved: false
@@ -1056,7 +1090,7 @@ export function calculateApplicationScore(docs: DocItem[], requiredTypes: Docume
   };
 }
 
-const MONTH_NAMES_MAP: Record<string, number> = {
+const MONTH_MAP_CLIENT: Record<string, number> = {
   jan: 1, january: 1,
   feb: 2, february: 2,
   mar: 3, march: 3,
@@ -1068,140 +1102,226 @@ const MONTH_NAMES_MAP: Record<string, number> = {
   sep: 9, sept: 9, september: 9,
   oct: 10, october: 10,
   nov: 11, november: 11,
-  dec: 12, december: 12
+  dec: 12, december: 12,
 };
 
+export interface NormalizedDob {
+  year: number;
+  month?: number;
+  day?: number;
+  isYearOnly: boolean;
+  isoString: string;
+  canonicalDob: string;
+}
+
 /**
- * Normalizes date string into canonical representation
+ * Validate that day, month, year represent a real calendar date
  */
-export function parseAndNormalizeDate(dateStr?: string): { canonical: string; year: number; month: number | null; day: number | null; isYearOnly: boolean; formatted: string } | null {
-  if (!dateStr || typeof dateStr !== 'string') return null;
-  const raw = dateStr.trim();
-  if (!raw || raw === 'Not detected' || raw === 'Not specified') return null;
+export function isValidCalendarDate(day: number, month: number, year: number): boolean {
+  if (!day || !month || !year) return false;
+  const currentYear = new Date().getFullYear();
+  if (year < 1900 || year > currentYear) return false;
+  if (month < 1 || month > 12) return false;
 
-  // 1. Textual Month Formats
-  const textMonthMatch = raw.match(/([0-3]?[0-9])[\s\-\/\.]([A-Za-z]{3,9})[\s\-\/\.,]((?:19|20)[0-9]{2})/);
-  if (textMonthMatch) {
-    const day = parseInt(textMonthMatch[1], 10);
-    const mStr = textMonthMatch[2].toLowerCase();
-    const year = parseInt(textMonthMatch[3], 10);
-    const month = MONTH_NAMES_MAP[mStr];
-    if (month && day >= 1 && day <= 31 && year >= 1900) {
-      const padM = String(month).padStart(2, '0');
-      const padD = String(day).padStart(2, '0');
-      return { canonical: `${year}-${padM}-${padD}`, year, month, day, isYearOnly: false, formatted: `${padD}/${padM}/${year}` };
+  const isLeap = (year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0));
+  const daysInMonth = [31, isLeap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  if (day < 1 || day > daysInMonth[month - 1]) return false;
+
+  return true;
+}
+
+/**
+ * Handle OCR character confusion inside date candidate tokens
+ */
+export function fixOcrDateNoise(str: string): string {
+  if (!str) return str;
+  return str
+    .replace(/[OoQD]/g, '0')
+    .replace(/[Il|!i]/g, '1')
+    .replace(/[Zz]/g, '2')
+    .replace(/[Ss]/g, '5')
+    .replace(/B/g, '8')
+    .replace(/[Gb]/g, '6')
+    .replace(/[gq]/g, '9');
+}
+
+/**
+ * Normalizes any DOB string into canonical date structure
+ * Canonical display format: DD/MM/YYYY
+ */
+export function normalizeDob(rawDateStr?: string): NormalizedDob | null {
+  if (!rawDateStr || typeof rawDateStr !== 'string') return null;
+  let str = rawDateStr.trim();
+  if (!str || str === 'Not detected' || str === 'Not specified') return null;
+
+  // 1. Clean OCR confusion on likely date tokens
+  const cleanedStr = fixOcrDateNoise(str);
+
+  // 2. Year only (e.g. "2008", "YOB 2008", "YEAR 2008", "वर्ष 2008")
+  if (/^(?:YOB|YEAR\s*OF\s*BIRTH|YEAR|वर्ष)?\s*[:\-\.]?\s*(?:19|20)\d{2}$/i.test(cleanedStr)) {
+    const yMatch = cleanedStr.match(/(?:19|20)\d{2}/);
+    if (yMatch) {
+      const y = parseInt(yMatch[0], 10);
+      return { year: y, isYearOnly: true, isoString: `${y}`, canonicalDob: `${y}` };
     }
   }
 
-  const monthFirstMatch = raw.match(/([A-Za-z]{3,9})[\s\-\/\.]([0-3]?[0-9])[\s\-\/\.,]((?:19|20)[0-9]{2})/);
-  if (monthFirstMatch) {
-    const mStr = monthFirstMatch[1].toLowerCase();
-    const day = parseInt(monthFirstMatch[2], 10);
-    const year = parseInt(monthFirstMatch[3], 10);
-    const month = MONTH_NAMES_MAP[mStr];
-    if (month && day >= 1 && day <= 31 && year >= 1900) {
-      const padM = String(month).padStart(2, '0');
-      const padD = String(day).padStart(2, '0');
-      return { canonical: `${year}-${padM}-${padD}`, year, month, day, isYearOnly: false, formatted: `${padD}/${padM}/${year}` };
-    }
-  }
-
-  // 2. Numeric Formats: YYYY-MM-DD or YYYY/MM/DD or YYYY.MM.DD
-  const ymdMatch = raw.match(/\b((?:19|20)[0-9]{2})[\/\-\.]([0-1]?[0-9])[\/\-\.]([0-3]?[0-9])\b/);
-  if (ymdMatch) {
-    const year = parseInt(ymdMatch[1], 10);
-    const month = parseInt(ymdMatch[2], 10);
-    const day = parseInt(ymdMatch[3], 10);
-    if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
-      const padM = String(month).padStart(2, '0');
-      const padD = String(day).padStart(2, '0');
-      return { canonical: `${year}-${padM}-${padD}`, year, month, day, isYearOnly: false, formatted: `${padD}/${padM}/${year}` };
-    }
-  }
-
-  // 3. Numeric Formats: DD/MM/YYYY or DD-MM-YYYY or DD.MM.YYYY
-  const dmyMatch = raw.match(/\b([0-3]?[0-9])[\/\-\.]([0-1]?[0-9])[\/\-\.]((?:19|20)[0-9]{2})\b/);
+  // 3. Format: DD/MM/YYYY, DD-MM-YYYY, DD.MM.YYYY, DD MM YYYY, D/M/YYYY
+  const dmyMatch = cleanedStr.match(/\b(0?[1-9]|[12]\d|3[01])[\/\-\.\s](0?[1-9]|1[0-2])[\/\-\.\s]((?:19|20)\d{2})\b/);
   if (dmyMatch) {
-    let day = parseInt(dmyMatch[1], 10);
-    let month = parseInt(dmyMatch[2], 10);
-    const year = parseInt(dmyMatch[3], 10);
-
-    if (month > 12 && day <= 12) {
-      const temp = day;
-      day = month;
-      month = temp;
-    }
-
-    if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
-      const padM = String(month).padStart(2, '0');
-      const padD = String(day).padStart(2, '0');
-      return { canonical: `${year}-${padM}-${padD}`, year, month, day, isYearOnly: false, formatted: `${padD}/${padM}/${year}` };
+    const d = parseInt(dmyMatch[1], 10);
+    const m = parseInt(dmyMatch[2], 10);
+    const y = parseInt(dmyMatch[3], 10);
+    if (isValidCalendarDate(d, m, y)) {
+      const canonical = `${String(d).padStart(2, '0')}/${String(m).padStart(2, '0')}/${y}`;
+      const iso = `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+      return { year: y, month: m, day: d, isYearOnly: false, isoString: iso, canonicalDob: canonical };
     }
   }
 
-  // 4. Year Only: YYYY
-  const yobMatch = raw.match(/\b((?:19|20)[0-9]{2})\b/);
-  if (yobMatch) {
-    const year = parseInt(yobMatch[1], 10);
-    return { canonical: `${year}`, year, month: null, day: null, isYearOnly: true, formatted: `${year}` };
+  // 4. Format: YYYY-MM-DD, YYYY/MM/DD, YYYY.MM.DD
+  const isoMatch = cleanedStr.match(/\b((?:19|20)\d{2})[\/\-\.](0?[1-9]|1[0-2])[\/\-\.](0?[1-9]|[12]\d|3[01])\b/);
+  if (isoMatch) {
+    const y = parseInt(isoMatch[1], 10);
+    const m = parseInt(isoMatch[2], 10);
+    const d = parseInt(isoMatch[3], 10);
+    if (isValidCalendarDate(d, m, y)) {
+      const canonical = `${String(d).padStart(2, '0')}/${String(m).padStart(2, '0')}/${y}`;
+      const iso = `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+      return { year: y, month: m, day: d, isYearOnly: false, isoString: iso, canonicalDob: canonical };
+    }
+  }
+
+  // 5. Format: DD/MM/YY, DD-MM-YY, DD.MM.YY (2-digit year)
+  const dmyShortMatch = cleanedStr.match(/\b(0?[1-9]|[12]\d|3[01])[\/\-\.](0?[1-9]|1[0-2])[\/\-\.](\d{2})\b/);
+  if (dmyShortMatch) {
+    const d = parseInt(dmyShortMatch[1], 10);
+    const m = parseInt(dmyShortMatch[2], 10);
+    const rawY = parseInt(dmyShortMatch[3], 10);
+    const currentYear = new Date().getFullYear();
+    const currentCenturyCutoff = currentYear % 100;
+    const y = rawY <= currentCenturyCutoff ? 2000 + rawY : 1900 + rawY;
+    if (isValidCalendarDate(d, m, y)) {
+      const canonical = `${String(d).padStart(2, '0')}/${String(m).padStart(2, '0')}/${y}`;
+      const iso = `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+      return { year: y, month: m, day: d, isYearOnly: false, isoString: iso, canonicalDob: canonical };
+    }
+  }
+
+  // 6. Format: DD Month YYYY (e.g. "29 March 2008", "29-Mar-2008", "29 Mar 2008")
+  const monthNameMatch = str.match(/\b(0?[1-9]|[12]\d|3[01])[\s\-\.]([A-Za-z]{3,10})[\s\-\.]((?:19|20)\d{2})\b/);
+  if (monthNameMatch) {
+    const d = parseInt(monthNameMatch[1], 10);
+    const monStr = monthNameMatch[2].toLowerCase();
+    const y = parseInt(monthNameMatch[3], 10);
+    const m = MONTH_MAP_CLIENT[monStr];
+    if (m && isValidCalendarDate(d, m, y)) {
+      const canonical = `${String(d).padStart(2, '0')}/${String(m).padStart(2, '0')}/${y}`;
+      const iso = `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+      return { year: y, month: m, day: d, isYearOnly: false, isoString: iso, canonicalDob: canonical };
+    }
+  }
+
+  // 7. Format: Month DD, YYYY (e.g. "March 29, 2008", "Mar 29 2008")
+  const monthFirstMatch = str.match(/\b([A-Za-z]{3,10})[\s\-\.](0?[1-9]|[12]\d|3[01])[\s\-\,]+((?:19|20)\d{2})\b/);
+  if (monthFirstMatch) {
+    const monStr = monthFirstMatch[1].toLowerCase();
+    const d = parseInt(monthFirstMatch[2], 10);
+    const y = parseInt(monthFirstMatch[3], 10);
+    const m = MONTH_MAP_CLIENT[monStr];
+    if (m && isValidCalendarDate(d, m, y)) {
+      const canonical = `${String(d).padStart(2, '0')}/${String(m).padStart(2, '0')}/${y}`;
+      const iso = `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+      return { year: y, month: m, day: d, isYearOnly: false, isoString: iso, canonicalDob: canonical };
+    }
+  }
+
+  // If the string contains full date punctuation (e.g. 31/02/2008), do not fall back to year-only
+  if (/[0-9][\/\-\.][0-9]/.test(cleanedStr)) {
+    return null;
+  }
+
+  // Fallback if standalone 4-digit year exists
+  const yMatch = cleanedStr.match(/\b((?:19|20)\d{2})\b/);
+  if (yMatch && !/[0-9]{5,}/.test(cleanedStr)) {
+    const y = parseInt(yMatch[1], 10);
+    const currentYear = new Date().getFullYear();
+    if (y >= 1900 && y <= currentYear) {
+      return { year: y, isYearOnly: true, isoString: `${y}`, canonicalDob: `${y}` };
+    }
   }
 
   return null;
 }
 
 /**
- * Smart Canonical Date Comparison Helper
+ * Smart Date of Birth Comparison
  */
-export function smartCompareDates(dateStr1?: string, dateStr2?: string): { match: boolean | 'Unable to verify'; notes: string } {
-  if (!dateStr1 || !dateStr2 || dateStr1 === 'Not detected' || dateStr2 === 'Not detected' || dateStr1 === 'Not specified' || dateStr2 === 'Not specified') {
-    return { match: 'Unable to verify', notes: 'Date of birth not present on both documents' };
+export function smartCompareDobs(dob1?: string, dob2?: string): { match: boolean | 'Unable to verify'; notes: string } {
+  if (!dob1 || !dob2 || dob1 === 'Not detected' || dob2 === 'Not detected' || dob1 === 'Not specified' || dob2 === 'Not specified') {
+    return { match: 'Unable to verify', notes: 'DOB not available on both documents' };
   }
 
-  const d1 = parseAndNormalizeDate(dateStr1);
-  const d2 = parseAndNormalizeDate(dateStr2);
+  const n1 = normalizeDob(dob1);
+  const n2 = normalizeDob(dob2);
 
-  if (!d1 || !d2) {
-    const digits1 = dateStr1.replace(/[^0-9]/g, '');
-    const digits2 = dateStr2.replace(/[^0-9]/g, '');
-    if (digits1 && digits2 && digits1 === digits2) {
-      return { match: true, notes: `DOB matches (${dateStr1})` };
+  if (!n1 || !n2) {
+    const c1 = dob1.replace(/[^0-9]/g, '');
+    const c2 = dob2.replace(/[^0-9]/g, '');
+    if (c1 && c2 && c1 === c2) {
+      return { match: true, notes: `Date strings match (${dob1})` };
     }
-    return { match: false, notes: `DOB values contradict (${dateStr1} vs ${dateStr2})` };
+    return { match: false, notes: `DOB interpretation discrepancy (${dob1} vs ${dob2})` };
   }
 
-  if (!d1.isYearOnly && !d2.isYearOnly) {
-    if (d1.canonical === d2.canonical) {
-      return { match: true, notes: `DOB matches exactly (${d1.formatted})` };
-    } else {
-      return { match: false, notes: `DOB values contradict (${d1.formatted} vs ${d2.formatted})` };
+  if (!n1.isYearOnly && !n2.isYearOnly) {
+    if (n1.year === n2.year && n1.month === n2.month && n1.day === n2.day) {
+      return { match: true, notes: `DOB matches exactly (${n1.canonicalDob})` };
     }
+    return { match: false, notes: `DOB values contradict: ${n1.canonicalDob} vs ${n2.canonicalDob}` };
   }
 
-  if (d1.year === d2.year) {
-    return { match: true, notes: `Birth year matches (${d1.year})` };
-  } else {
-    return { match: false, notes: `Birth years contradict (${d1.year} vs ${d2.year})` };
+  if (n1.year === n2.year) {
+    return { match: true, notes: `Birth year matches (${n1.year})` };
   }
+
+  return { match: false, notes: `Birth year contradicts: ${n1.year} vs ${n2.year}` };
+}
+
+function levenshteinDist(s1: string, s2: string): number {
+  if (s1 === s2) return 0;
+  if (!s1.length) return s2.length;
+  if (!s2.length) return s1.length;
+  const v0 = new Array(s2.length + 1).fill(0).map((_, i) => i);
+  const v1 = new Array(s2.length + 1).fill(0);
+  for (let i = 0; i < s1.length; i++) {
+    v1[0] = i + 1;
+    for (let j = 0; j < s2.length; j++) {
+      const cost = s1[i] === s2[j] ? 0 : 1;
+      v1[j + 1] = Math.min(v1[j] + 1, v0[j + 1] + 1, v0[j] + cost);
+    }
+    for (let j = 0; j < v0.length; j++) v0[j] = v1[j];
+  }
+  return v0[s2.length];
 }
 
 /**
- * Smart Name Comparison Helper with Indian Middle/Father's Name, Initials, and Noise Handling
+ * Smart Name Comparison Helper
  */
 export function smartCompareNames(name1?: string, name2?: string): { match: boolean | 'Unable to verify'; notes: string } {
   if (!name1 || !name2 || name1 === 'Not detected' || name2 === 'Not detected' || name1 === 'Not specified' || name2 === 'Not specified') {
     return { match: 'Unable to verify', notes: 'Name not readable on both documents' };
   }
-  
-  const HONORIFICS = new Set(['mr', 'mrs', 'ms', 'miss', 'dr', 'shri', 'smt', 'kumari', 'shree', 'prof', 'to', 'the', 'ree', 'ref', 'holder', 'name']);
   const clean1 = name1.toLowerCase().trim().replace(/[^a-z\s]/g, ' ').replace(/\s+/g, ' ');
   const clean2 = name2.toLowerCase().trim().replace(/[^a-z\s]/g, ' ').replace(/\s+/g, ' ');
-  
   if (clean1 === clean2) {
     return { match: true, notes: 'Full name matches exactly' };
   }
 
-  const words1 = clean1.split(' ').filter(w => !HONORIFICS.has(w) && w.length >= 1);
-  const words2 = clean2.split(' ').filter(w => !HONORIFICS.has(w) && w.length >= 1);
+  // Filter noise words / single artifact tokens
+  const NOISE = new Set(['ree', 'i', 'no', 'mr', 'mrs', 'ms', 'shri', 'smt', 'dr', 'to', 'the', 's/o', 'd/o', 'w/o', 'kumari', 'late', 'master', 'baby']);
+  const words1 = clean1.split(' ').filter(w => !NOISE.has(w) && w.length >= 1);
+  const words2 = clean2.split(' ').filter(w => !NOISE.has(w) && w.length >= 1);
 
   if (words1.length === 0 || words2.length === 0) {
     return { match: 'Unable to verify', notes: 'Name tokens insufficient for verification' };
@@ -1220,55 +1340,140 @@ export function smartCompareNames(name1?: string, name2?: string): { match: bool
 
   // 1. Indian First Name + Last Name match with Middle Name (e.g. "Ved Gharat" vs "Ved Nishad Gharat")
   if (first1 === first2 && last1 === last2) {
-    const longer = words1.length >= words2.length ? words1 : words2;
+    const longer = words1.length > words2.length ? words1 : words2;
     const middleWords = longer.slice(1, -1);
-    const middleStr = middleWords.map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+    const middleStr = middleWords.join(' ');
     return {
       match: true,
       notes: middleStr ? `Compatible Indian name variant: includes middle/father's name ('${middleStr}')` : 'Core first & last name match exactly'
     };
   }
 
-  // 2. Subset matching (e.g. "Ved Gharat" is completely within "Ved Nishad Gharat")
-  const isSubset1 = words1.every(w => words2.includes(w) || words2.some(w2 => w2.startsWith(w.charAt(0)) && w.length === 1));
-  const isSubset2 = words2.every(w => words1.includes(w) || words1.some(w1 => w1.startsWith(w.charAt(0)) && w.length === 1));
-  if (isSubset1 || isSubset2) {
+  // 2. Initials matching (e.g. "V. Gharat", "V. N. Gharat", "Ved N. Gharat" vs "Ved Nishad Gharat")
+  if (last1 === last2 && words1.length > 0 && words2.length > 0) {
+    const nonLast1 = words1.slice(0, -1);
+    const nonLast2 = words2.slice(0, -1);
+    let initialsCompatible = true;
+    const checkLen = Math.min(nonLast1.length, nonLast2.length);
+    if (checkLen > 0) {
+      for (let k = 0; k < checkLen; k++) {
+        const w1 = nonLast1[k];
+        const w2 = nonLast2[k];
+        if (w1.charAt(0) !== w2.charAt(0) && !(w1.length > 1 && w2.length > 1 && levenshteinDist(w1, w2) <= 1)) {
+          initialsCompatible = false;
+          break;
+        }
+      }
+      if (initialsCompatible) {
+        return { match: true, notes: 'Compatible name variant: matching initial(s) and surname' };
+      }
+    }
+  }
+
+  // 3. Subset matching (all tokens of shorter name appear in longer name)
+  const shorter = words1.length <= words2.length ? words1 : words2;
+  const longer = words1.length > words2.length ? words1 : words2;
+  const isAllIncluded = shorter.every(w => longer.includes(w) || longer.some(lw => lw.length >= 4 && levenshteinDist(w, lw) <= 1));
+  if (isAllIncluded && shorter.length >= 2) {
     return { match: true, notes: 'Compatible name variant: name expansion / middle name addition' };
   }
 
-  // 3. Initial matching with same surname (e.g. "V. Gharat" or "V. N. Gharat" vs "Ved Nishad Gharat")
-  if (last1 === last2 && (first1.charAt(0) === first2.charAt(0))) {
-    return { match: true, notes: 'Compatible name variant: matching initial and surname' };
-  }
-
-  // 4. Permuted surname-first order (e.g. "Gharat Ved" vs "Ved Gharat")
+  // 4. Permuted surname-first order (e.g. "Gharat Ved" vs "Ved Gharat", "Gharat Ved Nishad" vs "Ved Nishad Gharat")
   const sorted1 = [...words1].sort().join(' ');
   const sorted2 = [...words2].sort().join(' ');
   if (sorted1 === sorted2) {
     return { match: true, notes: 'Compatible name variant: surname-first order' };
   }
 
-  // 5. Permuted with subset (e.g. "Gharat Ved" vs "Ved Nishad Gharat")
-  const isSortedSubset1 = words1.every(w => words2.includes(w));
-  const isSortedSubset2 = words2.every(w => words1.includes(w));
-  if (isSortedSubset1 || isSortedSubset2) {
-    return { match: true, notes: 'Compatible name variant: middle name expansion with surname ordering' };
+  // 5. OCR Single-Character Typo / Minor Artifact Tolerance on Core Name
+  if (words1.length === words2.length && words1.length >= 2) {
+    let typoCount = 0;
+    for (let k = 0; k < words1.length; k++) {
+      if (words1[k] !== words2[k]) {
+        if (words1[k].length >= 3 && words2[k].length >= 3 && levenshteinDist(words1[k], words2[k]) <= 1) {
+          typoCount++;
+        } else {
+          typoCount = 99;
+          break;
+        }
+      }
+    }
+    if (typoCount === 1) {
+      return { match: true, notes: 'Compatible name variant: minor optical scan character variation' };
+    }
   }
 
   return { match: false, notes: `Name discrepancy detected: "${name1}" vs "${name2}"` };
 }
 
 /**
+ * Smart Gender Comparison Helper
+ */
+export function smartCompareGenders(g1?: string, g2?: string): { match: boolean | 'Unable to verify'; notes: string } {
+  if (!g1 || !g2 || g1 === 'Not detected' || g2 === 'Not detected' || g1 === 'Not specified' || g2 === 'Not specified') {
+    return { match: 'Unable to verify', notes: 'Gender not present on both documents' };
+  }
+
+  const normGender = (g: string) => {
+    const u = g.toUpperCase().trim();
+    if (u.startsWith('F') || u.includes('FEMALE') || u.includes('महिला') || u.includes('WOMAN') || u.includes('स्त्री')) return 'FEMALE';
+    if (u.startsWith('M') || u.includes('MALE') || u.includes('पुरुष') || u.includes('MAN')) return 'MALE';
+    if (u.startsWith('T') || u.includes('TRANS')) return 'TRANSGENDER';
+    return u;
+  };
+
+  const ng1 = normGender(g1);
+  const ng2 = normGender(g2);
+
+  if (ng1 === ng2) {
+    return { match: true, notes: `Gender verified (${ng1})` };
+  }
+
+  return { match: false, notes: `Gender record contradiction: ${g1} vs ${g2}` };
+}
+
+const ADDRESS_ABBR_MAP: Record<string, string> = {
+  rd: 'road',
+  st: 'street',
+  nr: 'near',
+  opp: 'opposite',
+  plt: 'plot',
+  fl: 'flat',
+  bldg: 'building',
+  apt: 'apartment',
+  sec: 'sector',
+  dist: 'district',
+  tal: 'taluka',
+  po: 'post',
+  soc: 'society',
+  mh: 'maharashtra',
+  mah: 'maharashtra',
+  del: 'delhi',
+  kar: 'karnataka',
+  tn: 'tamilnadu',
+  guj: 'gujarat',
+  raj: 'rajasthan',
+  up: 'uttarpradesh',
+  mp: 'madhyapradesh'
+};
+
+function normalizeAddressTokens(addrStr: string): string[] {
+  if (!addrStr) return [];
+  const clean = addrStr.toLowerCase().replace(/[^a-z0-9\s]/g, ' ');
+  return clean.split(/\s+/).filter(Boolean).map(w => ADDRESS_ABBR_MAP[w] || w);
+}
+
+/**
  * Smart Address Comparison Helper
  */
 export function smartCompareAddresses(addr1?: string, addr2?: string): { match: boolean | 'Unable to verify'; notes: string } {
-  if (!addr1 || !addr2 || addr1 === 'Not specified' || addr2 === 'Not specified' || addr1 === 'Not detected' || addr2 === 'Not detected' || addr1.trim() === '' || addr2.trim() === '') {
-    return { match: 'Unable to verify', notes: 'Address not present on both documents' };
+  if (!addr1 || !addr2 || addr1 === 'Not specified' || addr2 === 'Not specified' || addr1 === 'Not detected' || addr2 === 'Not detected' || addr1.trim().length < 6 || addr2.trim().length < 6) {
+    return { match: 'Unable to verify', notes: 'Address not present on both documents (single address provided)' };
   }
   const clean1 = addr1.toLowerCase();
   const clean2 = addr2.toLowerCase();
   
-  // Extract PIN codes (6 digits)
+  // 1. Extract PIN codes (6 digits)
   const pin1 = clean1.match(/\b\d{6}\b/);
   const pin2 = clean2.match(/\b\d{6}\b/);
   
@@ -1276,20 +1481,53 @@ export function smartCompareAddresses(addr1?: string, addr2?: string): { match: 
     if (pin1[0] === pin2[0]) {
       return { match: true, notes: `Compatible address: matching postal PIN code (${pin1[0]})` };
     } else {
-      return { match: false, notes: `Address mismatch: PIN code discrepancy (${pin1[0]} vs ${pin2[0]})` };
+      return { match: false, notes: `Address mismatch: postal PIN code discrepancy (${pin1[0]} vs ${pin2[0]})` };
     }
   }
 
-  // Token overlap (locality / city)
-  const words1 = clean1.split(/[\s,.-]+/).filter(w => w.length > 3);
-  const words2 = clean2.split(/[\s,.-]+/).filter(w => w.length > 3);
-  const overlap = words1.filter(w => words2.includes(w));
+  // 2. Token overlap (locality / city)
+  const tokens1 = normalizeAddressTokens(addr1).filter(w => w.length >= 3 && !['the', 'and', 'for', 'near', 'opp', 'flat', 'plot', 'house', 'room'].includes(w));
+  const tokens2 = normalizeAddressTokens(addr2).filter(w => w.length >= 3 && !['the', 'and', 'for', 'near', 'opp', 'flat', 'plot', 'house', 'room'].includes(w));
+
+  const set2 = new Set(tokens2);
+  const overlap = tokens1.filter(w => set2.has(w));
   
-  if (overlap.length >= 1) {
+  if (overlap.length >= 2) {
     return { match: true, notes: `Compatible address: locality and city align (${overlap.slice(0, 3).join(', ')})` };
   }
 
-  return { match: false, notes: `Address discrepancy: different residential localities` };
+  // 3. Shorter address is a subset of longer address
+  const shorter = tokens1.length <= tokens2.length ? tokens1 : tokens2;
+  const longer = tokens1.length > tokens2.length ? tokens1 : tokens2;
+  const longerSet = new Set(longer);
+  const matchRatio = shorter.filter(w => longerSet.has(w)).length / (shorter.length || 1);
+
+  if (shorter.length >= 2 && matchRatio >= 0.6) {
+    return { match: true, notes: 'Compatible address: concise address aligns with detailed address record' };
+  }
+
+  return { match: false, notes: 'Address discrepancy: different residential localities' };
+}
+
+/**
+ * Smart Document Number Comparison Helper
+ */
+export function smartCompareDocNumbers(docType1: string, num1?: string, docType2?: string, num2?: string): { match: boolean | 'Unable to verify'; notes: string } {
+  if (docType1 !== docType2) {
+    return { match: 'Unable to verify', notes: 'Different document types (not comparable)' };
+  }
+  if (!num1 || !num2 || num1 === 'Not detected' || num2 === 'Not detected' || num1 === 'Not specified' || num2 === 'Not specified') {
+    return { match: 'Unable to verify', notes: 'Document number not present on both' };
+  }
+
+  const norm1 = num1.toUpperCase().replace(/[^A-Z0-9]/g, '');
+  const norm2 = num2.toUpperCase().replace(/[^A-Z0-9]/g, '');
+
+  if (norm1 === norm2) {
+    return { match: true, notes: `Document numbers match exactly (${num1})` };
+  }
+
+  return { match: false, notes: `Document numbers contradict each other (${num1} vs ${num2})` };
 }
 
 /**
@@ -1303,3 +1541,4 @@ function fileToBase64(file: File): Promise<string> {
     reader.readAsDataURL(file);
   });
 }
+

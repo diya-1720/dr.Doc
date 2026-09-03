@@ -1,14 +1,16 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useForensics } from '../context/ForensicsContext';
 import { useLanguage } from '../i18n/LanguageContext';
 import { Sidebar } from '../components/Sidebar';
+import { QrExportModal } from '../components/QrExportModal';
 import { 
   CheckCircle2, 
   AlertTriangle, 
   XCircle, 
   ArrowRight, 
-  Upload
+  Upload,
+  QrCode
 } from 'lucide-react';
 
 export const VerificationPage: React.FC = () => {
@@ -28,6 +30,9 @@ export const VerificationPage: React.FC = () => {
 
   const isReady = isEvaluated && readinessScore >= 85 && issues.filter(i => i.severity === 'CRITICAL' && !i.resolved).length === 0;
   const unresolvedIssues = issues.filter(i => !i.resolved);
+
+  // 30-minute QR Code export modal state
+  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
 
   // Verification Summary Meters
   const validityScore = isEvaluated ? Math.min(98, Math.max(60, Math.round((verifiedCount / documents.length) * 100))) : 0;
@@ -127,6 +132,13 @@ export const VerificationPage: React.FC = () => {
                     {t.verification.goFixWorkflowBtn}
                     <ArrowRight className="w-5 h-5 text-[#FFF8EA]" />
                   </Link>
+                  <button
+                    type="button"
+                    onClick={() => setIsQrModalOpen(true)}
+                    className="font-mono text-xs uppercase font-bold bg-[#D97706] hover:bg-[#B45309] text-[#FFF8EA] px-4 py-2.5 border-2 border-[#3F2928] shadow-[2px_2px_0px_#3F2928] flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
+                  >
+                    <QrCode className="w-4 h-4" /> ⚡ QR Export (30m)
+                  </button>
                   <Link
                     to="/report"
                     className="font-mono text-xs uppercase font-bold bg-[#FFF8EA] hover:bg-[#E8B9B8] text-[#3F2928] px-4 py-2.5 border border-[#3F2928] shadow-[2px_2px_0px_#3F2928] text-center"
@@ -324,6 +336,21 @@ export const VerificationPage: React.FC = () => {
           </div>
 
         </div>
+
+        {/* 30-Minute QR Code Mobile Export Modal */}
+        {isQrModalOpen && (
+          <QrExportModal
+            isOpen={isQrModalOpen}
+            onClose={() => setIsQrModalOpen(false)}
+            documents={documents || []}
+            applicantName={
+              (documents || [])
+                .map(d => (d?.extractedFields || []).find(f => f?.key && (String(f.key).toLowerCase().includes('name') || f.key === 'applicantName'))?.value)
+                .find(name => name && name !== 'Not detected' && name !== 'Not specified') || 'Applicant'
+            }
+            readinessScore={readinessScore || 0}
+          />
+        )}
 
       </main>
     </div>

@@ -92,10 +92,14 @@ export const Footer: React.FC = () => {
         <div>
           {t.footer.copyright}
         </div>
-        <div className="flex gap-4">
+        <div className="flex items-center gap-4">
           <span>{t.footer.privacy}</span>
           <span>•</span>
           <span>{t.footer.terms}</span>
+          <span>•</span>
+          <Link to="/admin" className="text-[#E8B9B8] hover:text-white font-bold transition-colors">
+            ⚡ Admin Portal
+          </Link>
         </div>
       </div>
     </footer>

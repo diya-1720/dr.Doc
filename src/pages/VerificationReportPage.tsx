@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { useForensics } from '../context/ForensicsContext';
 import { useLanguage } from '../i18n/LanguageContext';
 import { Sidebar } from '../components/Sidebar';
-import { QrShareModal } from '../components/QrShareModal';
 import { mergeSelectedDocsIntoPdf, downloadDocInFormat } from '../services/docTools';
+import { QrExportModal } from '../components/QrExportModal';
 import type { DocItem } from '../types';
 import { 
   Printer, 
@@ -25,9 +25,6 @@ export const VerificationReportPage: React.FC = () => {
 
   const isReady = readinessScore >= 85 && issues.filter(i => i.severity === 'CRITICAL' && !i.resolved).length === 0;
 
-  // QR Share Modal state
-  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
-
   // Bundle download state
   const [isDownloadingBundle, setIsDownloadingBundle] = useState(false);
   const [bundleSuccessMsg, setBundleSuccessMsg] = useState<string | null>(null);
@@ -35,6 +32,9 @@ export const VerificationReportPage: React.FC = () => {
   // Individual download format modal
   const [downloadModalDoc, setDownloadModalDoc] = useState<DocItem | null>(null);
   const [chosenFormat, setChosenFormat] = useState<'pdf' | 'png' | 'jpg' | 'webp'>('pdf');
+
+  // QR Code 30-Minute Mobile Export modal
+  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
 
   const handlePrint = () => {
     window.print();
@@ -116,21 +116,21 @@ export const VerificationReportPage: React.FC = () => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 font-mono text-xs mb-6 sm:mb-8 p-3 sm:p-4 bg-[#F3E4C8] border-2 border-[#3F2928]">
             <div>
               <span className="text-[#A58B7B] block text-[10px] uppercase">APPLICATION</span>
-              <strong className="text-[#3F2928] truncate block">{currentApplication.name}</strong>
+              <strong className="text-[#3F2928] truncate block">{currentApplication?.name || 'Standard Verification'}</strong>
             </div>
             <div>
               <span className="text-[#A58B7B] block text-[10px] uppercase">{t.home.readinessScore}</span>
               <strong className="text-sm sm:text-base text-[#7A302F]">
-                {readinessScore} / 100
+                {readinessScore || 0} / 100
               </strong>
             </div>
             <div>
               <span className="text-[#A58B7B] block text-[10px] uppercase">{t.nav.documents}</span>
-              <strong className="text-[#3F2928]">{documents.length} / 20 Files</strong>
+              <strong className="text-[#3F2928]">{(documents || []).length} / 20 Files</strong>
             </div>
             <div>
               <span className="text-[#A58B7B] block text-[10px] uppercase">{t.issues.title}</span>
-              <strong className="text-[#7A302F]">{issues.filter(i => !i.resolved).length} Issues</strong>
+              <strong className="text-[#7A302F]">{(issues || []).filter(i => !i.resolved).length} Issues</strong>
             </div>
           </div>
 
@@ -172,9 +172,9 @@ export const VerificationReportPage: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {documents.map((doc) => {
-                    const applicantName = doc.extractedFields.find(f => f.key.toLowerCase().includes('name') || f.key === 'applicantName')?.value;
-                    const docNumber = doc.extractedFields.find(f => f.key.toLowerCase().includes('number') || f.key === 'documentNumber')?.value;
+                  {(documents || []).map((doc) => {
+                    const applicantName = (doc.extractedFields || []).find(f => f.key.toLowerCase().includes('name') || f.key === 'applicantName')?.value;
+                    const docNumber = (doc.extractedFields || []).find(f => f.key.toLowerCase().includes('number') || f.key === 'documentNumber')?.value;
 
                     return (
                       <tr key={doc.id} className="border-b border-[#3F2928] hover:bg-[#F3E4C8] text-[#3F2928]">
@@ -202,7 +202,7 @@ export const VerificationReportPage: React.FC = () => {
                             <span className="text-[#A58B7B]">N/A</span>
                           )}
                         </td>
-                        <td className="p-2 border border-[#3F2928] font-bold">{doc.quality.overallScore}%</td>
+                        <td className="p-2 border border-[#3F2928] font-bold">{doc.quality?.overallScore ?? 90}%</td>
                         <td className="p-2 border border-[#3F2928] font-bold">
                           <span className={doc.verificationStatus === 'VERIFIED' ? 'text-green-800' : 'text-[#7A302F]'}>
                             {doc.verificationStatus === 'VERIFIED' ? t.common.verified : t.common.needsReview}
@@ -217,13 +217,13 @@ export const VerificationReportPage: React.FC = () => {
           </div>
 
           {/* Cross Check Findings Section */}
-          {crossChecks.length > 0 && (
+          {(crossChecks || []).length > 0 && (
             <div className="mb-6 sm:mb-8 font-mono text-xs">
               <h3 className="font-heading text-lg sm:text-xl font-bold text-[#3F2928] mb-3 border-b-2 border-[#3F2928] pb-1">
                 {t.crossCheck.matrixTitle}
               </h3>
               <div className="space-y-2">
-                {crossChecks.map((check) => (
+                {(crossChecks || []).map((check) => (
                   <div key={check.id} className="p-2.5 border border-[#3F2928] bg-[#F3E4C8] flex flex-col sm:flex-row justify-between text-[#3F2928] gap-1 sm:gap-2">
                     <span>{check.fieldName}: <strong>{check.analysisNote}</strong></span>
                     <span className={`font-bold self-start sm:self-auto ${check.status === 'MATCHED' ? 'text-green-800' : 'text-[#7A302F]'}`}>
@@ -268,29 +268,17 @@ export const VerificationReportPage: React.FC = () => {
                 </p>
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-2.5 w-full sm:w-auto">
-                <button
-                  onClick={() => setIsQrModalOpen(true)}
-                  disabled={documents.length === 0}
-                  className="w-full sm:w-auto bg-[#3F2928] hover:bg-[#7A302F] text-[#FFF8EA] px-5 py-3 border-2 border-[#3F2928] shadow-[3px_3px_0px_#7A302F] font-heading text-base font-bold flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
-                  title={t.qr.shareViaQr}
-                >
-                  <QrCode className="w-5 h-5 text-[#FFF8EA]" />
-                  <span>{t.qr.shareViaQr}</span>
-                </button>
-
-                <button
-                  onClick={handleDownloadConsolidatedBundle}
-                  disabled={isDownloadingBundle || documents.length === 0}
-                  className="w-full sm:w-auto bg-[#7A302F] hover:bg-[#5c2322] text-[#FFF8EA] px-6 py-3 border-2 border-[#3F2928] shadow-[3px_3px_0px_#3F2928] font-heading text-base font-bold flex items-center justify-center gap-2 disabled:opacity-50"
-                >
-                  {isDownloadingBundle ? (
-                    <><Loader2 className="w-5 h-5 animate-spin" /> {t.common.loading}</>
-                  ) : (
-                    <><Download className="w-5 h-5" /> {t.report.downloadConsolidatedPdf}</>
-                  )}
-                </button>
-              </div>
+              <button
+                onClick={handleDownloadConsolidatedBundle}
+                disabled={isDownloadingBundle || documents.length === 0}
+                className="w-full sm:w-auto bg-[#7A302F] hover:bg-[#5c2322] text-[#FFF8EA] px-6 py-3 border-2 border-[#3F2928] shadow-[3px_3px_0px_#3F2928] font-heading text-base font-bold flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                {isDownloadingBundle ? (
+                  <><Loader2 className="w-5 h-5 animate-spin" /> {t.common.loading}</>
+                ) : (
+                  <><Download className="w-5 h-5" /> {t.report.downloadConsolidatedPdf}</>
+                )}
+              </button>
             </div>
 
             {bundleSuccessMsg && (
@@ -332,17 +320,16 @@ export const VerificationReportPage: React.FC = () => {
             </div>
           )}
 
-          {/* Action Bar (Print + Share via QR) */}
+          {/* Print & Mobile QR Transfer Bar */}
           <div className="flex flex-col sm:flex-row justify-end gap-3 sm:gap-4 font-mono text-xs">
             <button
+              type="button"
               onClick={() => setIsQrModalOpen(true)}
-              disabled={documents.length === 0}
-              className="w-full sm:w-auto bg-[#7A302F] hover:bg-[#5c2322] text-[#FFF8EA] px-6 py-3 border border-[#3F2928] shadow-[3px_3px_0px_#3F2928] font-bold flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+              className="w-full sm:w-auto bg-[#D97706] hover:bg-[#B45309] text-[#FFF8EA] px-6 py-3 border-2 border-[#3F2928] shadow-[3px_3px_0px_#3F2928] font-black flex items-center justify-center gap-2 cursor-pointer transition-colors"
             >
               <QrCode className="w-4 h-4" />
-              {t.qr.shareViaQr}
+              ⚡ EXPORT TO MOBILE VIA QR (30m)
             </button>
-
             <button
               onClick={handlePrint}
               className="w-full sm:w-auto bg-[#3F2928] text-[#FFF8EA] px-6 py-3 border border-[#3F2928] shadow-[3px_3px_0px_#7A302F] font-bold flex items-center justify-center gap-2 hover:bg-[#7A302F] transition-colors"
@@ -422,15 +409,20 @@ export const VerificationReportPage: React.FC = () => {
           </div>
         )}
 
-        {/* QR Share Modal */}
-        <QrShareModal
-          isOpen={isQrModalOpen}
-          onClose={() => setIsQrModalOpen(false)}
-          documents={documents}
-          caseId={caseId}
-          currentApp={currentApplication}
-          crossCheckResult={null}
-        />
+        {/* 30-Minute QR Code Mobile Export Modal */}
+        {isQrModalOpen && (
+          <QrExportModal
+            isOpen={isQrModalOpen}
+            onClose={() => setIsQrModalOpen(false)}
+            documents={documents || []}
+            applicantName={
+              (documents || [])
+                .map(d => (d?.extractedFields || []).find(f => f?.key && (String(f.key).toLowerCase().includes('name') || f.key === 'applicantName'))?.value)
+                .find(name => name && name !== 'Not detected' && name !== 'Not specified') || 'Applicant'
+            }
+            readinessScore={readinessScore || 0}
+          />
+        )}
 
       </main>
     </div>

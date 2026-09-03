@@ -4,7 +4,13 @@ import { useForensics } from '../context/ForensicsContext';
 import { useLanguage } from '../i18n/LanguageContext';
 import { Sidebar } from '../components/Sidebar';
 import { backendCrossCheck } from '../services/api';
-import { smartCompareNames, smartCompareAddresses, smartCompareDates } from '../services/aiEngine';
+import { 
+  smartCompareNames, 
+  smartCompareDobs, 
+  smartCompareGenders, 
+  smartCompareAddresses, 
+  smartCompareDocNumbers 
+} from '../services/aiEngine';
 import type { CrossCheckResult } from '../types';
 import { 
   ShieldAlert, 
@@ -82,20 +88,23 @@ export const CrossCheckPage: React.FC = () => {
 
     // Comprehensive Local Cross-Check Computation
     try {
-      const name1 = doc1.extractedFields.find(f => f.key.toLowerCase().includes('name') || f.key === 'applicantName')?.value || 'Not detected';
-      const name2 = doc2.extractedFields.find(f => f.key.toLowerCase().includes('name') || f.key === 'applicantName')?.value || 'Not detected';
+      const f1 = doc1?.extractedFields || [];
+      const f2 = doc2?.extractedFields || [];
 
-      const dob1 = doc1.extractedFields.find(f => f.key.toLowerCase().includes('dob') || f.key.toLowerCase().includes('birth'))?.value || 'Not detected';
-      const dob2 = doc2.extractedFields.find(f => f.key.toLowerCase().includes('dob') || f.key.toLowerCase().includes('birth'))?.value || 'Not detected';
+      const name1 = f1.find(f => f?.key && (String(f.key).toLowerCase().includes('name') || f.key === 'applicantName'))?.value || 'Not detected';
+      const name2 = f2.find(f => f?.key && (String(f.key).toLowerCase().includes('name') || f.key === 'applicantName'))?.value || 'Not detected';
 
-      const id1 = doc1.extractedFields.find(f => f.key.toLowerCase().includes('number') || f.key.toLowerCase().includes('num'))?.value || 'Not detected';
-      const id2 = doc2.extractedFields.find(f => f.key.toLowerCase().includes('number') || f.key.toLowerCase().includes('num'))?.value || 'Not detected';
+      const dob1 = f1.find(f => f?.key && (String(f.key).toLowerCase().includes('dob') || String(f.key).toLowerCase().includes('birth')))?.value || 'Not detected';
+      const dob2 = f2.find(f => f?.key && (String(f.key).toLowerCase().includes('dob') || String(f.key).toLowerCase().includes('birth')))?.value || 'Not detected';
 
-      const gender1 = doc1.extractedFields.find(f => f.key.toLowerCase().includes('gender') || f.key.toLowerCase().includes('sex'))?.value || 'Not specified';
-      const gender2 = doc2.extractedFields.find(f => f.key.toLowerCase().includes('gender') || f.key.toLowerCase().includes('sex'))?.value || 'Not specified';
+      const id1 = f1.find(f => f?.key && (String(f.key).toLowerCase().includes('number') || String(f.key).toLowerCase().includes('num')))?.value || 'Not detected';
+      const id2 = f2.find(f => f?.key && (String(f.key).toLowerCase().includes('number') || String(f.key).toLowerCase().includes('num')))?.value || 'Not detected';
 
-      const addr1 = doc1.extractedFields.find(f => f.key.toLowerCase().includes('address') || f.key.toLowerCase().includes('residence'))?.value || 'Not specified';
-      const addr2 = doc2.extractedFields.find(f => f.key.toLowerCase().includes('address') || f.key.toLowerCase().includes('residence'))?.value || 'Not specified';
+      const gender1 = f1.find(f => f?.key && (String(f.key).toLowerCase().includes('gender') || String(f.key).toLowerCase().includes('sex')))?.value || 'Not specified';
+      const gender2 = f2.find(f => f?.key && (String(f.key).toLowerCase().includes('gender') || String(f.key).toLowerCase().includes('sex')))?.value || 'Not specified';
+
+      const addr1 = f1.find(f => f?.key && (String(f.key).toLowerCase().includes('address') || String(f.key).toLowerCase().includes('residence')))?.value || 'Not specified';
+      const addr2 = f2.find(f => f?.key && (String(f.key).toLowerCase().includes('address') || String(f.key).toLowerCase().includes('residence')))?.value || 'Not specified';
 
       const fields: Record<string, { match: boolean | 'Unable to verify'; document1: string; document2: string; notes: string }> = {};
       const matchedFields: string[] = [];
@@ -115,11 +124,11 @@ export const CrossCheckPage: React.FC = () => {
         }
       }
 
-      // 2. DOB Comparison (ONLY IF PRESENT IN BOTH DOCUMENTS - CANONICAL COMPARISON)
+      // 2. DOB Comparison (ONLY IF PRESENT IN BOTH DOCUMENTS)
       const isDobPresent1 = dob1 && dob1 !== 'Not detected' && dob1 !== 'Not specified';
       const isDobPresent2 = dob2 && dob2 !== 'Not detected' && dob2 !== 'Not specified';
       if (isDobPresent1 && isDobPresent2) {
-        const dobComp = smartCompareDates(dob1, dob2);
+        const dobComp = smartCompareDobs(dob1, dob2);
         if (dobComp.match === true) {
           fields.dateOfBirth = { match: true, document1: dob1, document2: dob2, notes: dobComp.notes };
           matchedFields.push('dateOfBirth');
@@ -133,13 +142,12 @@ export const CrossCheckPage: React.FC = () => {
       const isDocNumPresent1 = id1 && id1 !== 'Not detected' && id1 !== 'Not specified';
       const isDocNumPresent2 = id2 && id2 !== 'Not detected' && id2 !== 'Not specified';
       if (doc1.documentType === doc2.documentType && isDocNumPresent1 && isDocNumPresent2) {
-        const normId1 = id1.toUpperCase().replace(/[^A-Z0-9]/g, '');
-        const normId2 = id2.toUpperCase().replace(/[^A-Z0-9]/g, '');
-        if (normId1 === normId2) {
-          fields.documentNumber = { match: true, document1: id1, document2: id2, notes: `Document numbers match exactly (${id1})` };
+        const docNumComp = smartCompareDocNumbers(doc1.documentType, id1, doc2.documentType, id2);
+        if (docNumComp.match === true) {
+          fields.documentNumber = { match: true, document1: id1, document2: id2, notes: docNumComp.notes };
           matchedFields.push('documentNumber');
-        } else {
-          fields.documentNumber = { match: false, document1: id1, document2: id2, notes: `Document numbers contradict each other (${id1} vs ${id2})` };
+        } else if (docNumComp.match === false) {
+          fields.documentNumber = { match: false, document1: id1, document2: id2, notes: docNumComp.notes };
           mismatches.push('documentNumber');
         }
       }
@@ -148,18 +156,19 @@ export const CrossCheckPage: React.FC = () => {
       const isGenderPresent1 = gender1 && gender1 !== 'Not specified' && gender1 !== 'Not detected';
       const isGenderPresent2 = gender2 && gender2 !== 'Not specified' && gender2 !== 'Not detected';
       if (isGenderPresent1 && isGenderPresent2) {
-        if (gender1.toUpperCase().charAt(0) === gender2.toUpperCase().charAt(0)) {
-          fields.gender = { match: true, document1: gender1, document2: gender2, notes: `Gender verified (${gender1})` };
+        const genderComp = smartCompareGenders(gender1, gender2);
+        if (genderComp.match === true) {
+          fields.gender = { match: true, document1: gender1, document2: gender2, notes: genderComp.notes };
           matchedFields.push('gender');
-        } else {
-          fields.gender = { match: false, document1: gender1, document2: gender2, notes: `Gender record contradiction: ${gender1} vs ${gender2}` };
+        } else if (genderComp.match === false) {
+          fields.gender = { match: false, document1: gender1, document2: gender2, notes: genderComp.notes };
           mismatches.push('gender');
         }
       }
 
       // 5. Address Comparison (ONLY IF PRESENT IN BOTH DOCUMENTS)
-      const isAddrPresent1 = addr1 && addr1 !== 'Not specified' && addr1 !== 'Not detected' && addr1.trim() !== '';
-      const isAddrPresent2 = addr2 && addr2 !== 'Not specified' && addr2 !== 'Not detected' && addr2.trim() !== '';
+      const isAddrPresent1 = addr1 && addr1 !== 'Not specified' && addr1 !== 'Not detected' && addr1.trim().length >= 8;
+      const isAddrPresent2 = addr2 && addr2 !== 'Not specified' && addr2 !== 'Not detected' && addr2.trim().length >= 8;
       if (isAddrPresent1 && isAddrPresent2) {
         const addrComp = smartCompareAddresses(addr1, addr2);
         if (addrComp.match === true) {
@@ -305,8 +314,9 @@ export const CrossCheckPage: React.FC = () => {
                 const isSelected = selectedDocIds.includes(doc.id);
                 const isFirst = selectedDocIds[0] === doc.id;
                 const isSecond = selectedDocIds[1] === doc.id;
-                const applicantName = doc.extractedFields.find(f => f.key.toLowerCase().includes('name'))?.value;
-                const dob = doc.extractedFields.find(f => f.key.toLowerCase().includes('dob'))?.value;
+                const fields = doc?.extractedFields || [];
+                const applicantName = fields.find(f => f?.key && String(f.key).toLowerCase().includes('name'))?.value;
+                const dob = fields.find(f => f?.key && String(f.key).toLowerCase().includes('dob'))?.value;
 
                 return (
                   <div

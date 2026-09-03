@@ -1,18 +1,14 @@
 const express = require('express');
 const router = express.Router();
-const {
-  createShareSession,
-  getShareSession,
-  downloadShareFile,
-} = require('../controllers/shareController');
+const shareController = require('../controllers/shareController');
 
-// Create a new secure share bundle
-router.post('/', createShareSession);
+// Create a new 30-minute share session
+router.post('/', shareController.createShareSession);
 
-// Get public metadata for a share token
-router.get('/:token', getShareSession);
+// Retrieve active share session
+router.get('/:shareId', shareController.getShareSession);
 
-// Download an individual file from the share bundle
-router.get('/:token/download/:fileId', downloadShareFile);
+// Delete / Revoke active share session early
+router.delete('/:shareId', shareController.deleteShareSession);
 
 module.exports = router;

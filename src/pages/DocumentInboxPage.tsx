@@ -3,9 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { useForensics } from '../context/ForensicsContext';
 import { useLanguage } from '../i18n/LanguageContext';
 import { Sidebar } from '../components/Sidebar';
-import { QrShareModal } from '../components/QrShareModal';
 import type { DocumentCategory, DocItem } from '../types';
 import { mergeSelectedDocsIntoPdf, downloadDocInFormat } from '../services/docTools';
+import { QrExportModal } from '../components/QrExportModal';
 import { 
   Upload, 
   Trash2, 
@@ -45,15 +45,12 @@ export const DocumentInboxPage: React.FC = () => {
     applySuggestedFilenames,
     uploadWarning,
     dismissWarning,
-    crossChecks,
-    caseId,
-    currentApplication
+    crossChecks
   } = useForensics();
 
   const [selectedCategory, setSelectedCategory] = useState<DocumentCategory | 'ALL'>('ALL');
   const [searchTerm, setSearchTerm] = useState('');
   const [isDragOver, setIsDragOver] = useState(false);
-  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
 
   // Checkbox multi-select state for consolidated PDF bundle
   const [selectedDocIds, setSelectedDocIds] = useState<string[]>([]);
@@ -63,6 +60,9 @@ export const DocumentInboxPage: React.FC = () => {
   // Download format modal / popup per document
   const [downloadModalDoc, setDownloadModalDoc] = useState<DocItem | null>(null);
   const [chosenFormat, setChosenFormat] = useState<'pdf' | 'png' | 'jpg' | 'webp'>('pdf');
+
+  // QR Code 30-minute export modal
+  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -209,6 +209,13 @@ export const DocumentInboxPage: React.FC = () => {
               >
                 <ArrowRightLeft className="w-3.5 h-3.5" /> {t.inboxTour.crossCheck}
               </button>
+              <button
+                onClick={() => setIsQrModalOpen(true)}
+                className="px-3 py-1.5 bg-[#D97706] hover:bg-[#B45309] text-[#FFF8EA] border-2 border-[#3F2928] font-black flex items-center gap-1.5 shadow-[2px_2px_0px_#3F2928] transition-all"
+                title="Export all documents via a 30-minute self-expiring mobile QR code"
+              >
+                <QrCode className="w-4 h-4" /> ⚡ QR EXPORT (30m)
+              </button>
             </div>
           )}
         </div>
@@ -340,14 +347,6 @@ export const DocumentInboxPage: React.FC = () => {
 
               <div className="flex flex-wrap items-center gap-2">
                 <button
-                  onClick={() => setIsQrModalOpen(true)}
-                  className="px-3 py-1 bg-[#7A302F] hover:bg-[#5c2322] text-[#FFF8EA] border border-[#3F2928] font-bold flex items-center gap-1.5 shadow-[2px_2px_0px_#3F2928] text-[11px] transition-all"
-                  title={t.qr.shareViaQr}
-                >
-                  <QrCode className="w-3.5 h-3.5 text-[#FFF8EA]" /> {t.qr.shareViaQr}
-                </button>
-
-                <button
                   onClick={applySuggestedFilenames}
                   className="px-3 py-1 bg-[#3F2928] hover:bg-[#7A302F] text-[#FFF8EA] border border-[#3F2928] font-bold flex items-center gap-1.5 shadow-[2px_2px_0px_#7A302F] text-[11px] transition-all"
                   title="Automatically rename all documents based on AI classification and applicant name"
@@ -435,15 +434,16 @@ export const DocumentInboxPage: React.FC = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {filteredDocs.map((doc) => {
                 const isSelected = selectedDocIds.includes(doc.id);
-                const applicantName = doc.extractedFields.find(f => f.key.toLowerCase().includes('name') || f.key === 'applicantName')?.value;
-                const docNumber = doc.extractedFields.find(f => f.key.toLowerCase().includes('number') || f.key === 'documentNumber')?.value;
-                const dob = doc.extractedFields.find(f => f.key.toLowerCase().includes('dob'))?.value;
-                const bloodGroup = doc.extractedFields.find(f => f.key === 'bloodGroup')?.value;
-                const validity = doc.extractedFields.find(f => f.key === 'validity')?.value;
-                const fatherName = doc.extractedFields.find(f => f.key === 'fatherName')?.value;
-                const vid = doc.extractedFields.find(f => f.key === 'vid')?.value;
-                const gender = doc.extractedFields.find(f => f.key === 'gender')?.value;
-                const address = doc.extractedFields.find(f => f.key === 'address')?.value;
+                const fields = doc?.extractedFields || [];
+                const applicantName = fields.find(f => f?.key && (String(f.key).toLowerCase().includes('name') || f.key === 'applicantName'))?.value;
+                const docNumber = fields.find(f => f?.key && (String(f.key).toLowerCase().includes('number') || f.key === 'documentNumber'))?.value;
+                const dob = fields.find(f => f?.key && String(f.key).toLowerCase().includes('dob'))?.value;
+                const bloodGroup = fields.find(f => f?.key === 'bloodGroup')?.value;
+                const validity = fields.find(f => f?.key === 'validity')?.value;
+                const fatherName = fields.find(f => f?.key === 'fatherName')?.value;
+                const vid = fields.find(f => f?.key === 'vid')?.value;
+                const gender = fields.find(f => f?.key === 'gender')?.value;
+                const address = fields.find(f => f?.key === 'address')?.value;
 
                 return (
                   <div
@@ -776,15 +776,19 @@ export const DocumentInboxPage: React.FC = () => {
           </div>
         )}
 
-        {/* QR Share Modal */}
-        <QrShareModal
-          isOpen={isQrModalOpen}
-          onClose={() => setIsQrModalOpen(false)}
-          documents={documents}
-          caseId={caseId}
-          currentApp={currentApplication}
-          crossCheckResult={null}
-        />
+        {/* 30-Minute QR Code Mobile Export Modal */}
+        {isQrModalOpen && (
+          <QrExportModal
+            isOpen={isQrModalOpen}
+            onClose={() => setIsQrModalOpen(false)}
+            documents={documents || []}
+            applicantName={
+              (documents || [])
+                .map(d => (d?.extractedFields || []).find(f => f?.key && (String(f.key).toLowerCase().includes('name') || f.key === 'applicantName'))?.value)
+                .find(name => name && name !== 'Not detected' && name !== 'Not specified') || 'Applicant'
+            }
+          />
+        )}
 
       </main>
     </div>

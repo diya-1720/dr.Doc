@@ -55,73 +55,82 @@ async function analyzeWithGemini(buffer, mimeType, apiKey) {
 You are an expert document forensics and optical character recognition (OCR) engine examining an official credential or document image.
 Current Year: ${currentYear}
 
-CRITICAL SPATIAL & POSITIONAL PARAMETER RECOGNITION RULES:
-Many official credentials (such as Indian Aadhaar, Driving License, PAN Card, Passport) DO NOT have explicit labels like "Name:" or "Address:" printed next to the data. You MUST recognize parameters based on their visual spatial placement and format:
+STRICT FORENSIC & ZERO-HALLUCINATION RULES:
+1. Extract information EXCLUSIVELY from the actual text optically visible on THIS specific document.
+2. NEVER guess, assume, fabricate, or hallucinate any field values.
+3. If a field (Full Name, Date of Birth, Document ID Number, Gender, Address) is NOT clearly readable on the document, set its value to "Not detected".
+4. Do NOT use filename, metadata, or previous document values.
+
+SPATIAL & POSITIONAL PARAMETER RECOGNITION:
+Many official credentials (such as Indian Aadhaar, Driving License, PAN Card, Passport) DO NOT have explicit labels like "Name:" or "Address:" printed next to the data. Recognize parameters based on visual placement:
 
 1. PERSON FULL NAME ("applicantName"):
-   - Locate the primary holder's full name (e.g. "Ved Nishad Gharat" or "Ved Gharat").
-   - Position: Printed prominently below government/state header banners, adjacent to the portrait photograph, or directly above the Date of Birth line.
-   - Extract the full name accurately even if no "Name:" label is present. Do NOT extract department headers or footer disclaimers as the name.
+   - Locate and extract the primary holder's full name exactly as printed on the document.
+   - Position: Prominently printed below government/state header banners, adjacent to the portrait photograph, or directly above Date of Birth.
+   - CRITICAL: NEVER extract the residential address, street name, house number, village, taluka, district, state, or PIN code as the person's full name. On Driving Licenses, the name is printed next to or below DL No and BEFORE Father/Spouse name (S/W/D) or DOB. The multi-line address at the bottom belongs to the 'address' field, NEVER 'applicantName'.
+   - Do NOT extract department headers, issuing authority names, or footer disclaimers as the person's name.
 
 2. DATE OF BIRTH ("dob") & AGE ("calculatedAge"):
-   - Extract Date of Birth in DD/MM/YYYY or DD-MM-YYYY format (e.g. "29/03/2008").
-   - Distinguish DOB from Issue Date, Date of Application, or License Validity/Expiry dates.
-   - Compute applicant's current age in years based on ${currentYear} (e.g. 18 years for 2008 birth year).
+   - Read the EXACT digits printed for the Date of Birth (DOB) field or adjacent to the DOB / birth label.
+   - CRITICAL: Never guess, alter, or hallucinate date digits. Read '20' as '20', '29' as '29', '0' as '0', '9' as '9' strictly as rendered on the document image.
+   - Distinguish Date of Birth (DOB) from Date of Issue (DOI) or Validity/Expiry dates by reading the specific label and field position.
+   - Extract Date of Birth in DD/MM/YYYY format as printed.
+   - Compute applicant's current age in years based on ${currentYear} if birth year is present.
 
 3. RESIDENTIAL ADDRESS ("address"):
-   - Extract the complete multi-line address text even if no "Address:" label is present (e.g. "80 A Kamare Road Near Govt Boys Hostel Gram Navali Palghar, MH, 401404").
-   - Recognize address by house/plot no, street, landmark, village/locality, district/city, state, and 6-digit postal PIN code.
-   - If address is absent on single-sided credentials (e.g. front of Aadhaar), set to "Not detected".
+   - Extract complete residential address text when present (e.g. house/flat no, street, landmark, locality/village, city/district, state, and 6-digit postal PIN code).
+   - If address is absent on single-sided credentials, set to "Not detected".
 
 4. GENDER ("gender"):
-   - Extract "MALE", "FEMALE", or "TRANSGENDER" (including Devanagari "पुरुष" -> MALE, "महिला" -> FEMALE, or "M" / "F").
+   - Extract "MALE", "FEMALE", or "TRANSGENDER" (including regional language indicators like "पुरुष" -> MALE, "महिला" -> FEMALE, or "M" / "F").
 
 5. BLOOD GROUP ("bloodGroup"):
-   - On Driving Licenses, extract the blood group (e.g. "O+", "A+", "B+", "AB+", "O-", "A-", "B-", "AB-"). If not applicable, omit or set to "Not detected".
+   - If printed (e.g. on Driving License: "O+", "A+", "B+", "AB+", etc.), extract it. Otherwise omit or set to "Not detected".
 
 6. DOCUMENT / ID NUMBER ("documentNumber"):
-   - Extract the exact alphanumeric identifier:
-     * Driving License: State code + RTO + Year + Digits (e.g. "MH48 20260023357" or "MH-4820260023357")
-     * Aadhaar Card: 12-digit number (e.g. "2500 6999 1014")
-     * PAN Card: 10-digit alphanumeric (e.g. "ABCDE1234F")
-     * Passport: 8-digit passport number
+   - Extract exact alphanumeric identifier as printed:
+     * Driving License: State code + RTO + Year + Digits
+     * Aadhaar Card: 12-digit number or VID
+     * PAN Card: 10-digit alphanumeric
+     * Passport: Passport number
+     * Voter ID: EPIC number
+     * Utility/Bank: Account/Consumer number
 
 7. ORIENTATION & DESKEW:
-   - If the image is photographed sideways, rotated by 90°, 180°, or 270°, accurately read all text regardless of orientation.
+   - If the image is photographed sideways or rotated, accurately read all text regardless of orientation.
 
 Return strictly valid JSON only:
 {
   "category": "IDENTITY" | "ADDRESS" | "BUSINESS" | "PERSONAL" | "UNKNOWN",
   "documentType": "Driving License" | "Aadhaar Card" | "PAN Card" | "Passport" | "Voter ID" | "Electricity Bill" | "Bank Statement" | "GST Certificate" | "Identity Document",
   "confidence": 95,
-  "calculatedAge": 18,
+  "calculatedAge": 25,
   "photoAudit": {
     "hasPhoto": true,
-    "estimatedPhotoAge": "young adult (18 years)",
+    "estimatedPhotoAge": "adult",
     "ageMatch": true,
-    "photoStatus": "VERIFIED_CURRENT",
-    "photoFeedback": "Photo appearance is current and matches calculated age of 18 years."
+    "photoStatus": "VERIFIED_CURRENT" | "OUTDATED_RECOMMEND_UPDATE" | "NOT_APPLICABLE",
+    "photoFeedback": "Photo appearance is current and matches calculated age."
   },
-  "suggestedFilename": "DRIVING_LICENSE_VED_GHARAT.pdf",
+  "suggestedFilename": "STANDARDIZED_FILENAME.pdf",
   "quality": {
-    "sharpness": 92,
+    "sharpness": 90,
     "textVisibility": 90,
     "lighting": 88,
-    "cropping": 92,
-    "overallScore": 91,
+    "cropping": 90,
+    "overallScore": 90,
     "status": "GOOD",
-    "feedbackLines": ["High legibility text", "All critical identity credentials detected"]
+    "feedbackLines": ["High legibility text", "Critical identity credentials detected"]
   },
   "extractedFields": [
-    { "key": "applicantName", "label": "Full Name", "value": "Ved Nishad Gharat", "confidence": 96 },
-    { "key": "documentNumber", "label": "Document Number", "value": "MH48 20260023357", "confidence": 98 },
-    { "key": "dob", "label": "Date of Birth", "value": "29/03/2008", "confidence": 96 },
-    { "key": "gender", "label": "Gender", "value": "MALE", "confidence": 95 },
-    { "key": "bloodGroup", "label": "Blood Group", "value": "O+", "confidence": 95 },
-    { "key": "address", "label": "Address", "value": "80 A Kamare Road Near Govt Boys Hostel Gram Navali Palghar, MH, 401404", "confidence": 92 }
+    { "key": "applicantName", "label": "Full Name", "value": "<EXTRACTED_FULL_NAME_OR_NOT_DETECTED>", "confidence": 95 },
+    { "key": "documentNumber", "label": "Document Number", "value": "<EXTRACTED_DOC_NUMBER_OR_NOT_DETECTED>", "confidence": 95 },
+    { "key": "dob", "label": "Date of Birth", "value": "<EXTRACTED_DOB_OR_NOT_DETECTED>", "confidence": 95 },
+    { "key": "gender", "label": "Gender", "value": "<EXTRACTED_GENDER_OR_NOT_DETECTED>", "confidence": 95 },
+    { "key": "address", "label": "Address", "value": "<EXTRACTED_ADDRESS_OR_NOT_DETECTED>", "confidence": 90 }
   ],
-  "rawOcrText": "...",
-  "verificationStatus": "VERIFIED",
+  "rawOcrText": "<EXTRACTED_RAW_OCR_TEXT>",
+  "verificationStatus": "VERIFIED" | "NEEDS REVIEW" | "REJECTED" | "UNIDENTIFIED",
   "issues": []
 }
 `;
