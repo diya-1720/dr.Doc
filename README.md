@@ -1,213 +1,154 @@
-# 🩺 DR. DOC — Automated Document Forensics & Ingestion Engine
+# 🩺 Dr. Doc — AI Document Checkup & Verification Workstation
 
-> **Never let paperwork be the reason an application fails.**  
-> An enterprise-grade, end-to-end document forensics, OCR extraction, quality inspection, and cross-verification workstation designed for government portals, visa processing, banking, and business registrations.
+<div align="center">
+
+<!-- Project Status & Metadata Badges -->
+[![Version](https://img.shields.io/badge/Version-v2.4.0-blue.svg?style=for-the-badge&logo=semver&logoColor=white)](https://github.com/diya-1720/dr.Doc/releases)
+[![Build Status](https://img.shields.io/badge/Build-Passing-brightgreen.svg?style=for-the-badge&logo=githubactions&logoColor=white)](https://github.com/diya-1720/dr.Doc)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge&logo=opensourceinitiative&logoColor=white)](https://opensource.org/licenses/MIT)
+[![Mobile Support](https://img.shields.io/badge/Responsive-Mobile_%26_Desktop-9cf.svg?style=for-the-badge&logo=googlechrome&logoColor=white)](http://localhost:5173)
+[![GitHub Stars](https://img.shields.io/github/stars/diya-1720/dr.Doc?style=for-the-badge&logo=github&color=gold)](https://github.com/diya-1720/dr.Doc/stargazers)
+[![GitHub Forks](https://img.shields.io/github/forks/diya-1720/dr.Doc?style=for-the-badge&logo=github&color=lightgrey)](https://github.com/diya-1720/dr.Doc/network/members)
+
+<br/>
+
+<!-- Technology & Framework Badges -->
+[![TypeScript](https://img.shields.io/badge/TypeScript_5.5-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![React](https://img.shields.io/badge/React_18.3-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://react.dev/)
+[![Node.js](https://img.shields.io/badge/Node.js_18+-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)](https://nodejs.org/)
+[![Express.js](https://img.shields.io/badge/Express.js_4-000000?style=for-the-badge&logo=express&logoColor=white)](https://expressjs.com/)
+[![Vite](https://img.shields.io/badge/Vite_5.4-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
+[![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
+[![Google Gemini](https://img.shields.io/badge/Gemini_Vision_AI-8E75B2?style=for-the-badge&logo=google&logoColor=white)](https://ai.google.dev/)
+
+<br/>
+
+<!-- Multilingual Availability Badges -->
+[![English](https://img.shields.io/badge/Language-English-0052CC?style=flat-square&logo=googletranslate&logoColor=white)](#-supported-languages)
+[![Hindi](https://img.shields.io/badge/भाषा-हिंदी_(Hindi)-FF9933?style=flat-square&logo=googletranslate&logoColor=white)](#-supported-languages)
+[![Marathi](https://img.shields.io/badge/भाषा-मराठी_(Marathi)-138808?style=flat-square&logo=googletranslate&logoColor=white)](#-supported-languages)
+
+<br/>
+
+> **"Never let paperwork be the reason an application fails."**  
+> *An intelligent pre-submission assistant that audits, verifies, cross-checks, and fixes documents before you submit them to government, banking, or college portals.*
+
+[Live Workstation](http://localhost:5173) • [Explore Features](#-key-features) • [How It Works](#-how-dr-doc-works-step-by-step-flow) • [Tech Stack](#-tech-stack) • [Quick Setup](#-quick-setup--run-locally)
+
+</div>
 
 ---
 
-## 🌟 Overview
+## 🎯 Project Overview & Purpose
 
-**DR. DOC** solves the critical problem of administrative document rejection. Blurry scans, mismatched names across identity cards, oversized PDFs, missing credentials, and inverted pages often lead to costly application delays. 
+Every year, millions of applications for **passports, GST registration, bank accounts, university admissions, and loans** get rejected due to simple, avoidable errors:
+- ❌ **Name Mismatches**: *"Rahul Kumar"* on PAN card vs. *"R. Kumar"* on Bank Statement.
+- ❌ **Poor Quality & Blurry Scans**: Hard to read, bad lighting, or cropped edges.
+- ❌ **File Size Violations**: Portals rejecting PDFs larger than 10 MB.
+- ❌ **Missing Files**: Forgetting a mandatory electricity bill or identity proof.
+- ❌ **Outdated Photographs**: Using a photo that doesn't match current age.
 
-Dr. Doc provides an automated, pre-submission forensic audit pipeline that ingests, classifies, audits legibility, extracts text via OCR, verifies profile compliance, and cross-checks data consistency between multiple documents before final portal submission.
+### 💡 The Solution: Dr. Doc
+**Dr. Doc is a pre-submission digital doctor for your documents.**  
+Upload your files before applying. Dr. Doc reads your documents using AI, tests their scan quality, compares names and dates across documents, lets you fix issues on the spot, and bundles everything into one verified PDF ready for submission.
 
 ---
 
-## 🚀 Key Features in End-to-End Workflow
+## ✨ Key Features
 
-Dr. Doc operates as a unified, continuous 10-phase document verification workflow:
+| Feature | What It Does | Key Advantage |
+| :--- | :--- | :--- |
+| 🔍 **AI Vision OCR** | Extracts names, DOB, addresses, and ID numbers using Google Gemini Vision AI. | Instant digital extraction with confidence scores. |
+| ⚖️ **Cross-Document Cross-Check** | Compares 2 documents side-by-side (e.g., PAN vs. Aadhaar) to detect name or date discrepancies. | Prevents silent administrative rejections. |
+| 📊 **Scan Quality Inspector** | Scores Sharpness, Text Legibility, Lighting, and Cropping (0–100%). | Flags blurry or unreadable scans immediately. |
+| 📸 **Photo Age Audit** | Verifies if the applicant's face photo matches their calculated age. | Catches outdated photos before the portal does. |
+| 🛠️ **7 In-Line Fix Tools** | Compress PDF/Image, Convert Image to PDF, Merge PDFs, Enhance Contrast, Rename Files. | Fix errors directly inside the app in 1 click. |
+| 📄 **Consolidated Master PDF** | Merges all approved documents into a single, paginated A4 submission package. | Ready for single-file portal uploads. |
+| 🌐 **100% Multilingual (i18n)** | Full native support for **English**, **Hindi (हिंदी)**, and **Marathi (मराठी)**. | Accessible to regional applicants and centers across India. |
 
-```mermaid
-graph LR
-    A[01. Setup & Profile] --> B[02. Document Inbox]
-    B --> C[03. OCR Extraction]
-    C --> D[04. Quality Audit]
-    D --> E[05. Verification]
-    E --> F[06. Cross-Check]
-    F --> G[07. Case Issues]
-    G --> H[08. Fix Resolution]
-    H --> I[09. Document Tools]
-    I --> J[10. Final Report]
+---
+
+## 🌐 Supported Languages
+
+Dr. Doc is fully accessible in 3 languages with a 1-click language switcher:
+
+- 🇬🇧 **English** (Default)
+- 🇮🇳 **Hindi (हिंदी)** — Full translation of UI, document types, quality meters, tools, and reports.
+- 🇮🇳 **Marathi (मराठी)** — Native Marathi translation across all 12 pages and workspaces.
+
+> *Example translations: Aadhaar (आधार कार्ड), PAN (पैन कार्ड / पॅन कार्ड), Electricity Bill (बिजली बिल / वीज बिल), Sharpness (स्पष्टता), Readiness (तत्परता / पूर्णता).*
+
+---
+
+## 🔄 How Dr. Doc Works (Step-by-Step Flow)
+
+```
+[1. Select Application Profile]  ➔  Choose KYC, GST, Loan, or College Admission
+            ↓
+[2. Document Inbox]             ➔  Drag & drop up to 5 documents (Auto-Classified)
+            ↓
+[3. AI OCR & Quality Audit]     ➔  Extracts key details & tests image legibility
+            ↓
+[4. Cross-Check Comparison]     ➔  Compares names & dates across different IDs
+            ↓
+[5. In-Line Fix Tools]          ➔  Compress large PDFs & boost contrast in 1 click
+            ↓
+[6. Master Bundle & Report]     ➔  Download final report & consolidated submission PDF
 ```
 
-### 1️⃣ Phase 01: Application Setup & Verification Profiles (`/verify`)
-- Select predefined application profiles: **Passport Renewal**, **Business Tax Registration (GST)**, **Personal Loan & Mortgage**, **Higher Education Visa**, or **Custom Portals**.
-- Configures portal-specific constraints: maximum file size thresholds (e.g. 10 MB), mandatory document categories, and required credential types.
+---
 
-### 2️⃣ Phase 02: Multi-Document Ingestion Inbox (`/documents`)
-- **Strict 5-File Batch Intake**: Ingest up to 5 documents per case simultaneously via drag-and-drop or file picker.
-- **Automated Ingestion Pipeline**: Automatically triggers classification, server-side OCR, and DPI quality auditing immediately upon upload.
-- Categorizes files into `IDENTITY`, `ADDRESS`, `BUSINESS`, `PERSONAL`, or `UNKNOWN`.
-- Supports `.pdf`, `.png`, `.jpg`, `.jpeg`, and `.webp`.
+## 💻 Tech Stack
 
-### 3️⃣ Phase 03: Extraction Desk & OCR Workspace (`/ocr`)
-- Deep multimodal extraction powered by Google Gemini AI Vision and local heuristic regex parsers.
-- Extracts structured applicant credentials: **Full Name**, **Date of Birth (DOB)**, **Document / ID Number** (PAN, Aadhaar, Passport, Driving License, Voter ID, Consumer Account Number), **Gender**, **Address**, and **Parent/Spouse Name**.
-- Displays bounding box coordinates, field-level confidence percentages, raw OCR terminal stream, and one-click JSON export.
-
-### 4️⃣ Phase 04: Legibility & Resolution Quality Audit (`/quality`)
-- Quantitative scoring across 4 forensic dimensions (0–100%):
-  - **Sharpness & Edge Clarity**
-  - **Text Visibility & Font Contrast**
-  - **Lighting, Glare & Shadow Uniformity**
-  - **Boundary Cropping & Orientation Detection**
-- Generates targeted feedback lines and identifies scans that fall below optimal thresholds.
-
-### 5️⃣ Phase 05: Case Verification & Application Readiness (`/verify`)
-- Computes real-time **Application Readiness Score (0–100%)**.
-- Checks mandatory document completeness against application rules.
-- Generates official submission readiness verdicts: `READY FOR SUBMISSION ✓` or `ACTION REQUIRED ✕`.
-
-### 6️⃣ Phase 06: Evidence Cross-Check Engine (`/cross-check`)
-- Allows users to select or upload **TWO documents** (e.g., PAN Card vs Aadhaar Card, or Passport vs Bank Statement) for consistency cross-referencing.
-- Compares key identifying fields:
-  - **Name** (Exact match, initials, and spelling variants)
-  - **Date of Birth** (Format standardization across `DD/MM/YYYY`, `DD-Mon-YYYY`, etc.)
-  - **Document / ID Number** (Category-aware validation)
-  - **Gender & Residential Address**
-- Returns a side-by-side comparison matrix with status indicators:
-  - `MATCH ✓` — Consistent identity values
-  - `MISMATCH ✕` — Active contradiction detected
-  - `UNABLE TO VERIFY ⚠` — Missing or unreadable field / distinct valid ID categories
-- Strict consistency analysis without fabricating unreadable data or making false legal authenticity claims.
-
-### 7️⃣ Phase 07: Case Findings & Issues Hub (`/issues`)
-- Aggregates all real-time issues flagged during the case:
-  - Missing mandatory documents
-  - File sizes exceeding portal limits (> 10 MB)
-  - Blurry scans or poor lighting (< 70% score)
-  - Name or DOB discrepancies detected in cross-checks
-  - Unidentified document formats
-- Severity filtering (`CRITICAL`, `NEEDS REVIEW`, `RESOLVED`) with direct routing to the Fix Desk.
-
-### 8️⃣ Phase 08: Fix Applications & Resolution Desk (`/fix`)
-- Interactive step-by-step resolution workspace:
-  - **Size Violations** ➔ 1-click client/server compression below portal thresholds.
-  - **Quality & Discrepancies** ➔ Re-upload replacement documents with instant re-audit.
-  - **Classification Errors** ➔ In-place document reclassification.
-- Updates case records in-place and celebrates with visual confetti milestones.
-
-### 9️⃣ Phase 09: Server-Accelerated Document Preparation Suite (`/tools`)
-A comprehensive 7-tool document engineering workbench:
-1. **Compress PDF / Image**: Reduce large files below portal limits with target MB slider.
-2. **Images to PDF Bundle**: Convert up to 5 PNG/JPG/WEBP images into a unified A4 PDF.
-3. **Image Format Converter**: Instant transcode between WEBP, JPG, and PNG.
-4. **TXT ↔ PDF Converter**: Paginated PDF generation (PDFKit) and text extraction (PDF-Parse).
-5. **PDF Merge Suite**: Concatenate multiple PDF files into one master application package.
-6. **Improve Readability**: High-contrast grayscale binarization to eliminate shadows and enhance faint text.
-7. **File Renamer**: Standardize file naming conventions for strict government portal guidelines.
-- Features **"Pick from Case Inbox"** integration to process and replace existing case documents in 1 click.
-
-### 🔟 Phase 10: Final Verification Report (`/report`)
-- Generates a comprehensive, printable forensic audit summary with timestamped case credentials, verification meters, checklist status, and compliance stamps.
+- **Frontend**: React 18, TypeScript, Vite, Tailwind CSS, Lucide Icons, Canvas Confetti
+- **Backend**: Node.js, Express.js
+- **AI Engine**: Google Gemini Vision AI (`@google/genai`)
+- **Document & Image Processing**: Sharp (Image manipulation), PDF-Lib, PDFKit, PDF-Parse
+- **Internationalization**: Custom React Context i18n Engine (English, Hindi, Marathi)
 
 ---
 
-## 🌐 Multilingual Localization (i18n)
+## 🚀 Quick Setup & Run Locally
 
-Dr. Doc features built-in, persistent language localization across the entire interface:
-- 🇬🇧 **English** (Default)
-- 🇮🇳 **Hindi (हिंदी)**
-- 🇮🇳 **Marathi (मराठी)**
+### 1. Clone & Install
+```bash
+git clone https://github.com/diya-1720/dr.Doc.git
+cd dr.Doc
+npm install
+```
 
----
+### 2. Add Gemini API Key
+Create a `.env` file in the project root:
+```env
+GEMINI_API_KEY=your_gemini_api_key_here
+PORT=5000
+FRONTEND_URL=http://localhost:5173
+```
 
-## 🛠️ Technology Stack
+### 3. Start Development Servers
 
-| Layer | Technologies & Libraries |
-| :--- | :--- |
-| **Frontend Core** | React 18, TypeScript, Vite, React Router v6 |
-| **Styling & Theme** | Tailwind CSS, Lucide React Icons, Canvas Confetti |
-| **Typography & UI** | Fraunces (Headings), Inter (Body), JetBrains Mono (Forensic Meta) |
-| **Backend Core** | Node.js, Express, Helmet, CORS, Express Rate Limit |
-| **AI & Vision** | Google GenAI SDK (`@google/genai`), Gemini 3.6 Flash / 2.0 Flash |
-| **Image & PDF Engine** | Sharp, PDF-Lib, PDFKit, PDF-Parse, Multer |
-| **Deployment** | Vercel Serverless Ready (`api/`, `vercel.json`), SPA Rewrites |
+**Terminal 1 (Backend):**
+```bash
+node backend/server.js
+```
 
----
+**Terminal 2 (Frontend):**
+```bash
+npm run dev
+```
 
-## 👥 Meet the Development Team
-
-Dr. Doc was designed and engineered by:
-
-### ⚙️ Backend Engineering
-- **Shravan Mali** — *Backend Developer*  
-  Architecture, REST API Design, Microservices, File Ingestion Pipeline & Serverless Engine.
-- **Yatharth Raut** — *Backend Developer*  
-  AI Forensics, Gemini Vision Integration, Cross-Check Logic & PDF Processing Engine.
-
-### 🎨 Frontend Engineering
-- **Diya Singh** — *Frontend Developer*  
-  UI/UX Architecture, Design System, Responsive Workspaces & Multi-Document Ingestion Flow.
-- **Ved Gharat** — *Frontend Developer*  
-  State Management, Forensic Data Visualization, Document Preparation Tools & i18n Localization.
+Open **[http://localhost:5173](http://localhost:5173)** in your browser!
 
 ---
 
-## 💻 Getting Started Locally
+## 👥 The Team
 
-### Prerequisites
-- **Node.js**: v18.0.0 or higher
-- **npm**: v9.0.0 or higher
-- **Google Gemini API Key** (from [Google AI Studio](https://aistudio.google.com/))
-
-### Installation Steps
-
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/diya-1720/dr.Doc.git
-   cd dr.Doc
-   ```
-
-2. **Install dependencies:**
-   ```bash
-   npm install
-   ```
-
-3. **Configure Environment Variables:**
-   Create a `.env` file in the root directory (or copy from `.env.example`):
-   ```env
-   # Gemini API Key
-   GEMINI_API_KEY=your_gemini_api_key_here
-
-   # Server Port
-   PORT=5000
-
-   # Frontend Origin for CORS
-   FRONTEND_URL=http://localhost:5173
-
-   # Maximum Upload Size (25MB in bytes)
-   MAX_FILE_SIZE=26214400
-
-   # Maximum Batch Files
-   MAX_FILES=5
-   ```
-
-4. **Run the Development Servers:**
-
-   **Terminal 1 — Backend Server:**
-   ```bash
-   node backend/server.js
-   ```
-
-   **Terminal 2 — Frontend Dev Server:**
-   ```bash
-   npm run dev
-   ```
-
-5. **Open in Browser:**
-   Navigate to **[http://localhost:5173](http://localhost:5173)**.
-
----
-
-## 🔒 Security, Privacy & Compliance
-
-- 🛡️ **Zero Retention Architecture**: All file buffers uploaded for analysis or manipulation are processed ephemerally in volatile memory or temporary directories (`os.tmpdir()`) and deleted immediately upon request completion.
-- 🔑 **Secrets Safety**: API keys are restricted to backend environment variables only and never leaked to the client bundle.
-- ⚡ **Vercel Serverless Ready**: Stateless functions with 60s timeout limits and 1024MB memory allocations for heavy PDF/Sharp image transformations.
+- **Shravan Mali** — *Backend Architecture & APIs*
+- **Yatharth Raut** — *AI Forensics & PDF Processing*
+- **Diya Singh** — *Frontend UI/UX & Ingestion Desk*
+- **Ved Gharat** — *State Management, Document Tools & Multilingual Engine*
 
 ---
 
 ## 📄 License
-
-This project is licensed under the **MIT License**.
+Licensed under the **MIT License**.
