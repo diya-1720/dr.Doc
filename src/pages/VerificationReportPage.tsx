@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useForensics } from '../context/ForensicsContext';
 import { useLanguage } from '../i18n/LanguageContext';
 import { Sidebar } from '../components/Sidebar';
+import { QrShareModal } from '../components/QrShareModal';
 import { mergeSelectedDocsIntoPdf, downloadDocInFormat } from '../services/docTools';
 import type { DocItem } from '../types';
 import { 
@@ -13,7 +14,8 @@ import {
   UserX, 
   FileText,
   Loader2,
-  X
+  X,
+  QrCode
 } from 'lucide-react';
 import logoImg from '../assets/logo.png';
 
@@ -22,6 +24,9 @@ export const VerificationReportPage: React.FC = () => {
   const { t } = useLanguage();
 
   const isReady = readinessScore >= 85 && issues.filter(i => i.severity === 'CRITICAL' && !i.resolved).length === 0;
+
+  // QR Share Modal state
+  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
 
   // Bundle download state
   const [isDownloadingBundle, setIsDownloadingBundle] = useState(false);
@@ -263,17 +268,29 @@ export const VerificationReportPage: React.FC = () => {
                 </p>
               </div>
 
-              <button
-                onClick={handleDownloadConsolidatedBundle}
-                disabled={isDownloadingBundle || documents.length === 0}
-                className="w-full sm:w-auto bg-[#7A302F] hover:bg-[#5c2322] text-[#FFF8EA] px-6 py-3 border-2 border-[#3F2928] shadow-[3px_3px_0px_#3F2928] font-heading text-base font-bold flex items-center justify-center gap-2 disabled:opacity-50"
-              >
-                {isDownloadingBundle ? (
-                  <><Loader2 className="w-5 h-5 animate-spin" /> {t.common.loading}</>
-                ) : (
-                  <><Download className="w-5 h-5" /> {t.report.downloadConsolidatedPdf}</>
-                )}
-              </button>
+              <div className="flex flex-col sm:flex-row gap-2.5 w-full sm:w-auto">
+                <button
+                  onClick={() => setIsQrModalOpen(true)}
+                  disabled={documents.length === 0}
+                  className="w-full sm:w-auto bg-[#3F2928] hover:bg-[#7A302F] text-[#FFF8EA] px-5 py-3 border-2 border-[#3F2928] shadow-[3px_3px_0px_#7A302F] font-heading text-base font-bold flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+                  title={t.qr.shareViaQr}
+                >
+                  <QrCode className="w-5 h-5 text-[#FFF8EA]" />
+                  <span>{t.qr.shareViaQr}</span>
+                </button>
+
+                <button
+                  onClick={handleDownloadConsolidatedBundle}
+                  disabled={isDownloadingBundle || documents.length === 0}
+                  className="w-full sm:w-auto bg-[#7A302F] hover:bg-[#5c2322] text-[#FFF8EA] px-6 py-3 border-2 border-[#3F2928] shadow-[3px_3px_0px_#3F2928] font-heading text-base font-bold flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  {isDownloadingBundle ? (
+                    <><Loader2 className="w-5 h-5 animate-spin" /> {t.common.loading}</>
+                  ) : (
+                    <><Download className="w-5 h-5" /> {t.report.downloadConsolidatedPdf}</>
+                  )}
+                </button>
+              </div>
             </div>
 
             {bundleSuccessMsg && (
@@ -315,8 +332,17 @@ export const VerificationReportPage: React.FC = () => {
             </div>
           )}
 
-          {/* Print Certificate Bar */}
+          {/* Action Bar (Print + Share via QR) */}
           <div className="flex flex-col sm:flex-row justify-end gap-3 sm:gap-4 font-mono text-xs">
+            <button
+              onClick={() => setIsQrModalOpen(true)}
+              disabled={documents.length === 0}
+              className="w-full sm:w-auto bg-[#7A302F] hover:bg-[#5c2322] text-[#FFF8EA] px-6 py-3 border border-[#3F2928] shadow-[3px_3px_0px_#3F2928] font-bold flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+            >
+              <QrCode className="w-4 h-4" />
+              {t.qr.shareViaQr}
+            </button>
+
             <button
               onClick={handlePrint}
               className="w-full sm:w-auto bg-[#3F2928] text-[#FFF8EA] px-6 py-3 border border-[#3F2928] shadow-[3px_3px_0px_#7A302F] font-bold flex items-center justify-center gap-2 hover:bg-[#7A302F] transition-colors"
@@ -395,6 +421,16 @@ export const VerificationReportPage: React.FC = () => {
             </div>
           </div>
         )}
+
+        {/* QR Share Modal */}
+        <QrShareModal
+          isOpen={isQrModalOpen}
+          onClose={() => setIsQrModalOpen(false)}
+          documents={documents}
+          caseId={caseId}
+          currentApp={currentApplication}
+          crossCheckResult={null}
+        />
 
       </main>
     </div>

@@ -12,6 +12,7 @@ const conversionRoutes = require('./routes/conversionRoutes');
 const compressionRoutes = require('./routes/compressionRoutes');
 const analysisRoutes = require('./routes/analysisRoutes');
 const crossCheckRoutes = require('./routes/crossCheckRoutes');
+const shareRoutes = require('./routes/shareRoutes');
 
 const app = express();
 
@@ -54,7 +55,7 @@ app.get('/', (req, res) => {
             <p>You are viewing the REST API server. To access the interactive web application interface, open the frontend portal below:</p>
             <a href="http://localhost:5173" class="btn">🚀 OPEN DR. DOC WEB APP (PORT 5173)</a>
             <hr style="margin-top:24px; border:1px solid #3F2928;" />
-            <p style="font-size:12px; color:#7A302F;">Active API Endpoints: /api/health • /api/analyze • /api/cross-check • /api/convert • /api/compress</p>
+            <p style="font-size:12px; color:#7A302F;">Active API Endpoints: /api/health • /api/analyze • /api/cross-check • /api/convert • /api/compress • /api/share</p>
           </div>
         </body>
       </html>
@@ -64,7 +65,7 @@ app.get('/', (req, res) => {
       success: true,
       message: 'DR. DOC Forensic Document Intelligence API is Online',
       frontendUrl: 'http://localhost:5173',
-      endpoints: ['/api/health', '/api/analyze', '/api/cross-check', '/api/convert', '/api/compress']
+      endpoints: ['/api/health', '/api/analyze', '/api/cross-check', '/api/convert', '/api/compress', '/api/share']
     });
   }
 });
@@ -76,6 +77,7 @@ app.use('/api/compress', compressionRoutes);
 app.use('/api/analyze', analysisRoutes);
 app.use('/api/cross-check', crossCheckRoutes);
 app.use('/api/crosscheck', crossCheckRoutes);
+app.use('/api/share', shareRoutes);
 
 // --- Gemini Proxy & Privacy routes ---
 app.get('/api/privacy', (_req, res) => {

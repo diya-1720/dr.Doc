@@ -17,6 +17,7 @@ import { FixApplicationPage } from './pages/FixApplicationPage';
 import { DocumentToolsPage } from './pages/DocumentToolsPage';
 import { NearbyHelpPage } from './pages/NearbyHelpPage';
 import { VerificationReportPage } from './pages/VerificationReportPage';
+import { ShareDownloadPage } from './pages/ShareDownloadPage';
 
 import { LanguageProvider } from './i18n/LanguageContext';
 
@@ -53,6 +54,7 @@ export const App: React.FC = () => {
               <Route path="/tools" element={<DocumentToolsPage />} />
               <Route path="/help-nearby" element={<NearbyHelpPage />} />
               <Route path="/report" element={<VerificationReportPage />} />
+              <Route path="/share/:token" element={<ShareDownloadPage />} />
             </Routes>
           </div>
 

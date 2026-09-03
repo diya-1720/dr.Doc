@@ -1,6 +1,7 @@
 const Tesseract = require('tesseract.js');
 const pdfParse = require('pdf-parse');
 const sharp = require('sharp');
+const { parseAndNormalizeDate } = require('../controllers/crossCheckController');
 
 /**
  * Pass 1: Standard Contrast Enhancement & Sharpening
@@ -41,7 +42,7 @@ async function preprocessImagePass2(buffer, rotateAngle = 0) {
     return await pipeline
       .resize({ width: 2800, withoutEnlargement: true, kernel: sharp.kernel.lanczos3 })
       .grayscale()
-      .linear(1.3, -20) // Increase contrast
+      .linear(1.35, -22) // High contrast boost to separate text from background texture
       .sharpen({ sigma: 1.8, m1: 0.8, m2: 0.8 })
       .toBuffer();
   } catch (err) {
@@ -66,10 +67,10 @@ async function preprocessImagePass3Crop(buffer, rotateAngle = 0) {
     const w = meta.width || 2000;
     const h = meta.height || 1400;
 
-    const cropLeft = Math.floor(w * 0.12);
-    const cropTop = Math.floor(h * 0.12);
-    const cropWidth = Math.floor(w * 0.85);
-    const cropHeight = Math.floor(h * 0.75);
+    const cropLeft = Math.floor(w * 0.08);
+    const cropTop = Math.floor(h * 0.10);
+    const cropWidth = Math.floor(w * 0.88);
+    const cropHeight = Math.floor(h * 0.80);
 
     return await rotated
       .extract({ left: cropLeft, top: cropTop, width: cropWidth, height: cropHeight })
@@ -110,7 +111,7 @@ function scoreOcrText(text) {
 }
 
 /**
- * Filter non-name noise words commonly found in Indian credentials
+ * Filter non-name noise words commonly found in Indian credentials and address lines
  */
 const NOISE_WORDS = new Set([
   'GOVERNMENT', 'GOVT', 'INDIA', 'BHARAT', 'SARKAR', 'INCOME', 'TAX', 'DEPARTMENT', 'PERMANENT', 'ACCOUNT',
@@ -123,9 +124,15 @@ const NOISE_WORDS = new Set([
   'ELECTRICITY', 'BILL', 'CONSUMER', 'TARIFF', 'METER', 'READING', 'AMOUNT', 'DUE',
   'BANK', 'STATEMENT', 'PASSBOOK', 'BRANCH', 'IFSC', 'MICR', 'TRANSACTION', 'BALANCE',
   'WWW', 'HTTP', 'HTTPS', 'HELP', 'EMAIL', 'TO', 'THE', 'OF', 'AND', 'FOR', 'IN', 'BY', 'AT', 'ON', 'SR', 'NO', 'DETAILS', 'INFORMATION',
-  'ISSUED', 'VALIDITY', 'BLOOD', 'GROUP', 'NEAR', 'HOSTEL', 'BOYS', 'REE', 'REF', 'TEL', 'VEL',
+  'ISSUED', 'VALIDITY', 'BLOOD', 'GROUP', 'REE', 'REF', 'TEL', 'VEL',
   'XML', 'OFFLINE', 'ONLINE', 'QR', 'CODE', 'SCANNING', 'PROOF', 'CITIZENSHIP', 'AUTHENTICATION', 'VERIFICATION', 'THY', 'SEE', 'USED', 'WITH', 'SHOULD', 'NOT',
-  'MERA', 'MERI', 'PEHCHAN', 'AADHAAR', 'WE', 'RATE', 'OD', 'FEE', 'FA', 'OX', 'FED', 'FL'
+  'MERA', 'MERI', 'PEHCHAN', 'AADHAAR', 'WE', 'RATE', 'OD', 'FEE', 'FA', 'OX', 'FED', 'FL',
+  // Address & administrative noise words that must not be taken as person's name
+  'ROAD', 'STREET', 'LANE', 'MARG', 'AVENUE', 'NAGAR', 'COLONY', 'SECTOR', 'VILLAGE', 'GRAM', 'TALUK', 'TALUKA', 'TEHSIL',
+  'DIST', 'DISTRICT', 'STATE', 'PIN', 'PINCODE', 'POST', 'PO', 'NEAR', 'BEHIND', 'OPP', 'OPPOSITE', 'HOSTEL', 'BOYS', 'GIRLS',
+  'BUILDING', 'FLOOR', 'FLAT', 'PLOT', 'HOUSE', 'HNO', 'H NO', 'APARTMENT', 'COMPLEX', 'SOCIETY', 'ENCLAVE',
+  'MAHARASHTRA', 'DELHI', 'MUMBAI', 'PUNE', 'THANE', 'PALGHAR', 'GUJARAT', 'KARNATAKA', 'TAMIL', 'NADU', 'RAJASTHAN',
+  'AUTHORITY', 'COMMISSIONER', 'RTO', 'REGIONAL', 'OFFICER', 'COMMISSION'
 ]);
 
 const HEADER_PHRASES = [
@@ -133,7 +140,8 @@ const HEADER_PHRASES = [
   'UNIQUE IDENTIFICATION AUTHORITY OF INDIA', 'ELECTION COMMISSION OF INDIA', 'REPUBLIC OF INDIA',
   'UNION OF INDIA', 'MOTOR VEHICLES DEPARTMENT', 'TRANSPORT DEPARTMENT', 'STATE OF',
   'ISSUED BY GOVERNMENT', 'INDIAN UNION DRIVING LICENSE', 'INDIAN UNION DRIVING LICENCE',
-  'AADHAAR IS PROOF', 'PROOF OF IDENTITY', 'NOT OF CITIZENSHIP', 'OFFLINE XML', 'QR CODE', 'SCANNING OF'
+  'AADHAAR IS PROOF', 'PROOF OF IDENTITY', 'NOT OF CITIZENSHIP', 'OFFLINE XML', 'QR CODE', 'SCANNING OF',
+  'MAHARASHTRA STATE', 'GUJARAT STATE', 'KARNATAKA STATE', 'TAMIL NADU STATE'
 ];
 
 function isLikelyDevanagariGibberish(str) {
@@ -247,13 +255,13 @@ function extractAadhaarNameMultiStrategy(rawText) {
   let bestCandidate = 'Not detected';
   let highestScore = 20; // Must achieve at least a score of 20 to qualify
 
-  // 1. Check lines adjacent to DOB
+  // 1. Check lines adjacent to DOB (above DOB)
   for (let i = 0; i < lines.length; i++) {
     const lineUpper = lines[i].toUpperCase();
     if (lineUpper.includes('DOB') || lineUpper.includes('DATE OF BIRTH') || lineUpper.includes('YEAR OF BIRTH') || lineUpper.includes('YOB') || /\b(?:19|20)[0-9]{2}\b/.test(lineUpper)) {
       for (let k = i - 1; k >= Math.max(0, i - 4); k--) {
         const line = lines[k];
-        const currentScore = scoreNameCandidate(line) + 20; // Proximity bonus
+        const currentScore = scoreNameCandidate(line) + 25; // Proximity bonus
         if (currentScore > highestScore) {
           const cleaned = cleanExtractedName(line);
           if (cleaned !== 'Not detected') {
@@ -347,18 +355,16 @@ function extractFieldsFromText(rawText) {
   if (documentType === 'Aadhaar Card') {
     applicantName = extractAadhaarNameMultiStrategy(text);
   } else if (documentType === 'Driving License') {
-    let bestWordCount = 0;
+    let highestScore = 15;
     for (let i = 0; i < lines.length; i++) {
       const lineUpper = lines[i].toUpperCase();
-      if (!lineUpper.includes('UNION OF INDIA') && !lineUpper.includes('ISSUED BY') && !lineUpper.includes('DRIVING') && !lineUpper.includes('DL NO') && !lineUpper.includes('VALIDITY') && !lineUpper.includes('DATE :') && !lineUpper.includes('DOB')) {
-        if (isCleanNameCandidate(lines[i])) {
+      if (!lineUpper.includes('UNION OF INDIA') && !lineUpper.includes('ISSUED BY') && !lineUpper.includes('DRIVING') && !lineUpper.includes('DL NO') && !lineUpper.includes('VALIDITY') && !lineUpper.includes('DATE :') && !lineUpper.includes('DOB') && !lineUpper.includes('BLOOD')) {
+        const score = scoreNameCandidate(lines[i]);
+        if (score > highestScore) {
           const cleaned = cleanExtractedName(lines[i]);
           if (cleaned !== 'Not detected') {
-            const wordCount = cleaned.split(' ').length;
-            if (wordCount >= bestWordCount) {
-              applicantName = cleaned;
-              bestWordCount = wordCount;
-            }
+            highestScore = score;
+            applicantName = cleaned;
           }
         }
       }
@@ -430,21 +436,21 @@ function extractFieldsFromText(rawText) {
     if (accMatch) docNumber = accMatch[1];
   }
 
-  // 4. Strict Date of Birth & Age Extraction
+  // 4. Strict Date of Birth & Age Extraction (Normalized)
   let dob = 'Not detected';
   let calculatedAge = null;
   const dobMatch = text.match(/(?:DOB|Date of Birth|Birth|D\.O\.B)\s*[:\-\.]?\s*([0-3]?[0-9][\/\-\.][0-1]?[0-9][\/\-\.](?:19|20)[0-9]{2})/i) ||
                    text.match(/\b([0-3]?[0-9][\/\-\.][0-1]?[0-9][\/\-\.](?:19|20)[0-9]{2})\b/) ||
+                   text.match(/(?:DOB|Date of Birth|Birth)\s*[:\-\.]?\s*([0-3]?[0-9][\s\-\/\.][A-Za-z]{3,9}[\s\-\/\.,](?:19|20)[0-9]{2})/i) ||
                    text.match(/(?:Year of Birth|YOB)\s*[:\-\.]?\s*((?:19|20)[0-9]{2})/i);
 
   if (dobMatch && dobMatch[1]) {
-    dob = dobMatch[1].replace(/[\-\.]/g, '/');
-    const yearMatch = dob.match(/(?:19|20)[0-9]{2}/);
-    if (yearMatch) {
-      const birthYear = parseInt(yearMatch[0], 10);
+    const normDate = parseAndNormalizeDate(dobMatch[1]);
+    if (normDate) {
+      dob = normDate.formatted;
       const currentYear = new Date().getFullYear();
-      if (birthYear >= 1920 && birthYear <= currentYear) {
-        calculatedAge = currentYear - birthYear;
+      if (normDate.year >= 1920 && normDate.year <= currentYear) {
+        calculatedAge = currentYear - normDate.year;
       }
     }
   }
@@ -522,7 +528,8 @@ function extractFieldsFromText(rawText) {
     }
     const valMatch = text.match(/(?:Validity(?:\(NT\))?|Valid\s*Upto|Expiry)\s*[:\-\.]?\s*([0-3]?[0-9][\/\-\.][0-1]?[0-9][\/\-\.](?:19|20)[0-9]{2})/i);
     if (valMatch) {
-      extractedFields.push({ key: 'validity', label: 'License Validity', value: valMatch[1].replace(/[\-\.]/g, '/'), confidence: 95 });
+      const normVal = parseAndNormalizeDate(valMatch[1]);
+      extractedFields.push({ key: 'validity', label: 'License Validity', value: normVal ? normVal.formatted : valMatch[1], confidence: 95 });
     }
     extractedFields.push({ key: 'issuingAuthority', label: 'Issuing Authority', value: 'Indian Union / Transport Dept', confidence: 99 });
   } else if (documentType === 'Aadhaar Card') {
@@ -541,7 +548,8 @@ function extractFieldsFromText(rawText) {
     extractedFields.push({ key: 'nationality', label: 'Nationality', value: 'INDIAN', confidence: 99 });
     const expiryMatch = text.match(/(?:Expiry\s*Date|Date of Expiry)\s*[:\-\.]?\s*([0-3]?[0-9][\/\-\.][0-1]?[0-9][\/\-\.](?:19|20)[0-9]{2})/i);
     if (expiryMatch) {
-      extractedFields.push({ key: 'expiryDate', label: 'Passport Expiry', value: expiryMatch[1].replace(/[\-\.]/g, '/'), confidence: 95 });
+      const normExp = parseAndNormalizeDate(expiryMatch[1]);
+      extractedFields.push({ key: 'expiryDate', label: 'Passport Expiry', value: normExp ? normExp.formatted : expiryMatch[1], confidence: 95 });
     }
   } else if (documentType === 'Electricity Bill') {
     const amtMatch = text.match(/(?:Amount|Total|Bill\s*Amount|Rs\.?)\s*[:\-\.]?\s*([0-9,]+(?:\.[0-9]{2})?)/i);
@@ -647,9 +655,11 @@ async function performMultiPassOcr(buffer, ext, mimeType) {
   let parsed = extractFieldsFromText(bestText);
   let passCount = 1;
 
-  // PASS 2: If Name is 'Not detected', run Enhanced Contrast & Upscaled OCR
-  const currentName = parsed.extractedFields.find(f => f.key === 'applicantName')?.value;
-  if (currentName === 'Not detected') {
+  // PASS 2: If Name OR DOB is 'Not detected', run Enhanced Contrast & Upscaled OCR
+  let currentName = parsed.extractedFields.find(f => f.key === 'applicantName')?.value;
+  let currentDob = parsed.extractedFields.find(f => f.key === 'dob')?.value;
+
+  if (currentName === 'Not detected' || currentDob === 'Not detected') {
     try {
       passCount = 2;
       const p2 = await preprocessImagePass2(buffer, bestAngle);
@@ -657,10 +667,27 @@ async function performMultiPassOcr(buffer, ext, mimeType) {
       const text2 = (res2?.data?.text || '').trim();
       const parsed2 = extractFieldsFromText(text2);
       const name2 = parsed2.extractedFields.find(f => f.key === 'applicantName')?.value;
+      const dob2 = parsed2.extractedFields.find(f => f.key === 'dob')?.value;
 
-      if (name2 && name2 !== 'Not detected') {
-        bestText = text2;
-        parsed = parsed2;
+      if (name2 && name2 !== 'Not detected' && currentName === 'Not detected') {
+        const nameField = parsed.extractedFields.find(f => f.key === 'applicantName');
+        if (nameField) {
+          nameField.value = name2;
+          nameField.confidence = 94;
+        }
+      }
+      if (dob2 && dob2 !== 'Not detected' && currentDob === 'Not detected') {
+        const dobField = parsed.extractedFields.find(f => f.key === 'dob');
+        if (dobField) {
+          dobField.value = dob2;
+          dobField.confidence = 95;
+        }
+        if (parsed2.calculatedAge) {
+          parsed.calculatedAge = parsed2.calculatedAge;
+        }
+      }
+      if (text2.length > bestText.length) {
+        bestText = `${bestText}\n${text2}`;
       }
     } catch (err2) {
       console.warn('Pass 2 OCR attempt warning:', err2.message);
@@ -668,8 +695,8 @@ async function performMultiPassOcr(buffer, ext, mimeType) {
   }
 
   // PASS 3: If Name is STILL 'Not detected', run Targeted Identity Area Cropped OCR
-  const nameAfterPass2 = parsed.extractedFields.find(f => f.key === 'applicantName')?.value;
-  if (nameAfterPass2 === 'Not detected') {
+  currentName = parsed.extractedFields.find(f => f.key === 'applicantName')?.value;
+  if (currentName === 'Not detected') {
     try {
       passCount = 3;
       const p3 = await preprocessImagePass3Crop(buffer, bestAngle);

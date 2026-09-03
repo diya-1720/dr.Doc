@@ -4,7 +4,7 @@ import { useForensics } from '../context/ForensicsContext';
 import { useLanguage } from '../i18n/LanguageContext';
 import { Sidebar } from '../components/Sidebar';
 import { backendCrossCheck } from '../services/api';
-import { smartCompareNames, smartCompareAddresses } from '../services/aiEngine';
+import { smartCompareNames, smartCompareAddresses, smartCompareDates } from '../services/aiEngine';
 import type { CrossCheckResult } from '../types';
 import { 
   ShieldAlert, 
@@ -115,17 +115,16 @@ export const CrossCheckPage: React.FC = () => {
         }
       }
 
-      // 2. DOB Comparison (ONLY IF PRESENT IN BOTH DOCUMENTS)
+      // 2. DOB Comparison (ONLY IF PRESENT IN BOTH DOCUMENTS - CANONICAL COMPARISON)
       const isDobPresent1 = dob1 && dob1 !== 'Not detected' && dob1 !== 'Not specified';
       const isDobPresent2 = dob2 && dob2 !== 'Not detected' && dob2 !== 'Not specified';
       if (isDobPresent1 && isDobPresent2) {
-        const clean1 = dob1.replace(/[^0-9]/g, '');
-        const clean2 = dob2.replace(/[^0-9]/g, '');
-        if (clean1 === clean2 || (clean1.length === 8 && clean2.length === 8 && clean1.slice(-4) === clean2.slice(-4)) || (clean1.length === 4 && clean2.includes(clean1))) {
-          fields.dateOfBirth = { match: true, document1: dob1, document2: dob2, notes: `Date of birth matches exactly (${dob1})` };
+        const dobComp = smartCompareDates(dob1, dob2);
+        if (dobComp.match === true) {
+          fields.dateOfBirth = { match: true, document1: dob1, document2: dob2, notes: dobComp.notes };
           matchedFields.push('dateOfBirth');
-        } else {
-          fields.dateOfBirth = { match: false, document1: dob1, document2: dob2, notes: `Birth date mismatch: "${dob1}" on ${doc1.documentType} vs "${dob2}" on ${doc2.documentType}` };
+        } else if (dobComp.match === false) {
+          fields.dateOfBirth = { match: false, document1: dob1, document2: dob2, notes: dobComp.notes };
           mismatches.push('dateOfBirth');
         }
       }

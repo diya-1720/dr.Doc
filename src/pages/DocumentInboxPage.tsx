@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useForensics } from '../context/ForensicsContext';
 import { useLanguage } from '../i18n/LanguageContext';
 import { Sidebar } from '../components/Sidebar';
+import { QrShareModal } from '../components/QrShareModal';
 import type { DocumentCategory, DocItem } from '../types';
 import { mergeSelectedDocsIntoPdf, downloadDocInFormat } from '../services/docTools';
 import { 
@@ -25,7 +26,8 @@ import {
   Sparkles,
   UserCheck,
   UserX,
-  RotateCw
+  RotateCw,
+  QrCode
 } from 'lucide-react';
 
 export const DocumentInboxPage: React.FC = () => {
@@ -43,12 +45,15 @@ export const DocumentInboxPage: React.FC = () => {
     applySuggestedFilenames,
     uploadWarning,
     dismissWarning,
-    crossChecks
+    crossChecks,
+    caseId,
+    currentApplication
   } = useForensics();
 
   const [selectedCategory, setSelectedCategory] = useState<DocumentCategory | 'ALL'>('ALL');
   const [searchTerm, setSearchTerm] = useState('');
   const [isDragOver, setIsDragOver] = useState(false);
+  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
 
   // Checkbox multi-select state for consolidated PDF bundle
   const [selectedDocIds, setSelectedDocIds] = useState<string[]>([]);
@@ -334,6 +339,14 @@ export const DocumentInboxPage: React.FC = () => {
               </div>
 
               <div className="flex flex-wrap items-center gap-2">
+                <button
+                  onClick={() => setIsQrModalOpen(true)}
+                  className="px-3 py-1 bg-[#7A302F] hover:bg-[#5c2322] text-[#FFF8EA] border border-[#3F2928] font-bold flex items-center gap-1.5 shadow-[2px_2px_0px_#3F2928] text-[11px] transition-all"
+                  title={t.qr.shareViaQr}
+                >
+                  <QrCode className="w-3.5 h-3.5 text-[#FFF8EA]" /> {t.qr.shareViaQr}
+                </button>
+
                 <button
                   onClick={applySuggestedFilenames}
                   className="px-3 py-1 bg-[#3F2928] hover:bg-[#7A302F] text-[#FFF8EA] border border-[#3F2928] font-bold flex items-center gap-1.5 shadow-[2px_2px_0px_#7A302F] text-[11px] transition-all"
@@ -762,6 +775,16 @@ export const DocumentInboxPage: React.FC = () => {
             </div>
           </div>
         )}
+
+        {/* QR Share Modal */}
+        <QrShareModal
+          isOpen={isQrModalOpen}
+          onClose={() => setIsQrModalOpen(false)}
+          documents={documents}
+          caseId={caseId}
+          currentApp={currentApplication}
+          crossCheckResult={null}
+        />
 
       </main>
     </div>

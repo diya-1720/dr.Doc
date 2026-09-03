@@ -496,6 +496,40 @@ export interface TranslationDictionary {
     downloadAs: string;
     authorizedSignature: string;
   };
+
+  // QR Download & Share
+  qr: {
+    generateQr: string;
+    shareViaQr: string;
+    qrModalTitle: string;
+    qrModalSubtitle: string;
+    scanWithPhone: string;
+    copyLink: string;
+    linkCopied: string;
+    downloadQr: string;
+    secureDownloadTitle: string;
+    secureDownloadSubtitle: string;
+    availableFiles: string;
+    download: string;
+    downloadAll: string;
+    downloadingAll: string;
+    linkExpiredTitle: string;
+    linkExpiredDesc: string;
+    expiresIn: string;
+    fileCount: string;
+    caseId: string;
+    application: string;
+    originalDocument: string;
+    processedImage: string;
+    consolidatedPdf: string;
+    ocrExport: string;
+    crossCheckReport: string;
+    localDevNotice: string;
+    close: string;
+    preparingFiles: string;
+    securityNote: string;
+    downloadReady: string;
+  };
 }
 
 export const translations: Record<Language, TranslationDictionary> = {
@@ -979,6 +1013,38 @@ export const translations: Record<Language, TranslationDictionary> = {
       downloadAs: 'DOWNLOAD AS',
       authorizedSignature: 'AUTHORIZED DIGITAL SIGNATURE',
     },
+    qr: {
+      generateQr: 'GENERATE QR',
+      shareViaQr: 'SHARE VIA QR',
+      qrModalTitle: 'SECURE QR DOWNLOAD',
+      qrModalSubtitle: 'Scan with your smartphone camera to access and download case documents instantly.',
+      scanWithPhone: 'Scan QR with Phone Camera',
+      copyLink: 'COPY LINK',
+      linkCopied: 'COPIED TO CLIPBOARD!',
+      downloadQr: 'DOWNLOAD QR (PNG)',
+      secureDownloadTitle: 'SECURE DOCUMENT ACCESS',
+      secureDownloadSubtitle: 'Official verified submission bundle and document exports.',
+      availableFiles: 'AVAILABLE DOWNLOADABLE FILES',
+      download: 'DOWNLOAD',
+      downloadAll: 'DOWNLOAD ALL FILES',
+      downloadingAll: 'PREPARING BUNDLE...',
+      linkExpiredTitle: 'SHARE LINK EXPIRED OR INVALID',
+      linkExpiredDesc: 'This secure download link has expired or is no longer accessible. Please generate a new QR code from the DR. DOC portal.',
+      expiresIn: 'Link active for 24 hours',
+      fileCount: 'Files Available',
+      caseId: 'CASE ID',
+      application: 'APPLICATION',
+      originalDocument: 'Original Document',
+      processedImage: 'Processed Image',
+      consolidatedPdf: 'Consolidated Application PDF',
+      ocrExport: 'OCR Text Data Export',
+      crossCheckReport: 'Cross-Check Forensic Report',
+      localDevNotice: 'Mobile tip: When testing locally, ensure phone is on the same Wi-Fi network.',
+      close: 'CLOSE',
+      preparingFiles: 'Generating secure share link...',
+      securityNote: 'End-to-end encrypted transfer. Links expire automatically after 24 hours.',
+      downloadReady: 'Files ready for instant download',
+    },
   },
 
   hi: {
@@ -1461,6 +1527,38 @@ export const translations: Record<Language, TranslationDictionary> = {
       downloadAs: 'डाउनलोड करें इस रूप में:',
       authorizedSignature: 'अधिकृत डिजिटल हस्ताक्षर',
     },
+    qr: {
+      generateQr: 'QR बनाएं',
+      shareViaQr: 'QR के माध्यम से साझा करें',
+      qrModalTitle: 'सुरक्षित QR डाउनलोड',
+      qrModalSubtitle: 'केस दस्तावेज़ों को तुरंत एक्सेस और डाउनलोड करने के लिए अपने स्मार्टफोन कैमरे से स्कैन करें।',
+      scanWithPhone: 'फ़ोन कैमरे से QR स्कैन करें',
+      copyLink: 'लिंक कॉपी करें',
+      linkCopied: 'क्लिपबोर्ड पर कॉपी हो गया!',
+      downloadQr: 'QR डाउनलोड करें (PNG)',
+      secureDownloadTitle: 'सुरक्षित दस्तावेज़ एक्सेस',
+      secureDownloadSubtitle: 'आधिकारिक सत्यापित सबमिशन पैकेज और दस्तावेज़ निर्यात।',
+      availableFiles: 'उपलब्ध डाउनलोड करने योग्य फ़ाइलें',
+      download: 'डाउनलोड करें',
+      downloadAll: 'सभी फ़ाइलें डाउनलोड करें',
+      downloadingAll: 'बंडल तैयार हो रहा है...',
+      linkExpiredTitle: 'शेयर लिंक समाप्त या अमान्य है',
+      linkExpiredDesc: 'यह सुरक्षित डाउनलोड लिंक समाप्त हो गया है या अब सुलभ नहीं है। कृपया डॉ. डॉक पोर्टल से एक नया QR कोड बनाएं।',
+      expiresIn: 'लिंक 24 घंटे के लिए सक्रिय है',
+      fileCount: 'फ़ाइलें उपलब्ध',
+      caseId: 'केस आईडी',
+      application: 'आवेदन',
+      originalDocument: 'मूल दस्तावेज़',
+      processedImage: 'संसाधित छवि',
+      consolidatedPdf: 'समेकित आवेदन पीडीएफ',
+      ocrExport: 'ओसीआर टेक्स्ट डेटा निर्यात',
+      crossCheckReport: 'क्रॉस-चेक फोरेंसिक रिपोर्ट',
+      localDevNotice: 'मोबाइल सुझाव: स्थानीय स्तर पर परीक्षण करते समय, सुनिश्चित करें कि फ़ोन उसी वाई-फाई नेटवर्क पर है।',
+      close: 'बंद करें',
+      preparingFiles: 'सुरक्षित शेयर लिंक बनाया जा रहा है...',
+      securityNote: 'एंड-टू-एंड एन्क्रिप्टेड ट्रांसफर। लिंक 24 घंटों के बाद स्वचालित रूप से समाप्त हो जाते हैं।',
+      downloadReady: 'फ़ाइलें तुरंत डाउनलोड के लिए तैयार हैं',
+    },
   },
 
   mr: {
@@ -1942,6 +2040,38 @@ export const translations: Record<Language, TranslationDictionary> = {
       chooseExportFormat: 'निर्यात फॉरमॅट निवडा:',
       downloadAs: 'या स्वरूपात डाउनलोड करा:',
       authorizedSignature: 'अधिकृत डिजिटल स्वाक्षरी',
+    },
+    qr: {
+      generateQr: 'QR तयार करा',
+      shareViaQr: 'QR द्वारे शेअर करा',
+      qrModalTitle: 'सुरक्षित QR डाउनलोड',
+      qrModalSubtitle: 'केस दस्तऐवज त्वरित पाहण्यासाठी आणि डाउनलोड करण्यासाठी आपल्या स्मार्टफोन कॅमेऱ्याने स्कॅन करा.',
+      scanWithPhone: 'फोन कॅमेऱ्याने QR स्कॅन करा',
+      copyLink: 'लिंक कॉपी करा',
+      linkCopied: 'क्लिपबोर्डवर कॉपी झाले!',
+      downloadQr: 'QR डाउनलोड करा (PNG)',
+      secureDownloadTitle: 'सुरक्षित दस्तऐवज ऍक्सेस',
+      secureDownloadSubtitle: 'अधिकृत सत्यापित सबमिशन संच आणि दस्तऐवज निर्यात.',
+      availableFiles: 'उपलब्ध डाउनलोड करण्यायोग्य फाईल्स',
+      download: 'डाउनलोड करा',
+      downloadAll: 'सर्व फाईल्स डाउनलोड करा',
+      downloadingAll: 'बंडल तयार होत आहे...',
+      linkExpiredTitle: 'शेअर लिंक कालबाह्य किंवा अवैध आहे',
+      linkExpiredDesc: 'ही सुरक्षित डाउनलोड लिंक कालबाह्य झाली आहे किंवा आता उपलब्ध नाही. कृपया डॉ. डॉक पोर्टलवरून नवीन QR कोड तयार करा.',
+      expiresIn: 'लिंक २४ तासांसाठी सक्रिय आहे',
+      fileCount: 'फाईल्स उपलब्ध',
+      caseId: 'केस आयडी',
+      application: 'अर्ज',
+      originalDocument: 'मूळ दस्तऐवज',
+      processedImage: 'प्रक्रिया केलेली प्रतिमा',
+      consolidatedPdf: 'एकत्रित अर्ज पीडीएफ',
+      ocrExport: 'ओसीआर मजकूर डेटा निर्यात',
+      crossCheckReport: 'क्रॉस-चेक फॉरेन्सिक अहवाल',
+      localDevNotice: 'मोबाइल टीप: स्थानिक पातळीवर चाचणी करताना, फोन एकाच वाय-फाय नेटवर्कवर असल्याची खात्री करा.',
+      close: 'बंद करा',
+      preparingFiles: 'सुरक्षित शेअर लिंक तयार केली जात आहे...',
+      securityNote: 'एंड-टू-एंड एनक्रिप्टेड ट्रान्सफर. लिंक्स २४ तासांनंतर आपोआप कालबाह्य होतात.',
+      downloadReady: 'फाईल्स त्वरित डाउनलोडसाठी तयार आहेत',
     },
   },
 };
